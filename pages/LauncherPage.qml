@@ -80,7 +80,13 @@ Item {
             body:     (a.comment || a.genericName || ""),
             exec:     (a.command || []).join(" "),
             cats:     (a.categories || []).join(", "),
-            run:      () => { Frecency.bump("app:" + a.id); a.execute() }
+            run:      () => {
+                Frecency.bump("app:" + a.id)
+                if (Config.raiseRunning)
+                    Compositor.raiseOrRun([a.startupClass, a.id, a.name], () => a.execute())
+                else a.execute()
+            },
+            runNew:   () => { Frecency.bump("app:" + a.id); a.execute() }
         }
     }
     readonly property var appResults: {
@@ -335,6 +341,7 @@ Item {
         else if (mode === "manager"  && c.runManager)  c.runManager()
         else if (mode === "terminal" && c.runTerminal) c.runTerminal()
         else if (mode === "terminal" && c.runAlt)      c.runAlt()
+        else if (mode === "new"      && c.runNew)      c.runNew()
         else c.run()
         Sh.closeLauncher()
     }
@@ -465,7 +472,8 @@ Item {
                                     return
                                 }
                                 if (ev.key === Qt.Key_Return || ev.key === Qt.Key_Enter) {
-                                    if (ev.modifiers & Qt.ShiftModifier)        root.activateWith("terminal")
+                                    const k = root.current ? root.current.kind : ""
+                                    if (ev.modifiers & Qt.ShiftModifier)        root.activateWith(k === "app" ? "new" : "terminal")
                                     else if (ev.modifiers & Qt.ControlModifier) root.activateWith("editor")
                                     else if (ev.modifiers & Qt.AltModifier)     root.activateWith("manager")
                                     else return
@@ -477,11 +485,14 @@ Item {
                             Keys.onReturnPressed: root.activate()
                             Keys.onEnterPressed:  root.activate()
                         }
-                        Text {
+                        ScrambleText {
                             anchors.fill: parent
                             verticalAlignment: Text.AlignVCenter
                             visible: root.query.length === 0
-                            text: "Search"
+                            gateOnReveal: false
+                            show: root.query.length === 0 && Sh.launcherShown
+                            span: 460
+                            content: "Search"
                             color: Theme.muted
                             font.family: Sh.font
                             font.pixelSize: root.f(root.tInput)
@@ -497,16 +508,22 @@ Item {
                         height: root.f(22)
                         radius: root.rSm
                         color: Qt.alpha(Theme.accent, 0.16)
-                        Text {
+                        ScrambleText {
                             id: tagText
                             anchors.centerIn: parent
-                            text: ({ run: "Command", calc: "Calc", files: "Files",
-                                     clipboard: "Clipboard" })[root.mode] || ""
+                            gateOnReveal: false
+                            show: root.mode !== "apps"
+                            span: 380
+                            hold: 32
+                            content: ({ run: "Command", calc: "Calc", files: "Files",
+                                        clipboard: "Clipboard" })[root.mode] || ""
                             color: Theme.accent
                             font.family: Sh.font
                             font.pixelSize: root.f(root.tCaption)
                         }
                         Behavior on width { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
+                        Behavior on opacity { NumberAnimation { duration: 120 } }
+                        opacity: visible ? 1 : 0
                     }
                 }
 
@@ -534,14 +551,35 @@ Item {
                     clip: true
 
                     populate: Transition {
-                        NumberAnimation { property: "opacity"; from: 0; to: 1
-                            duration: 150; easing.type: Easing.OutCubic }
+                        id: pop
+                        SequentialAnimation {
+                            PauseAnimation { duration: Math.min(6, pop.ViewTransition.index) * 24 }
+                            ParallelAnimation {
+                                NumberAnimation { property: "opacity"; from: 0; to: 1
+                                    duration: 170; easing.type: Easing.OutCubic }
+                                NumberAnimation { property: "scale"; from: 0.97; to: 1
+                                    duration: 200; easing.type: Easing.OutCubic }
+                            }
+                        }
                     }
                     displaced: Transition {
                         NumberAnimation { property: "y"; duration: 150; easing.type: Easing.OutCubic }
                     }
-                    highlightMoveDuration: 130
+
+                    highlightFollowsCurrentItem: true
+                    highlightMoveDuration: 150
                     highlightResizeDuration: 0
+                    highlight: Rectangle {
+                        z: 0
+                        width: list.width - root.sp1 * 2
+                        x: root.sp1
+                        radius: root.rSm
+                        color: root.cSel
+                        border.width: 1
+                        border.color: root.cSelRim
+                        opacity: root.results.length > 0 ? 1 : 0
+                        Behavior on opacity { NumberAnimation { duration: 120 } }
+                    }
 
                     delegate: Item {
                         id: rowItem
@@ -557,10 +595,8 @@ Item {
                             anchors.topMargin: 2
                             anchors.bottomMargin: 2
                             radius: root.rSm
-                            color: rowItem.sel ? root.cSel
-                                   : rowMouse.containsMouse ? root.cHover : "transparent"
-                            border.width: rowItem.sel ? 1 : 0
-                            border.color: root.cSelRim
+                            color: (!rowItem.sel && rowMouse.containsMouse) ? root.cHover : "transparent"
+                            Behavior on color { ColorAnimation { duration: 100 } }
                         }
 
                         Row {
@@ -572,6 +608,10 @@ Item {
                             Item {
                                 anchors.verticalCenter: parent.verticalCenter
                                 width: root.f(34); height: root.f(34)
+                                scale: rowItem.sel ? 1.07 : 1
+                                Behavior on scale {
+                                    NumberAnimation { duration: 170; easing.type: Easing.OutBack; easing.overshoot: 2.4 }
+                                }
 
                                 Image {
                                     anchors.fill: parent
@@ -701,10 +741,13 @@ Item {
         visible: opacity > 0.01
         Behavior on opacity { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
 
-        Text {
+        ScrambleText {
             id: legendText
             anchors.centerIn: parent
-            text: "›  run      =  calc      /  files      ;  clipboard"
+            gateOnReveal: false
+            show: legend.opacity > 0.5 && Sh.launcherShown
+            span: 560
+            content: "›  run      =  calc      /  files      ;  clipboard"
             color: Qt.alpha(Theme.fg, 0.6)
             font.family: Sh.font
             font.pixelSize: root.f(root.tCaption)

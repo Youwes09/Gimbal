@@ -62,6 +62,9 @@ QtObject {
     readonly property string icLock:          "\ue10b"
     readonly property string icHardDrive:     "\ue0ed"
     readonly property string icMemory:        "\ue445"
+    readonly property string icBell:          "\ue059"
+    readonly property string icBellOff:       "\ue05a"
+    readonly property string icX:             "\ue1b2"
 
     function batteryGlyph(pct, charging) {
         if (charging)  return root.icBatteryChg

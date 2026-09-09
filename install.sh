@@ -117,22 +117,22 @@ cat <<EOF
 ${c_ok}Gimbal is installed.${c_off}
 
   gimbal start            run the daemon (put this in your compositor autostart)
-  gimbal toggle           summon / dismiss the overlay
   gimbal launch           the Spotlight launcher
+  gimbal toggle           summon / dismiss the overlay
   gimbal wallpaper next   cycle wallpaper
 
 Bind the two toggles in your compositor, e.g.
 
-  Hyprland   bind = SUPER, A,     exec, gimbal toggle
-             bind = SUPER SHIFT, A, exec, gimbal launch
+  Hyprland   bind = SUPER SHIFT, A, exec, gimbal launch
+             bind = SUPER, Tab,   exec, gimbal toggle
              exec-once = gimbal start
 
-  niri       binds { "Mod+A" { spawn "gimbal" "toggle"; }
-                      "Mod+Shift+A" { spawn "gimbal" "launch"; } }
+  niri       binds { "Mod+Shift+A" { spawn "gimbal" "launch"; }
+                      "Mod+Tab"   { spawn "gimbal" "toggle"; } }
              spawn-at-startup "gimbal" "start"
 
-  sway       bindsym \$mod+a exec gimbal toggle
-             bindsym \$mod+Shift+a exec gimbal launch
+  sway       bindsym $mod+Shift+a exec gimbal launch
+             bindsym \$mod+Tab exec gimbal toggle
              exec gimbal start
 
 Inside the overlay: w = wallpaper picker, arrows = arm power / cycle, esc = close.

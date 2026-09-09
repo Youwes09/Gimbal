@@ -34,6 +34,13 @@ QtObject {
     readonly property string dirOpen:
         _pick("dirOpen", "GIMBAL_DIR_OPEN", "smart")
 
+    readonly property bool raiseRunning:
+        root._j.raiseRunning !== undefined ? !!root._j.raiseRunning : true
+
+    readonly property var notifications:
+        (root._j.notifications && typeof root._j.notifications === "object")
+            ? root._j.notifications : ({})
+
     readonly property var fileRoots: {
         const env = (Quickshell.env("GIMBAL_FILE_ROOTS") || "").split(":").filter(s => s.length > 0)
         if (env.length > 0) return env.map(root._expand)

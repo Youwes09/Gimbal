@@ -8,6 +8,7 @@ ShellRoot {
     WallpaperWindow { }
     Overlay { id: overlay }
     LauncherWindow { id: launcher }
+    NotificationToasts { }
 
     IpcHandler {
         target: "overlay"
@@ -38,5 +39,15 @@ ShellRoot {
         function rescan():        void { Wallpapers.rescan() }
         function current():     string { return Wallpapers.current }
         function list():        string { return Wallpapers.list.map(w => w.name).join("\n") }
+    }
+
+    IpcHandler {
+        target: "notifications"
+
+        function toggle(): void { Sh.toggle("notifications") }
+        function open():   void { Sh.open("notifications") }
+        function dnd():  string { Notifications.toggleDnd(); return Notifications.dnd ? "on" : "off" }
+        function clear():  void { Notifications.clearAll() }
+        function state(): string { return Notifications.dnd ? "dnd" : "on" }
     }
 }

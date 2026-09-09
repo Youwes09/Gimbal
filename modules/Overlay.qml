@@ -172,7 +172,7 @@ PanelWindow {
         }
 
         TapHandler {
-            enabled: Sh.page !== "wallpaper"
+            enabled: Sh.page === "clock"
             onTapped: Sh.close()
         }
 
@@ -180,7 +180,7 @@ PanelWindow {
             id: clockLoader
             anchors.fill: parent
             sourceComponent: clockPage
-            opacity: Sh.page === "wallpaper" ? 0 : 1
+            opacity: Sh.page === "clock" ? 1 : 0
             visible: opacity > 0.01
             Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
             transform: Translate { y: Sh.powerPush }
@@ -198,6 +198,17 @@ PanelWindow {
         }
         Component { id: wallpaperPage; WallpaperCarousel {} }
 
+        Loader {
+            id: notifLoader
+            anchors.fill: parent
+            active: Sh.page === "notifications" || opacity > 0.01
+            sourceComponent: notifPage
+            opacity: Sh.page === "notifications" ? 1 : 0
+            visible: opacity > 0.01
+            Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+        }
+        Component { id: notifPage; NotificationsPage {} }
+
         Rectangle {
             anchors.fill: parent
             color: "black"
@@ -210,7 +221,7 @@ PanelWindow {
     Connections {
         target: Sh
         function onPageChanged() {
-            if (Sh.page === "wallpaper" && powerArm.armed !== "") powerArm.cancel()
+            if (Sh.page !== "clock" && powerArm.armed !== "") powerArm.cancel()
         }
     }
 
@@ -275,22 +286,27 @@ PanelWindow {
         focus: true
 
         readonly property bool wall: Sh.page === "wallpaper"
+        readonly property bool notif: Sh.page === "notifications"
+        readonly property bool home: Sh.page === "clock"
 
         Keys.onPressed: (e) => {
             if (e.key === Qt.Key_W) {
                 Sh.page = keyCatch.wall ? "clock" : "wallpaper"
                 e.accepted = true
+            } else if (e.key === Qt.Key_N) {
+                Sh.page = keyCatch.notif ? "clock" : "notifications"
+                e.accepted = true
             }
         }
         Keys.onEscapePressed: {
-            if (keyCatch.wall) { Sh.close(); return }
+            if (!keyCatch.home) { Sh.close(); return }
             if (powerArm.armed !== "") powerArm.cancel(); else Sh.close()
         }
         Keys.onLeftPressed:  if (keyCatch.wall && wallLoader.item) wallLoader.item.step(-1)
         Keys.onRightPressed: if (keyCatch.wall && wallLoader.item) wallLoader.item.step(1)
-        Keys.onUpPressed:    if (!keyCatch.wall) powerArm.key(true)
-        Keys.onDownPressed:  if (!keyCatch.wall) powerArm.key(false)
-        Keys.onReturnPressed: keyCatch.wall ? (wallLoader.item && wallLoader.item.apply()) : powerArm.confirm()
-        Keys.onEnterPressed:  keyCatch.wall ? (wallLoader.item && wallLoader.item.apply()) : powerArm.confirm()
+        Keys.onUpPressed:    if (keyCatch.home) powerArm.key(true)
+        Keys.onDownPressed:  if (keyCatch.home) powerArm.key(false)
+        Keys.onReturnPressed: keyCatch.wall ? (wallLoader.item && wallLoader.item.apply()) : (keyCatch.home && powerArm.confirm())
+        Keys.onEnterPressed:  keyCatch.wall ? (wallLoader.item && wallLoader.item.apply()) : (keyCatch.home && powerArm.confirm())
     }
 }

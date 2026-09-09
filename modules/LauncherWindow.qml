@@ -48,6 +48,8 @@ PanelWindow {
         anchors.fill: parent
         visible: root.active
         opacity: root.t
-        transform: Translate { y: (1 - root.t) * 8 }
+        transformOrigin: Item.Center
+        scale: 0.985 + 0.015 * root.t
+        transform: Translate { y: (1 - root.t) * 10 }
     }
 }

@@ -8,7 +8,7 @@
 
 Gimbal has no persistent chrome. You bind two keys:
 
-- **the overlay** — a circular reveal onto a clock page and a wallpaper picker, with a hold-to-confirm power/suspend arm
+- **the overlay** — a circular reveal onto a clock page, a wallpaper picker, and notification history, with a hold-to-confirm power/suspend arm
 - **the launcher** — a Spotlight-style bar: apps, files, clipboard history, a calculator, and run-a-command, all behind single-character prefixes, ranked by frecency, with an inspect card for previews
 
 It also owns your wallpaper (static / GIF / video, cross-faded on switch) and repaints itself from the wallpaper's colours.
@@ -27,6 +27,11 @@ It also owns your wallpaper (static / GIF / video, cross-faded on switch) and re
 - Files: `enter` = smart open (project dir → editor, else file manager), `ctrl+enter` = editor, `alt+enter` = file manager, `shift+enter` = terminal there. It **learns** your pick per directory.
 - Inspect card (`tab`) — text/image/video previews, colour swatches, binary metadata, app details; scrollable, mouse-locked
 - Clipboard rows show image thumbnails
+
+**Notifications**
+- Own `org.freedesktop.Notifications` server (disable mako / dunst / swaync)
+- Toasts drop from the top-centre as a shallow deck; hover pauses the timer, critical stays until dismissed
+- History page (`n` in the overlay) — grouped by app, per-item + clear-all, DND toggle, action buttons on still-live notifications
 
 **Wallpaper**
 - Quickshell draws it directly (kills `wbg` on start)
@@ -74,12 +79,12 @@ Fonts (AdwaitaMono, Lucide) are bundled in `assets/fonts/`.
 
 ```
 gimbal start            run the daemon (compositor autostart)
-gimbal toggle [page]    summon / dismiss the overlay  (page: clock | wallpaper)
 gimbal launch           the launcher
+gimbal toggle [page]    summon / dismiss the overlay  (page: clock | wallpaper | notifications)
 gimbal wallpaper …      next | prev | random | rescan | list | <name>
 ```
 
-**In the overlay:** `w` → wallpaper picker · `←`/`→` cycle · `enter` apply · `↑`/`↓` arm power · `esc` close
+**In the overlay:** `w` → wallpaper picker · `n` → notifications · `←`/`→` cycle · `enter` apply · `↑`/`↓` arm power · `esc` close
 
 **In the launcher:** type a prefix, `↑`/`↓` to move, `tab` to inspect, `enter` to run.
 
@@ -89,8 +94,8 @@ gimbal wallpaper …      next | prev | random | rescan | list | <name>
 
 ```
 exec-once=gimbal start
-bind=SUPER,a,spawn_shell,gimbal toggle
 bind=SUPER+SHIFT,a,spawn_shell,gimbal launch
+bind=SUPER,Tab,spawn_shell,gimbal toggle
 ```
 </details>
 
@@ -98,8 +103,8 @@ bind=SUPER+SHIFT,a,spawn_shell,gimbal launch
 
 ```
 exec-once = gimbal start
-bind = SUPER, A, exec, gimbal toggle
 bind = SUPER SHIFT, A, exec, gimbal launch
+bind = SUPER, Tab, exec, gimbal toggle
 ```
 </details>
 
@@ -108,8 +113,8 @@ bind = SUPER SHIFT, A, exec, gimbal launch
 ```
 spawn-at-startup "gimbal" "start"
 binds {
-    "Mod+A"       { spawn "gimbal" "toggle"; }
     "Mod+Shift+A" { spawn "gimbal" "launch"; }
+    "Mod+Tab"     { spawn "gimbal" "toggle"; }
 }
 ```
 </details>
@@ -118,8 +123,8 @@ binds {
 
 ```
 exec gimbal start
-bindsym $mod+a exec gimbal toggle
 bindsym $mod+Shift+a exec gimbal launch
+bindsym $mod+Tab exec gimbal toggle
 ```
 </details>
 
