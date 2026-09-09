@@ -1,0 +1,135 @@
+#!/usr/bin/env bash
+
+repo="$(dirname "$(readlink -f "$0")")"
+
+export_render_loop() {
+    [ -z "$QSG_RENDER_LOOP" ] && export QSG_RENDER_LOOP=threaded
+}
+
+export_qtmultimedia() {
+    local d
+    for d in /nix/store/*-qtmultimedia-*/lib/qt-6; do
+        [ -d "$d/qml/QtMultimedia" ] || continue
+        export NIXPKGS_QT6_QML_IMPORT_PATH="$d/qml${NIXPKGS_QT6_QML_IMPORT_PATH:+:$NIXPKGS_QT6_QML_IMPORT_PATH}"
+        export QML2_IMPORT_PATH="$d/qml${QML2_IMPORT_PATH:+:$QML2_IMPORT_PATH}"
+        export QT_PLUGIN_PATH="$d/plugins${QT_PLUGIN_PATH:+:$QT_PLUGIN_PATH}"
+        export QT_MEDIA_BACKEND="${QT_MEDIA_BACKEND:-ffmpeg}"
+        break
+    done
+}
+
+export_ffmpeg() {
+    command -v ffmpeg >/dev/null && return
+    local f
+    for f in /nix/store/*-ffmpeg*-bin/bin/ffmpeg; do
+        [ -x "$f" ] || continue
+        export PATH="${f%/ffmpeg}${PATH:+:$PATH}"
+        break
+    done
+}
+
+export_magick() {
+    command -v magick >/dev/null && return
+    local f
+    for f in /nix/store/*-imagemagick-*/bin/magick; do
+        [ -x "$f" ] || continue
+        export PATH="${f%/magick}${PATH:+:$PATH}"
+        break
+    done
+}
+
+export_env() {
+    export_render_loop; export_qtmultimedia; export_ffmpeg; export_magick
+}
+
+ipc() {
+    local target="$1" fn="$2"; shift 2
+    qs -p "$repo" ipc -n call "$target" "$fn" "$@" 2>/dev/null
+}
+running_pids() { pgrep -f "(^|/)(qs|quickshell) -p $repo( |\$)"; }
+ensure_daemon() {
+    running_pids >/dev/null && return 0
+    export_env
+    setsid -f qs -p "$repo" >/dev/null 2>&1
+    for _ in $(seq 1 50); do sleep 0.1; running_pids >/dev/null && return 0; done
+    return 1
+}
+reap_duplicates() {
+    mapfile -t pids < <(running_pids | sort -n)
+    while [ "${#pids[@]}" -gt 1 ]; do
+        kill "${pids[0]}" 2>/dev/null
+        pids=("${pids[@]:1}")
+    done
+}
+stop_daemon() {
+    reap_duplicates
+    pids=$(running_pids)
+    [ -n "$pids" ] && kill $pids
+}
+
+usage() {
+    cat <<'EOF'
+gimbal — summoned-overlay shell daemon control
+
+  gimbal start            start the persistent daemon (spawn-at-startup)
+  gimbal stop             stop the daemon
+  gimbal restart          stop, then start
+  gimbal toggle [page]    show/hide the overlay; optional page id (clock|wallpaper)
+  gimbal launch           show/hide the launcher
+  gimbal wallpaper [name|next|prev|random|rescan|list]
+                          manage the wallpaper (no arg prints the current one)
+  gimbal help             show this message
+EOF
+}
+
+case "$1" in
+start)
+    running_pids >/dev/null && exit 0
+    export_env
+    exec qs -p "$repo"
+    ;;
+stop)
+    stop_daemon
+    ;;
+restart)
+    stop_daemon
+    for _ in $(seq 1 50); do running_pids >/dev/null || break; sleep 0.1; done
+    export_env
+    setsid -f qs -p "$repo" >/dev/null 2>&1
+    ;;
+toggle)
+    reap_duplicates
+    ipc overlay toggle "$2" && exit 0
+    ensure_daemon || exit 1
+    for _ in $(seq 1 50); do sleep 0.1; ipc overlay toggle "$2" && exit 0; done
+    exit 1
+    ;;
+launch)
+    reap_duplicates
+    ipc launcher toggle && exit 0
+    ensure_daemon || exit 1
+    for _ in $(seq 1 50); do sleep 0.1; ipc launcher toggle && exit 0; done
+    exit 1
+    ;;
+wallpaper)
+    reap_duplicates
+    case "$2" in
+        next | prev | random | rescan) fn="$2"; arg=() ;;
+        list)                          fn="list"; arg=() ;;
+        "")                            fn="current"; arg=() ;;
+        *)                             fn="set"; arg=("$2") ;;
+    esac
+    ipc wallpaper "$fn" "${arg[@]}" && exit 0
+    ensure_daemon || exit 1
+    for _ in $(seq 1 50); do sleep 0.1; ipc wallpaper "$fn" "${arg[@]}" && exit 0; done
+    exit 1
+    ;;
+help | "")
+    usage
+    ;;
+*)
+    echo "gimbal: unknown command '$1'" >&2
+    usage >&2
+    exit 1
+    ;;
+esac
