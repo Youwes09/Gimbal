@@ -42,10 +42,13 @@ Item {
     function _fire(which) {
         root.armed = ""
         disarm.stop()
-        Quickshell.execDetached(which === "power"
-            ? ["systemctl", "poweroff"]
-            : ["systemctl", "suspend"])
-        Sh.close()
+        if (which === "power") {
+            Quickshell.execDetached(["systemctl", "poweroff"])
+            Sh.close()
+        } else {
+            Sh.beginSuspend()
+            Quickshell.execDetached(["systemctl", "suspend"])
+        }
     }
     function _arm(which) {
         root.armed = which

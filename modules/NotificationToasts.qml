@@ -6,7 +6,6 @@ import "root:/modules"
 
 PanelWindow {
     id: win
-    visible: true
     color: "transparent"
 
     WlrLayershell.layer: WlrLayer.Overlay
@@ -23,7 +22,15 @@ PanelWindow {
     implicitWidth: cardW + pad * 2
     implicitHeight: topGap + cardH * 2 + Sh.fs(48)
 
-    mask: Region { item: clipArea }
+    readonly property bool hasToast: Notifications.popupModel.count > 0 && !Sh.shown
+
+    visible: hasToast || linger.running
+    onHasToastChanged: if (hasToast) linger.stop(); else linger.restart()
+    Timer { id: linger; interval: 340 }
+
+    mask: win.hasToast ? toastRegion : emptyRegion
+    Region { id: toastRegion; item: clipArea }
+    Region { id: emptyRegion }
 
     function _strip(s) {
         return String(s || "")
@@ -42,7 +49,7 @@ PanelWindow {
         x: (win.width - win.cardW) / 2
         y: win.topGap
         width: win.cardW
-        height: win.cardH * 2
+        height: win.cardH
 
         ListView {
             id: stack
@@ -127,25 +134,11 @@ PanelWindow {
                         anchors.rightMargin: Sh.fs(14)
                         spacing: Sh.fs(13)
 
-                        Item {
+                        AppIcon {
                             width: Sh.fs(27); height: Sh.fs(27)
                             anchors.verticalCenter: parent.verticalCenter
-                            Image {
-                                id: appImg
-                                anchors.fill: parent
-                                source: win._iconSource(card.model.appIcon)
-                                visible: source.toString().length > 0 && status === Image.Ready
-                                sourceSize.width: 54; sourceSize.height: 54
-                                smooth: true; mipmap: true
-                            }
-                            Text {
-                                anchors.centerIn: parent
-                                visible: !appImg.visible
-                                text: Sh.icBell
-                                color: Theme.muted
-                                font.family: Sh.iconFont
-                                font.pixelSize: Sh.fs(17)
-                            }
+                            icon: card.model.appIcon
+                            fallbackGlyph: Sh.icBell
                         }
 
                         Column {

@@ -82,11 +82,25 @@ Item {
             cats:     (a.categories || []).join(", "),
             run:      () => {
                 Frecency.bump("app:" + a.id)
+                const go = () => {
+                    if (!a.runInTerminal && a.command && a.command.length) Compositor.spawn(a.command)
+                    else a.execute()
+                    Launches.begin(a.name, Quickshell.iconPath(a.icon, true),
+                                   [a.startupClass, a.id, a.name])
+                }
                 if (Config.raiseRunning)
-                    Compositor.raiseOrRun([a.startupClass, a.id, a.name], () => a.execute())
-                else a.execute()
+                    Compositor.raiseOrRun([a.startupClass, a.id, a.name], go)
+                else go()
             },
-            runNew:   () => { Frecency.bump("app:" + a.id); a.execute() }
+            runNew:   () => {
+                Frecency.bump("app:" + a.id)
+                if (!a.runInTerminal && a.command && a.command.length) Compositor.spawn(a.command)
+                else a.execute()
+                Launches.begin(a.name, Quickshell.iconPath(a.icon, true),
+                               [a.startupClass, a.id, a.name])
+            },
+            kill:     () => Compositor.killApp([a.startupClass, a.id, a.name],
+                                              (a.command && a.command[0]) || "")
         }
     }
     readonly property var appResults: {
@@ -213,6 +227,49 @@ Item {
         }]
     }
 
+    readonly property var _capActions: [
+        { id: "cap:shot-region", title: "Screenshot — region", hint: "select an area",
+          glyph: Sh.icMonitor, act: () => Capture.shot("region"),
+          keys: ["screenshot", "screen shot", "snip", "region", "capture", "grab", "printscreen", "print screen"] },
+        { id: "cap:shot-full", title: "Screenshot — full screen", hint: "whole display",
+          glyph: Sh.icMonitor, act: () => Capture.shot("full"),
+          keys: ["screenshot full", "fullscreen", "full screen", "screenshot screen", "capture screen"] },
+        { id: "cap:rec", title: Capture.recording ? "Stop recording" : "Record — full screen",
+          hint: Capture.recording ? "finish and save" : "screen recording",
+          glyph: Capture.recording ? Sh.icPause : Sh.icPlay, act: () => Capture.recToggle(),
+          keys: ["record", "screen record", "recording", "screencast", "capture video"] },
+        { id: "cap:rec-region", title: "Record — region", hint: "record an area",
+          glyph: Sh.icPlay, act: () => Capture.recStart("region"), keys: ["record region"] },
+        { id: "cap:annotate", title: "Annotate last screenshot", hint: "arrows · text · blur",
+          glyph: Sh.icTheme, act: () => Capture.annotate(), need: () => Capture.lastShot.length > 0,
+          keys: ["annotate", "markup", "edit screenshot", "draw"] },
+        { id: "cap:last", title: "Open last capture", hint: "view · specs · actions",
+          glyph: Sh.icFile, act: () => Sh.open("capture"),
+          keys: ["screenshots", "last screenshot", "captures", "last capture"] }
+    ]
+    function _capRow(a) {
+        return {
+            id: a.id, title: a.title, path: a.hint || "", kind: "action",
+            iconPath: "", iconGlyph: a.glyph, body: "",
+            run: a.act
+        }
+    }
+    readonly property var captureResults: {
+        const _ = Capture.recording
+        const q = root.q.toLowerCase().trim()
+        if (q.length < 2) return []
+        const out = []
+        for (const a of root._capActions) {
+            if (a.need && !a.need()) continue
+            let hit = false
+            for (const k of a.keys) {
+                if (k.indexOf(q) >= 0 || q.indexOf(k) === 0) { hit = true; break }
+            }
+            if (hit) out.push(root._capRow(a))
+        }
+        return out
+    }
+
     ClipboardList {
         id: clipboard
         filterText: root.mode === "clipboard" ? root.q : ""
@@ -239,7 +296,7 @@ Item {
         : root.mode === "files"     ? root.fileResults
         : root.mode === "calc"      ? root.calcResults
         : root.mode === "run"       ? root.runResults
-        : root.appResults
+        : root.captureResults.concat(root.appResults)
     onResultsChanged: { selected = 0; inspectOpen = false }
     readonly property var current: results.length > 0
         ? results[Math.max(0, Math.min(selected, results.length - 1))] : null
@@ -271,6 +328,7 @@ Item {
     function _kindLabel(kind) {
         return kind === "app" ? "App" : kind === "dir" ? "Folder" : kind === "file" ? "File"
              : kind === "run" ? "Command" : kind === "calc" ? "Result"
+             : kind === "action" ? "Action"
              : kind === "link" ? "Link" : kind === "image" ? "Image"
              : kind === "color" ? "Color" : "Text"
     }
@@ -347,7 +405,19 @@ Item {
     }
     function activate()    { root.activateWith("") }
     function activateAlt() { root.activateWith("terminal") }
-    readonly property var _noInspect: ["run", "calc"]
+    function _enter(ev) {
+        ev.accepted = true
+        if (ev.isAutoRepeat || root._fired) return
+        root._fired = true
+        Qt.callLater(() => root._fired = false)
+        const k = root.current ? root.current.kind : ""
+        if (ev.modifiers & Qt.ShiftModifier)        root.activateWith(k === "app" ? "new" : "terminal")
+        else if (ev.modifiers & Qt.ControlModifier) root.activateWith("editor")
+        else if (ev.modifiers & Qt.AltModifier)     root.activateWith("manager")
+        else root.activate()
+    }
+    property bool _fired: false
+    readonly property var _noInspect: ["run", "calc", "action"]
     function toggleInspect() {
         if (!root.current || root._noInspect.indexOf(root.current.kind) >= 0) return
         root.inspectOpen = !root.inspectOpen
@@ -471,19 +541,19 @@ Item {
                                     ev.accepted = true
                                     return
                                 }
-                                if (ev.key === Qt.Key_Return || ev.key === Qt.Key_Enter) {
-                                    const k = root.current ? root.current.kind : ""
-                                    if (ev.modifiers & Qt.ShiftModifier)        root.activateWith(k === "app" ? "new" : "terminal")
-                                    else if (ev.modifiers & Qt.ControlModifier) root.activateWith("editor")
-                                    else if (ev.modifiers & Qt.AltModifier)     root.activateWith("manager")
-                                    else return
+                                if (ev.key === Qt.Key_Delete && root.current && root.current.kind === "app"
+                                        && root.current.kill
+                                        && ((ev.modifiers & Qt.ShiftModifier)
+                                            || input.cursorPosition === input.text.length)) {
+                                    root.current.kill()
                                     ev.accepted = true
+                                    return
                                 }
                             }
                             Keys.onDownPressed: root.selected = Math.min(root.results.length - 1, root.selected + 1)
                             Keys.onUpPressed:   root.selected = Math.max(0, root.selected - 1)
-                            Keys.onReturnPressed: root.activate()
-                            Keys.onEnterPressed:  root.activate()
+                            Keys.onReturnPressed: (ev) => root._enter(ev)
+                            Keys.onEnterPressed:  (ev) => root._enter(ev)
                         }
                         ScrambleText {
                             anchors.fill: parent
@@ -613,13 +683,10 @@ Item {
                                     NumberAnimation { duration: 170; easing.type: Easing.OutBack; easing.overshoot: 2.4 }
                                 }
 
-                                Image {
+                                AppIcon {
                                     anchors.fill: parent
                                     visible: modelData.iconPath && modelData.iconPath.length > 0
-                                    source: modelData.iconPath || ""
-                                    sourceSize.width: 128; sourceSize.height: 128
-                                    smooth: true
-                                    mipmap: true
+                                    icon: modelData.iconPath || ""
                                 }
 
                                 ClippingRectangle {
@@ -650,7 +717,7 @@ Item {
                                     anchors.centerIn: parent
                                     visible: !(modelData.iconPath && modelData.iconPath.length > 0)
                                              && !rowItem.isImg && modelData.kind !== "color"
-                                    text: root._glyph(modelData.kind)
+                                    text: modelData.iconGlyph || root._glyph(modelData.kind)
                                     color: rowItem.sel ? Theme.accent : Theme.muted
                                     font.family: Sh.iconFont
                                     font.pixelSize: root.f(20)
@@ -775,6 +842,9 @@ Item {
 
         readonly property string _fk: root._curIsFile ? fileInspect.kind : ""
 
+        readonly property bool _fkSvg: inspectLayer._fk === "image" && inspectLayer._c
+            && /\.svgz?$/i.test(inspectLayer._c.body || "")
+
         readonly property bool _hasPreview:
               (_c && (_c.kind === "image" || _c.kind === "color" || _c.kind === "app"))
             || _fk === "image" || _fk === "video" || _fk === "text"
@@ -867,8 +937,14 @@ Item {
                             fillMode: Image.PreserveAspectFit
                             cache: false
                             asynchronous: true
-                            source: inspectLayer._fk === "image"
+                            visible: !inspectLayer._fkSvg
+                            source: inspectLayer._fk === "image" && !inspectLayer._fkSvg
                                     ? "file://" + inspectLayer._c.body : ""
+                        }
+                        AppIcon {
+                            anchors.fill: parent
+                            visible: inspectLayer._fkSvg
+                            icon: inspectLayer._fkSvg ? ("file://" + inspectLayer._c.body) : ""
                         }
                     }
 
@@ -904,16 +980,11 @@ Item {
                         spacing: root.sp3
                         visible: inspectLayer._c && inspectLayer._c.kind === "app"
 
-                        Image {
+                        AppIcon {
                             anchors.horizontalCenter: parent.horizontalCenter
                             readonly property real d: Math.min(inspectLayer.bodyH - root.f(72), root.f(148))
                             width: d; height: d
-                            source: inspectLayer._c && inspectLayer._c.kind === "app" ? (inspectLayer._c.iconPath || "") : ""
-
-                            sourceSize.width: 128; sourceSize.height: 128
-                            fillMode: Image.PreserveAspectFit
-                            smooth: true
-                            mipmap: true
+                            icon: inspectLayer._c && inspectLayer._c.kind === "app" ? (inspectLayer._c.iconPath || "") : ""
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter

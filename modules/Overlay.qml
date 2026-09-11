@@ -8,7 +8,7 @@ import "root:/pages"
 PanelWindow {
     id: root
 
-    visible: true
+    visible: !Sh.captureVeil
     readonly property bool open: Sh.shown === true
 
     anchors { left: true; right: true; top: true; bottom: true }
@@ -40,7 +40,6 @@ PanelWindow {
 
     onOpenChanged: {
         if (root.open) {
-            wallWarm.warm()
             closeAnim.stop()
             root.active = true
             Sh.reveal = 0
@@ -172,8 +171,14 @@ PanelWindow {
         }
 
         TapHandler {
-            enabled: Sh.page === "clock"
-            onTapped: Sh.close()
+            enabled: Sh.page === "clock" || Sh.page === "suspend"
+            onTapped: {
+                if (Sh.page === "suspend") {
+                    if (suspendLoader.item) suspendLoader.item.tryDismiss()
+                    return
+                }
+                Sh.close()
+            }
         }
 
         Loader {
@@ -209,74 +214,41 @@ PanelWindow {
         }
         Component { id: notifPage; NotificationsPage {} }
 
+        Loader {
+            id: suspendLoader
+            anchors.fill: parent
+            active: Sh.page === "suspend" || opacity > 0.01
+            sourceComponent: suspendPage
+            opacity: Sh.page === "suspend" ? 1 : 0
+            visible: opacity > 0.01
+            Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+        }
+        Component { id: suspendPage; SuspendScreen {} }
+
+        Loader {
+            id: captureLoader
+            anchors.fill: parent
+            active: Sh.page === "capture" || opacity > 0.01
+            sourceComponent: capturePage
+            opacity: Sh.page === "capture" ? 1 : 0
+            visible: opacity > 0.01
+            Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+        }
+        Component { id: capturePage; CapturePage {} }
+
         Rectangle {
             anchors.fill: parent
             color: "black"
             opacity: Sh.powerDim
         }
 
-        PowerArm { id: powerArm; anchors.fill: parent }
+        PowerArm { id: powerArm; anchors.fill: parent; enabled: Sh.page === "clock" }
     }
 
     Connections {
         target: Sh
         function onPageChanged() {
             if (Sh.page !== "clock" && powerArm.armed !== "") powerArm.cancel()
-        }
-    }
-
-    Item {
-        id: wallWarm
-        opacity: 0
-        width: 2; height: 2
-
-        readonly property int warmH: Sh.fs(360)
-        property var queue: []
-        property int qi: 0
-
-        function warm() {
-            const L = Wallpapers.list
-            if (!L || L.length === 0) return
-            const c = Math.max(0, Wallpapers._idx())
-            const order = [0, -1, 1, -2, 2]
-            const out = []
-            for (const d of order) {
-                const w = L[((c + d) % L.length + L.length) % L.length]
-                if (!w) continue
-                const u = w.video
-                    ? (w.poster && w.poster.length > 0
-                        ? "file://" + w.poster + "?v=" + Wallpapers.posterRev : "")
-                    : "file://" + w.path
-                if (u.length > 0 && out.indexOf(u) < 0) out.push(u)
-            }
-            wallWarm.queue = out
-            wallWarm.qi = 0
-            wallWarm._pull()
-        }
-        function _pull() {
-            warmImg.source = (qi < queue.length) ? queue[qi] : ""
-        }
-        Component.onCompleted: warm()
-        Connections {
-            target: Wallpapers
-            function onCurrentChanged()   { wallWarm.warm() }
-            function onListChanged()      { wallWarm.warm() }
-            function onPosterRevChanged() { wallWarm.warm() }
-        }
-
-        Image {
-            id: warmImg
-            asynchronous: true
-            cache: true
-            sourceSize.height: wallWarm.warmH
-            width: 2; height: 2
-            fillMode: Image.PreserveAspectCrop
-            onStatusChanged: {
-                if (status === Image.Ready || status === Image.Error) {
-                    wallWarm.qi++
-                    Qt.callLater(wallWarm._pull)
-                }
-            }
         }
     }
 
@@ -288,25 +260,80 @@ PanelWindow {
         readonly property bool wall: Sh.page === "wallpaper"
         readonly property bool notif: Sh.page === "notifications"
         readonly property bool home: Sh.page === "clock"
+        readonly property bool cap: Sh.page === "capture"
 
         Keys.onPressed: (e) => {
+            if (Sh.page === "suspend") {
+                if (suspendLoader.item) suspendLoader.item.tryDismiss()
+                e.accepted = true
+                return
+            }
+            if (keyCatch.cap && captureLoader.item) {
+                const it = captureLoader.item
+                if (e.key === Qt.Key_C) { it.copy(); e.accepted = true; return }
+                if (e.key === Qt.Key_A) { it.annotate(); e.accepted = true; return }
+                if (e.key === Qt.Key_O) { it.open(); e.accepted = true; return }
+                if (e.key === Qt.Key_R) { it.reveal(); e.accepted = true; return }
+                if (e.key === Qt.Key_Delete || e.key === Qt.Key_Backspace || e.key === Qt.Key_X) {
+                    it.discard(); e.accepted = true; return
+                }
+            }
             if (e.key === Qt.Key_W) {
                 Sh.page = keyCatch.wall ? "clock" : "wallpaper"
                 e.accepted = true
             } else if (e.key === Qt.Key_N) {
                 Sh.page = keyCatch.notif ? "clock" : "notifications"
                 e.accepted = true
+            } else if (e.key === Qt.Key_S) {
+                Sh.page = keyCatch.cap ? "clock" : "capture"
+                e.accepted = true
+            } else if (keyCatch.notif && e.key === Qt.Key_D) {
+                Notifications.toggleDnd()
+                e.accepted = true
+            } else if (keyCatch.notif && e.key === Qt.Key_C) {
+                Notifications.clearAll()
+                e.accepted = true
+            } else if (keyCatch.notif && notifLoader.item
+                       && (e.key === Qt.Key_Delete || e.key === Qt.Key_Backspace || e.key === Qt.Key_X)) {
+                notifLoader.item.dropSel()
+                e.accepted = true
             }
         }
         Keys.onEscapePressed: {
+            if (Sh.page === "suspend") {
+                if (suspendLoader.item) suspendLoader.item.tryDismiss()
+                return
+            }
             if (!keyCatch.home) { Sh.close(); return }
             if (powerArm.armed !== "") powerArm.cancel(); else Sh.close()
         }
-        Keys.onLeftPressed:  if (keyCatch.wall && wallLoader.item) wallLoader.item.step(-1)
-        Keys.onRightPressed: if (keyCatch.wall && wallLoader.item) wallLoader.item.step(1)
-        Keys.onUpPressed:    if (keyCatch.home) powerArm.key(true)
-        Keys.onDownPressed:  if (keyCatch.home) powerArm.key(false)
-        Keys.onReturnPressed: keyCatch.wall ? (wallLoader.item && wallLoader.item.apply()) : (keyCatch.home && powerArm.confirm())
-        Keys.onEnterPressed:  keyCatch.wall ? (wallLoader.item && wallLoader.item.apply()) : (keyCatch.home && powerArm.confirm())
+        Keys.onLeftPressed: {
+            if (keyCatch.wall && wallLoader.item) wallLoader.item.step(-1)
+            else if (keyCatch.cap) Capture.browse(-1)
+        }
+        Keys.onRightPressed: {
+            if (keyCatch.wall && wallLoader.item) wallLoader.item.step(1)
+            else if (keyCatch.cap) Capture.browse(1)
+        }
+        Keys.onUpPressed: {
+            if (keyCatch.home) powerArm.key(true)
+            else if (keyCatch.notif && notifLoader.item) notifLoader.item.moveSel(-1)
+        }
+        Keys.onDownPressed: {
+            if (keyCatch.home) powerArm.key(false)
+            else if (keyCatch.notif && notifLoader.item) notifLoader.item.moveSel(1)
+        }
+        Keys.onReturnPressed: {
+            if (keyCatch.wall && wallLoader.item) wallLoader.item.apply()
+            else if (keyCatch.notif && notifLoader.item) notifLoader.item.actSel()
+            else if (keyCatch.cap && captureLoader.item) captureLoader.item.copyAndClose()
+            else if (keyCatch.home) powerArm.confirm()
+        }
+        Keys.onEnterPressed: {
+            if (keyCatch.wall && wallLoader.item) wallLoader.item.apply()
+            else if (keyCatch.notif && notifLoader.item) notifLoader.item.actSel()
+            else if (keyCatch.cap && captureLoader.item) captureLoader.item.copyAndClose()
+            else if (keyCatch.home) powerArm.confirm()
+        }
     }
 }

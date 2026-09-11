@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Effects
 import Quickshell
-import Quickshell.Widgets
 import "root:/modules"
 
 Item {
@@ -10,10 +9,58 @@ Item {
 
     function f(px) { return Sh.fs(px) }
 
-    readonly property var items: {
-        const h = Notifications.history.slice()
-        h.sort((a, b) => a.app === b.app ? b.time - a.time : a.app.localeCompare(b.app))
-        return h
+    readonly property color fg:     Qt.rgba(1, 1, 1, 0.97)
+    readonly property color muted:  Qt.rgba(1, 1, 1, 0.5)
+    readonly property color faint:  Qt.rgba(1, 1, 1, 0.26)
+    readonly property color accent: Theme.accent
+
+    readonly property int count: Notifications.historyModel.count
+    property int selected: 0
+
+    function cardH() { return root.f(82) }
+    function gap()   { return root.f(12) }
+    function step()  { return root.f(82) + root.f(12) }
+
+    property bool _ready: false
+    readonly property int half: 3
+    property int centerIdx: 0
+
+    onCountChanged: {
+        root.selected = Math.max(0, Math.min(root.selected, root.count - 1))
+        root._reflow()
+    }
+    onSelectedChanged: root._reflow()
+    onHeightChanged: root._reflow()
+    Component.onCompleted: {
+        root._reflow()
+        Qt.callLater(() => root._ready = true)
+    }
+
+    function _reflow() {
+        if (root.count === 0) { strip.scrollY = root.height / 2; return }
+        var lo = root.half
+        var hi = root.count - 1 - root.half
+        root.centerIdx = (hi < lo)
+            ? Math.round((root.count - 1) / 2)
+            : Math.max(lo, Math.min(hi, root.selected))
+        strip.scrollY = root.height / 2 - root.cardH() / 2 - root.centerIdx * root.step()
+    }
+
+
+    function moveSel(d) {
+        if (root.count === 0) return
+        root.selected = Math.max(0, Math.min(root.count - 1, root.selected + d))
+    }
+    function actSel() {
+        if (root.count === 0) return
+        const r = Notifications.historyModel.get(root.selected)
+        Notifications.focusSender(r)
+        Notifications.invoke(r.nid, "")
+        Notifications.dismiss(r.nid)
+    }
+    function dropSel() {
+        if (root.count === 0) return
+        Notifications.dismiss(Notifications.historyModel.get(root.selected).nid)
     }
 
     function _ago(ms) {
@@ -26,6 +73,7 @@ Item {
     function _strip(s) {
         return String(s || "").replace(/<[^>]+>/g, "")
             .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+            .replace(/&#39;|&apos;/g, "'").replace(/&quot;/g, '"')
             .replace(/\s+/g, " ").trim()
     }
     function _icon(s) {
@@ -34,279 +82,232 @@ Item {
     }
 
     Item {
-        id: panelWrap
-        anchors.horizontalCenter: parent.horizontalCenter
-        y: Math.round(parent.height * 0.16)
-        width: Math.min(root.f(660), parent.width * 0.5)
-        height: Math.min(root.f(620), parent.height * 0.68)
-
-        layer.enabled: true
-        layer.effect: MultiEffect {
-            shadowEnabled: true
-            shadowColor: Qt.rgba(0, 0, 0, 0.42)
-            shadowBlur: 1.0
-            shadowVerticalOffset: root.f(12)
-            blurMax: 64
+        id: sheet
+        anchors.fill: parent
+        opacity: 0
+        Component.onCompleted: fade.start()
+        NumberAnimation {
+            id: fade
+            target: sheet; property: "opacity"; to: 1
+            duration: 240; easing.type: Easing.OutCubic
         }
 
-        Rectangle {
-            id: panel
-            anchors.fill: parent
-            radius: root.f(18)
-            color: Theme.surface
-            clip: true
-            border.width: 1
-            border.color: Qt.rgba(1, 1, 1, 0.06)
-
-            Item {
-                id: header
-                anchors { top: parent.top; left: parent.left; right: parent.right }
-                height: root.f(56)
-
-                Text {
-                    anchors { left: parent.left; leftMargin: root.f(20); verticalCenter: parent.verticalCenter }
-                    text: "NOTIFICATIONS"
-                    color: Theme.muted
-                    font.family: Sh.font
-                    font.pixelSize: root.f(12)
-                    font.letterSpacing: 1.5
-                }
-
-                Row {
-                    anchors { right: parent.right; rightMargin: root.f(14); verticalCenter: parent.verticalCenter }
-                    spacing: root.f(8)
-
-                    Rectangle {
-                        width: dndRow.implicitWidth + root.f(18)
-                        height: root.f(28)
-                        radius: root.f(8)
-                        color: Notifications.dnd ? Qt.alpha(Theme.accent, 0.16) : Qt.rgba(1, 1, 1, 0.04)
-                        border.width: 1
-                        border.color: Notifications.dnd ? Qt.alpha(Theme.accent, 0.4) : Qt.rgba(1, 1, 1, 0.06)
-                        Row {
-                            id: dndRow
-                            anchors.centerIn: parent
-                            spacing: root.f(6)
-                            Text {
-                                anchors.verticalCenter: parent.verticalCenter
-                                text: Notifications.dnd ? Sh.icBellOff : Sh.icBell
-                                color: Notifications.dnd ? Theme.accent : Theme.muted
-                                font.family: Sh.iconFont
-                                font.pixelSize: root.f(13)
-                            }
-                            Text {
-                                anchors.verticalCenter: parent.verticalCenter
-                                text: Notifications.dnd ? "DND on" : "DND"
-                                color: Notifications.dnd ? Theme.accent : Theme.muted
-                                font.family: Sh.font
-                                font.pixelSize: root.f(11)
-                            }
-                        }
-                        MouseArea { anchors.fill: parent; onClicked: Notifications.toggleDnd() }
-                    }
-
-                    Rectangle {
-                        width: clrText.implicitWidth + root.f(18)
-                        height: root.f(28)
-                        radius: root.f(8)
-                        visible: root.items.length > 0
-                        color: clrArea.containsMouse ? Qt.rgba(1, 1, 1, 0.06) : "transparent"
-                        Text {
-                            id: clrText
-                            anchors.centerIn: parent
-                            text: "Clear all"
-                            color: Theme.muted
-                            font.family: Sh.font
-                            font.pixelSize: root.f(11)
-                        }
-                        MouseArea {
-                            id: clrArea
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            onClicked: Notifications.clearAll()
-                        }
-                    }
-                }
-
-                Rectangle {
-                    anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
-                    height: 1
-                    color: Theme.rim
-                }
+        Item {
+            id: emptyState
+            anchors.centerIn: parent
+            width: root.f(120); height: root.f(120)
+            opacity: root.count === 0 ? 1 : 0
+            visible: opacity > 0.01
+            scale: root.count === 0 ? 1 : 0.86
+            Behavior on opacity { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
+            Behavior on scale {
+                NumberAnimation { duration: 360; easing.type: Easing.OutBack; easing.overshoot: 1.4 }
             }
 
-            ListView {
-                id: list
-                anchors { top: header.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
-                anchors.margins: root.f(6)
-                clip: true
-                model: root.items
-                boundsBehavior: Flickable.StopAtBounds
-                spacing: 0
+            Text {
+                anchors.centerIn: parent
+                text: Notifications.dnd ? Sh.icBellOff : Sh.icBell
+                color: Notifications.dnd ? root.accent : Qt.rgba(1, 1, 1, 0.3)
+                font.family: Sh.iconFont
+                font.pixelSize: root.f(60)
+                Behavior on color { ColorAnimation { duration: 220 } }
 
-                section.property: "app"
-                section.delegate: Item {
-                    width: list.width
-                    height: root.f(30)
-                    Row {
-                        anchors { left: parent.left; leftMargin: root.f(14); verticalCenter: parent.verticalCenter }
-                        spacing: root.f(8)
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: section.toUpperCase()
-                            color: Theme.muted
-                            font.family: Sh.font
-                            font.pixelSize: root.f(10)
-                            font.letterSpacing: 1
-                        }
-                    }
+                SequentialAnimation on scale {
+                    running: emptyState.visible
+                    loops: Animation.Infinite
+                    NumberAnimation { from: 1.0; to: 1.04; duration: 2200; easing.type: Easing.InOutSine }
+                    NumberAnimation { from: 1.04; to: 1.0; duration: 2200; easing.type: Easing.InOutSine }
                 }
+            }
+        }
+
+        Item {
+            id: strip
+            width: Math.min(root.f(600), root.width * 0.44)
+            x: (root.width - width) / 2
+            opacity: root.count > 0 ? 1 : 0
+            visible: opacity > 0.01
+            Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+
+            property real scrollY: 0
+            y: scrollY
+            Behavior on y {
+                enabled: root._ready
+                NumberAnimation { duration: 260; easing.type: Easing.OutCubic }
+            }
+
+            transform: Translate { id: rise; y: root.f(16) }
+            Component.onCompleted: riseAnim.start()
+            NumberAnimation {
+                id: riseAnim
+                target: rise; property: "y"; to: 0
+                duration: 440; easing.type: Easing.OutBack; easing.overshoot: 1.2
+            }
+
+            Repeater {
+                model: Notifications.historyModel
 
                 delegate: Item {
-                    id: row
-                    width: list.width
-                    height: Math.max(root.f(54), col.implicitHeight + root.f(18))
+                    id: card
+                    required property int index
+                    required property var model
 
-                    readonly property var live: Notifications._live(modelData.nid)
+                    width: strip.width
+                    height: root.cardH()
+                    y: index * root.step()
+
+                    readonly property int dist: index - root.centerIdx
+                    readonly property bool edge: Math.abs(card.dist) > root.half
+                    visible: Math.abs(card.dist) <= root.half + 1
+
+                    readonly property bool sel: index === root.selected
+                    readonly property bool crit: model.urgency === "critical"
+                    readonly property bool hot: card.sel || tap.containsMouse
+                    property bool dying: false
+
+                    opacity: card.dying ? 0 : (card.edge ? 0 : 1)
+                    Behavior on opacity { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
+
+                    scale: card.dying ? 0.97 : (card.edge ? 0.955 : 1)
+                    Behavior on scale { NumberAnimation { duration: 240; easing.type: Easing.OutCubic } }
+
+                    transform: Translate { x: card.dying ? root.f(42) : 0
+                        Behavior on x { NumberAnimation { duration: 180; easing.type: Easing.InCubic } } }
+
+                    function go() {
+                        if (card.dying) return
+                        card.dying = true
+                        gone.start()
+                    }
+                    Timer { id: gone; interval: 180; onTriggered: Notifications.dismiss(card.model.nid) }
+
+                    Rectangle {
+                        id: glass
+                        anchors.fill: parent
+                        radius: root.f(17)
+                        gradient: Gradient {
+                            GradientStop { position: 0.0
+                                color: Qt.rgba(1, 1, 1, (card.crit ? 0.10 : 0.075) + (card.hot ? 0.04 : 0)) }
+                            GradientStop { position: 1.0
+                                color: Qt.rgba(1, 1, 1, 0.035 + (card.hot ? 0.02 : 0)) }
+                        }
+                        border.width: card.crit ? 1.5 : 1
+                        border.color: card.crit ? Qt.alpha(root.accent, 0.42)
+                                                : Qt.rgba(1, 1, 1, card.hot ? 0.18 : 0.11)
+                        layer.enabled: true
+                        layer.effect: MultiEffect {
+                            shadowEnabled: true
+                            shadowColor: card.crit ? Qt.alpha(root.accent, 0.22) : Qt.rgba(0, 0, 0, 0.24)
+                            shadowBlur: 0.7
+                            shadowVerticalOffset: root.f(5)
+                            blurMax: 40
+                        }
+                    }
 
                     Rectangle {
                         anchors.fill: parent
-                        anchors.margins: 2
-                        radius: root.f(9)
-                        color: rowArea.containsMouse ? Qt.rgba(1, 1, 1, 0.04) : "transparent"
+                        radius: root.f(17)
+                        color: Qt.alpha(root.accent, 0.07)
+                        border.width: 1.5
+                        border.color: Qt.alpha(root.accent, 0.75)
+                        opacity: card.sel ? 1 : 0
+                        Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                    }
+
+                    Rectangle {
+                        anchors { left: parent.left; right: parent.right; top: parent.top }
+                        anchors.margins: root.f(1)
+                        height: root.f(1)
+                        radius: height
+                        color: Qt.rgba(1, 1, 1, card.hot ? 0.18 : 0.12)
                     }
 
                     Row {
-                        anchors.fill: parent
-                        anchors.leftMargin: root.f(14)
-                        anchors.rightMargin: root.f(12)
-                        spacing: root.f(12)
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.leftMargin: root.f(20)
+                        anchors.rightMargin: root.f(18)
+                        spacing: root.f(15)
 
-                        Item {
-                            width: root.f(28); height: root.f(28)
+                        AppIcon {
+                            width: root.f(32); height: root.f(32)
                             anchors.verticalCenter: parent.verticalCenter
-                            Image {
-                                id: ic
-                                anchors.fill: parent
-                                source: root._icon(modelData.appIcon)
-                                visible: source.toString().length > 0 && status === Image.Ready
-                                sourceSize.width: 56; sourceSize.height: 56
-                                smooth: true; mipmap: true
-                            }
-                            Text {
-                                anchors.centerIn: parent
-                                visible: !ic.visible
-                                text: Sh.icBell
-                                color: Theme.muted
-                                font.family: Sh.iconFont
-                                font.pixelSize: root.f(15)
-                            }
+                            icon: card.model.appIcon
+                            fallbackGlyph: Sh.icBell
+                            fallbackColor: card.crit ? root.accent : root.muted
                         }
 
                         Column {
-                            id: col
+                            id: textCol
+                            width: parent.width - root.f(32) - parent.spacing - timeText.width - parent.spacing
                             anchors.verticalCenter: parent.verticalCenter
-                            width: parent.width - root.f(28) - parent.spacing - timeText.width - parent.spacing
                             spacing: root.f(3)
 
                             Text {
                                 width: parent.width
-                                visible: text.length > 0
-                                text: root._strip(modelData.summary)
-                                color: Theme.fg
+                                text: root._strip(card.model.summary) || String(card.model.app).toUpperCase()
+                                color: root.fg
                                 elide: Text.ElideRight
                                 font.family: Sh.font
-                                font.pixelSize: root.f(13)
+                                font.pixelSize: root.f(15)
                                 font.weight: Font.Medium
                             }
                             Text {
                                 width: parent.width
                                 visible: text.length > 0
-                                text: root._strip(modelData.body)
-                                color: Theme.muted
+                                text: root._strip(card.model.body)
+                                color: root.muted
                                 wrapMode: Text.Wrap
-                                maximumLineCount: 3
+                                maximumLineCount: 2
                                 elide: Text.ElideRight
                                 font.family: Sh.font
-                                font.pixelSize: root.f(12)
-                            }
-                            Row {
-                                spacing: root.f(6)
-                                visible: row.live && row.live.actions && row.live.actions.length > 0
-                                Repeater {
-                                    model: row.live && row.live.actions ? row.live.actions : []
-                                    delegate: Rectangle {
-                                        height: root.f(24)
-                                        width: aTxt.implicitWidth + root.f(16)
-                                        radius: root.f(7)
-                                        color: aArea.containsMouse ? Qt.alpha(Theme.accent, 0.22)
-                                                                   : Qt.alpha(Theme.accent, 0.12)
-                                        Text {
-                                            id: aTxt
-                                            anchors.centerIn: parent
-                                            text: modelData.text || modelData.identifier
-                                            color: Theme.accent
-                                            font.family: Sh.font
-                                            font.pixelSize: root.f(11)
-                                        }
-                                        MouseArea {
-                                            id: aArea
-                                            anchors.fill: parent
-                                            hoverEnabled: true
-                                            onClicked: {
-                                                Notifications.invoke(row.modelData.nid, modelData.identifier)
-                                                Notifications.dismiss(row.modelData.nid)
-                                            }
-                                        }
-                                    }
-                                }
+                                font.pixelSize: root.f(13)
+                                lineHeight: 1.2
                             }
                         }
 
                         Text {
                             id: timeText
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: root._ago(modelData.time)
-                            color: Theme.muted
+                            anchors.top: parent.top
+                            text: root._ago(card.model.time)
+                            color: root.faint
                             font.family: Sh.font
                             font.pixelSize: root.f(11)
-                        }
-                    }
-
-                    Text {
-                        anchors { right: parent.right; rightMargin: root.f(12); top: parent.top; topMargin: root.f(8) }
-                        visible: rowArea.containsMouse
-                        text: Sh.icX
-                        color: Theme.muted
-                        font.family: Sh.iconFont
-                        font.pixelSize: root.f(13)
-                        MouseArea {
-                            anchors.fill: parent
-                            anchors.margins: -root.f(6)
-                            onClicked: Notifications.dismiss(row.modelData.nid)
+                            font.letterSpacing: 1
                         }
                     }
 
                     MouseArea {
-                        id: rowArea
+                        id: tap
                         anchors.fill: parent
                         hoverEnabled: true
-                        acceptedButtons: Qt.LeftButton
                         onClicked: {
-                            if (row.live) { Notifications.invoke(row.modelData.nid, "") }
+                            root.selected = card.index
+                            Notifications.focusSender(card.model)
+                            Notifications.invoke(card.model.nid, "")
+                            card.go()
                         }
                     }
                 }
             }
+        }
 
-            Text {
-                anchors.centerIn: parent
-                visible: root.items.length === 0
-                text: "No notifications"
-                color: Theme.muted
-                font.family: Sh.font
-                font.pixelSize: root.f(13)
+        Text {
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: 36
+            textFormat: Text.StyledText
+            text: {
+                const a = "<font color='" + root.accent + "'>&middot;</font>"
+                if (root.count === 0)
+                    return Notifications.dnd ? "d  resume notifications" : "d  do not disturb"
+                return "↑↓ select   " + a + "   enter open   " + a
+                     + "   del dismiss   " + a + "   d dnd   " + a + "   c clear"
             }
+            color: root.faint
+            font.family: Sh.font
+            font.pixelSize: root.f(12)
         }
     }
 }

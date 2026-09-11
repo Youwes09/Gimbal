@@ -18,33 +18,9 @@ QtObject {
         const p = src.indexOf("://") >= 0 ? src.replace(/^file:\/\//, "") : src
         if (_ex.running) { _ex._pending = p; return }
 
-        _ex.command = ["sh", "-c",
-            'img="$1"; '
-            + 'if command -v matugen >/dev/null 2>&1; then '
-            +   'out=$(matugen image "$img" --json hex --dry-run 2>/dev/null); '
-            +   'case "$out" in "{"*) printf "%s" "$out"; exit 0;; esac; '
-            + 'fi; '
-            + 'command -v magick >/dev/null 2>&1 && '
-            +   'magick "$img" -resize 160x160 -depth 8 -colors 10 -format "%c" histogram:info: 2>/dev/null',
-            "_", p]
+        _ex.command = ["magick", p, "-resize", "160x160", "-depth", "8",
+            "-colors", "10", "-format", "%c", "histogram:info:"]
         _ex.running = true
-    }
-
-    function _fromMatugen(j) {
-        const c = j && j.colors
-        if (!c) return null
-        const g = (role, fb) => (c[role] && c[role].dark && c[role].dark.color) || fb
-        const prim = g("primary", null)
-        if (!prim) return null
-        return {
-            background:             g("surface_container_lowest", g("background", "#0a0908")),
-            surface:                g("surface_container_low",    g("surface",    "#0c0c10")),
-            surface_container_high: g("surface_container_high",    "#17161c"),
-            on_surface:             g("on_surface",                "#f3ede4"),
-            on_surface_variant:     g("on_surface_variant",        "#968b7c"),
-            outline:                g("outline",                   "#2b2620"),
-            primary:                prim
-        }
     }
 
     function _rgbToHsl(r, g, b) {
@@ -116,9 +92,6 @@ QtObject {
     function _derive(text) {
         const t = (text || "").trim()
         if (t.length === 0) return null
-        if (t[0] === "{") {
-            try { return _fromMatugen(JSON.parse(t)) } catch (e) { return null }
-        }
         return _fromHistogram(t)
     }
 

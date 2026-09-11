@@ -33,6 +33,14 @@ It also owns your wallpaper (static / GIF / video, cross-faded on switch) and re
 - Toasts drop from the top-centre as a shallow deck; hover pauses the timer, critical stays until dismissed
 - History page (`n` in the overlay) — grouped by app, per-item + clear-all, DND toggle, action buttons on still-live notifications
 
+**Capture**
+- Type `screenshot` (region / full) or `record` in the launcher — no prefix
+- Region via `slurp` + `grim`; recording via `wl-screenrec` (SIGINT to finalise), toggled from the same `record` entry
+- After a screenshot the overlay opens the **Capture page** — the image, its dimensions / size / format, and `c` copy · `a` annotate · `o` open · `r` reveal · `del` discard
+- Annotate opens `satty` on the file in place
+- `gimbal screenshot [region|full]` · `gimbal record [full|region|toggle|stop]`
+- Files land in `~/Pictures/Screenshots` and `~/Videos/Recordings`; the image is also put on the clipboard
+
 **Wallpaper**
 - Quickshell draws it directly (kills `wbg` on start)
 - `~/Pictures/Wallpapers` scanned on every picker open
@@ -42,7 +50,7 @@ It also owns your wallpaper (static / GIF / video, cross-faded on switch) and re
 
 **Colours**
 - Wallpaper → palette written to `~/.config/gimbal/colors.json`, live-reloaded by the theme
-- [matugen](https://github.com/InioX/matugen) when present (proper Material You); ImageMagick histogram derivation otherwise
+- Derived from an ImageMagick histogram of the current wallpaper
 
 ## Install
 
@@ -66,12 +74,13 @@ The script checks dependencies, installs the missing ones (`pacman` + `paru`/`ya
 | | `imagemagick` | wallpaper colour palette |
 | **optional** | `qt6-multimedia` | video wallpapers |
 | | `ffmpeg` | video wallpaper poster frames |
+| | `grim`, `slurp` | screenshots (region + full) |
+| | `wayfreeze` | freezes the screen for region select — some compositors don't render a live `slurp` overlay without it |
+| | `wl-screenrec` | screen recording |
+| | `satty` | screenshot annotation |
 | | `upower` | battery on the clock page |
 | | `curl` | weather on the clock page |
 | | `file` | richer file-type detection in the inspect card |
-| | `matugen` | Material You palette instead of the ImageMagick fallback |
-
-> matugen `4.0.0` currently fails colour extraction outside a TTY — until that's fixed, pin `3.x` or just rely on the ImageMagick fallback.
 
 Fonts (AdwaitaMono, Lucide) are bundled in `assets/fonts/`.
 
@@ -80,11 +89,14 @@ Fonts (AdwaitaMono, Lucide) are bundled in `assets/fonts/`.
 ```
 gimbal start            run the daemon (compositor autostart)
 gimbal launch           the launcher
-gimbal toggle [page]    summon / dismiss the overlay  (page: clock | wallpaper | notifications)
+gimbal toggle [page]    summon / dismiss the overlay  (page: clock | wallpaper | notifications | capture)
 gimbal wallpaper …      next | prev | random | rescan | list | <name>
+gimbal screenshot …     region | full
+gimbal record …         full | region | toggle | stop
 ```
 
-**In the overlay:** `w` → wallpaper picker · `n` → notifications · `←`/`→` cycle · `enter` apply · `↑`/`↓` arm power · `esc` close
+**In the overlay:** `w` → wallpaper picker · `n` → notifications · `s` → last capture · `←`/`→` cycle · `enter` apply · `↑`/`↓` arm power · `esc` close
+**Capture page:** `c` copy · `a` annotate · `o` open · `r` reveal · `del` discard
 
 **In the launcher:** type a prefix, `↑`/`↓` to move, `tab` to inspect, `enter` to run.
 
@@ -150,6 +162,6 @@ State (frecency, current wallpaper, video posters) lives under `~/.local/state/g
 
 ## Credits
 
-Gimbal is a rebuild of ideas from **[pibble](https://github.com/kianblakley/pibble)** by [kian blakley](https://github.com/kianblakley) — the summoned-shell approach, the wallpaper carousel's spatial model (parallax windows, scale falloff, continuous rank), the clipboard inspect card, live-wallpaper handling, and matugen-driven theming all trace back to it. If you want the full-featured version with in-app settings, custom pages, and flyouts, use pibble.
+Gimbal is a rebuild of ideas from **[pibble](https://github.com/kianblakley/pibble)** by [kian blakley](https://github.com/kianblakley) — the summoned-shell approach, the wallpaper carousel's spatial model (parallax windows, scale falloff, continuous rank), the clipboard inspect card, live-wallpaper handling, and wallpaper-derived theming all trace back to it. If you want the full-featured version with in-app settings, custom pages, and flyouts, use pibble.
 
-Built with [Quickshell](https://github.com/quickshell-mirror/quickshell). Palette by [matugen](https://github.com/InioX/matugen). Icons from [Lucide](https://lucide.dev).
+Built with [Quickshell](https://github.com/quickshell-mirror/quickshell). Icons from [Lucide](https://lucide.dev).

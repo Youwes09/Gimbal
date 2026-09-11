@@ -32,10 +32,7 @@ QtObject {
     }
     function openTerminal(path, isDir) {
         const dir = isDir ? path : root._parent(path)
-        Quickshell.execDetached(["sh", "-c",
-            _q(Config.terminal) + ' -D "$1" 2>/dev/null || '
-            + _q(Config.terminal) + ' --working-directory="$1" 2>/dev/null || '
-            + '(cd "$1" && exec ' + _q(Config.terminal) + ')', "_", dir])
+        Quickshell.execDetached(["sh", "-c", 'cd "$1" && exec "$2"', "_", dir, Config.terminal])
     }
 
     function openSmart(path) {

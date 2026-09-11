@@ -22,10 +22,14 @@ required=(
 optional=(
   "qt6-multimedia|qml_has QtMultimedia|qt6-multimedia|pacman|video wallpapers"
   "ffmpeg|command -v ffmpeg|ffmpeg|pacman|video wallpaper poster frames"
+  "grim|command -v grim|grim|pacman|screenshots"
+  "slurp|command -v slurp|slurp|pacman|screenshot / recording region select"
+  "wayfreeze|command -v wayfreeze|wayfreeze|aur|freezes the screen for region select"
+  "wl-screenrec|command -v wl-screenrec|wl-screenrec|aur|screen recording"
+  "satty|command -v satty|satty|aur|screenshot annotation"
   "upower|command -v upower|upower|pacman|battery on the clock page"
   "curl|command -v curl|curl|pacman|weather on the clock page"
   "file|command -v file|file|pacman|richer metadata in the inspect card"
-  "matugen|command -v matugen|matugen|aur|Material You palette (ImageMagick is the fallback)"
 )
 
 qml_has() {

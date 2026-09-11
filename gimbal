@@ -40,6 +40,7 @@ export_magick() {
 
 export_env() {
     export_render_loop; export_qtmultimedia; export_ffmpeg; export_magick
+    unset ELECTRON_RUN_AS_NODE
 }
 
 ipc() {
@@ -78,6 +79,8 @@ gimbal — summoned-overlay shell daemon control
   gimbal launch           show/hide the launcher
   gimbal wallpaper [name|next|prev|random|rescan|list]
                           manage the wallpaper (no arg prints the current one)
+  gimbal screenshot [region|full]   take a screenshot (default region)
+  gimbal record [full|region|toggle|stop]   screen recording
   gimbal help             show this message
 EOF
 }
@@ -123,6 +126,20 @@ wallpaper)
     ensure_daemon || exit 1
     for _ in $(seq 1 50); do sleep 0.1; ipc wallpaper "$fn" "${arg[@]}" && exit 0; done
     exit 1
+    ;;
+screenshot)
+    reap_duplicates
+    ensure_daemon || exit 1
+    ipc capture screenshot "${2:-region}"
+    ;;
+record)
+    reap_duplicates
+    ensure_daemon || exit 1
+    case "$2" in
+        stop)   ipc capture stop ;;
+        toggle) ipc capture recordToggle ;;
+        *)      ipc capture record "${2:-full}" ;;
+    esac
     ;;
 help | "")
     usage

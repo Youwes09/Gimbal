@@ -1,14 +1,20 @@
 import Quickshell
 import Quickshell.Io
+import Quickshell.Services.SystemTray
 import "root:/modules"
 
 ShellRoot {
     id: shellRoot
 
+    readonly property int _trayCount: SystemTray.items ? SystemTray.items.values.length : 0
+
     WallpaperWindow { }
     Overlay { id: overlay }
     LauncherWindow { id: launcher }
     NotificationToasts { }
+    LaunchIndicator { }
+    RecordingIndicator { }
+    RegionPicker { }
 
     IpcHandler {
         target: "overlay"
@@ -49,5 +55,16 @@ ShellRoot {
         function dnd():  string { Notifications.toggleDnd(); return Notifications.dnd ? "on" : "off" }
         function clear():  void { Notifications.clearAll() }
         function state(): string { return Notifications.dnd ? "dnd" : "on" }
+    }
+
+    IpcHandler {
+        target: "capture"
+
+        function screenshot(mode: string): void { Capture.shot(mode ?? "region") }
+        function record(mode: string):     void { Capture.recStart(mode ?? "full") }
+        function stop():                   void { Capture.recStop() }
+        function recordToggle():           void { Capture.recToggle() }
+        function annotate():               void { Capture.annotate() }
+        function recording():            string { return Capture.recording ? "on" : "off" }
     }
 }

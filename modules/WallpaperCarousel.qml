@@ -11,7 +11,11 @@ Item {
 
     property int stepCount: 0
     property real pos: 0
-    Behavior on pos { NumberAnimation { duration: 360; easing.type: Easing.OutCubic } }
+    property bool _touched: false
+    Behavior on pos {
+        id: posBehavior
+        NumberAnimation { duration: 360; easing.type: Easing.OutCubic }
+    }
 
     readonly property int sel: walls.length > 0
         ? ((stepCount % walls.length) + walls.length) % walls.length : -1
@@ -39,6 +43,7 @@ Item {
 
     function step(dir) {
         if (root.walls.length === 0) return
+        root._touched = true
         root.stepCount += dir
         root.pos = root.stepCount
     }
@@ -50,8 +55,12 @@ Item {
         Sh.close()
     }
     function _resync() {
-        root.stepCount = Math.max(0, Wallpapers._idx())
+        const i = Wallpapers._idx()
+        root._touched = false
+        root.stepCount = i >= 0 ? i : 0
+        posBehavior.enabled = false
         root.pos = root.stepCount
+        posBehavior.enabled = true
     }
     Component.onCompleted: root._resync()
     Connections {
@@ -63,6 +72,11 @@ Item {
                 enterAnim.restart()
             }
         }
+    }
+    Connections {
+        target: Wallpapers
+        function onListChanged()    { if (!root._touched) root._resync() }
+        function onCurrentChanged() { if (!root._touched) root._resync() }
     }
 
     property real applyFlash: 0

@@ -83,11 +83,23 @@ QtObject {
     property real   powerPush: 0
     property real   powerDim: 0
 
+    property bool   captureVeil: false
+
+    property double suspendAt: 0
+    property int    suspendBattery: -1
+    property bool   suspendCharging: false
+    function beginSuspend() {
+        root.suspendAt = Date.now()
+        root.page = "suspend"
+        root.shown = true
+    }
+
     function toggle(p) {
         if (root.shown) root.close()
         else            root.open(p)
     }
     function open(p) {
+        root.captureVeil = false
         if (p && p.length > 0) root.page = p
         root.shown = true
     }
@@ -96,8 +108,8 @@ QtObject {
     }
 
     property bool launcherShown: false
-    function toggleLauncher() { root.launcherShown = !root.launcherShown }
-    function openLauncher()   { root.launcherShown = true }
+    function toggleLauncher() { root.captureVeil = false; root.launcherShown = !root.launcherShown }
+    function openLauncher()   { root.captureVeil = false; root.launcherShown = true }
     function closeLauncher()  { root.launcherShown = false }
 
     property real reveal: 0

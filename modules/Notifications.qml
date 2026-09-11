@@ -15,6 +15,12 @@ QtObject {
     property bool dnd: false
     property var history: []
     property ListModel popupModel: ListModel {}
+    property ListModel historyModel: ListModel {}
+
+    function _syncModel() {
+        root.historyModel.clear()
+        for (const r of root.history) root.historyModel.append(r)
+    }
 
     readonly property var cfg: Config.notifications
     function _c(k, d) { return (root.cfg && root.cfg[k] !== undefined) ? root.cfg[k] : d }
@@ -48,6 +54,8 @@ QtObject {
         h.unshift(r)
         if (h.length > 100) h.length = 100
         root.history = h
+        root.historyModel.insert(0, r)
+        while (root.historyModel.count > 100) root.historyModel.remove(root.historyModel.count - 1)
         _saveTimer.restart()
 
         const crit = r.urgency === "critical"
@@ -74,6 +82,8 @@ QtObject {
         const n = _live(nid)
         if (n) n.dismiss()
         root.history = root.history.filter(r => r.nid !== nid)
+        for (let i = 0; i < root.historyModel.count; i++)
+            if (root.historyModel.get(i).nid === nid) { root.historyModel.remove(i); break }
         _saveTimer.restart()
     }
 
@@ -83,6 +93,7 @@ QtObject {
         const arr = t && t.values ? t.values.slice() : []
         for (const n of arr) n.dismiss()
         root.history = []
+        root.historyModel.clear()
         _saveTimer.restart()
     }
 
@@ -117,8 +128,9 @@ QtObject {
                 root.dnd = !!j.dnd
                 root.history = Array.isArray(j.items) ? j.items : []
             } catch (e) { root.dnd = false; root.history = [] }
+            root._syncModel()
         }
-        onLoadFailed: { root.dnd = false; root.history = [] }
+        onLoadFailed: { root.dnd = false; root.history = []; root._syncModel() }
     }
 
     property Timer _saveTimer: Timer {
