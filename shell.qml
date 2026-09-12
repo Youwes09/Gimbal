@@ -7,6 +7,7 @@ ShellRoot {
     id: shellRoot
 
     readonly property int _trayCount: SystemTray.items ? SystemTray.items.values.length : 0
+    readonly property int _batteryWatch: BatteryWatch.pct
 
     WallpaperWindow { }
     Overlay { id: overlay }
@@ -14,6 +15,7 @@ ShellRoot {
     NotificationToasts { }
     LaunchIndicator { }
     RecordingIndicator { }
+    OsdIndicator { }
     RegionPicker { }
 
     IpcHandler {
@@ -66,5 +68,22 @@ ShellRoot {
         function recordToggle():           void { Capture.recToggle() }
         function annotate():               void { Capture.annotate() }
         function recording():            string { return Capture.recording ? "on" : "off" }
+    }
+
+    IpcHandler {
+        target: "volume"
+
+        function up(step: string):   void { Audio.nudge((parseFloat(step) || 5) / 100) }
+        function down(step: string): void { Audio.nudge(-(parseFloat(step) || 5) / 100) }
+        function mute():             void { Audio.toggleMute() }
+        function get():            string { return Math.round(Audio.volume * 100) + (Audio.muted ? " muted" : "") }
+    }
+
+    IpcHandler {
+        target: "brightness"
+
+        function up(step: string):   void { Brightness.nudge((parseFloat(step) || 5) / 100) }
+        function down(step: string): void { Brightness.nudge(-(parseFloat(step) || 5) / 100) }
+        function get():            string { return Math.round(Brightness.pct * 100) + "" }
     }
 }

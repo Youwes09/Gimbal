@@ -182,14 +182,23 @@ Item {
                     Timer { id: gone; interval: 180; onTriggered: Notifications.dismiss(card.model.nid) }
 
                     Rectangle {
+                        id: backing
+                        anchors.fill: parent
+                        radius: root.f(17)
+                        color: Qt.rgba(0.09, 0.09, 0.10, card.crit ? 0.82 : 0.76)
+                    }
+
+                    Rectangle {
                         id: glass
                         anchors.fill: parent
                         radius: root.f(17)
                         gradient: Gradient {
                             GradientStop { position: 0.0
-                                color: Qt.rgba(1, 1, 1, (card.crit ? 0.10 : 0.075) + (card.hot ? 0.04 : 0)) }
+                                color: Qt.rgba(1, 1, 1, (card.crit ? 0.065 : 0.05) + (card.hot ? 0.02 : 0)) }
+                            GradientStop { position: 0.5
+                                color: Qt.rgba(1, 1, 1, (card.crit ? 0.05 : 0.038) + (card.hot ? 0.015 : 0)) }
                             GradientStop { position: 1.0
-                                color: Qt.rgba(1, 1, 1, 0.035 + (card.hot ? 0.02 : 0)) }
+                                color: Qt.rgba(1, 1, 1, 0.032 + (card.hot ? 0.01 : 0)) }
                         }
                         border.width: card.crit ? 1.5 : 1
                         border.color: card.crit ? Qt.alpha(root.accent, 0.42)

@@ -25,6 +25,7 @@ QtObject {
     property bool busy: false
     property bool pickerActive: false
     property string _pickerFor: ""
+    property bool _quiet: false
 
     property bool recording: false
     property string recFile: ""
@@ -64,38 +65,39 @@ QtObject {
     function shot(mode) {
         if (root.busy) return
         root.error = ""
-        Sh.closeLauncher()
-        Sh.close()
-        Sh.captureVeil = true
         root.busy = true
-        if ((mode || "region") === "region") {
+        const m = mode || "region"
+        root._quiet = /-quiet$/.test(m)
+        if (m.replace(/-quiet$/, "") === "region") {
             root._pickerFor = "shot"
             root.pickerActive = true
             return
         }
         _shot.out = root.shotDir + "/Screenshot_" + root._stamp() + ".png"
-        _shotDelay.restart()
-    }
-
-    property Timer _shotDelay: Timer {
-        interval: 220
-        onTriggered: _shot.running = true
+        _shot.quiet = root._quiet ? "1" : "0"
+        _shot.running = true
     }
 
     property Process _shot: Process {
         property string out: ""
+        property string quiet: "0"
         command: ["sh", "-c",
-            'out="$1"; mkdir -p "$(dirname "$out")"; grim "$out" || exit 2; '
-            + 'wl-copy --type image/png < "$out" 2>/dev/null; printf %s "$out"',
-            "_", _shot.out]
+            'q="$2"; out="$1"; '
+            + 'if [ "$q" = "1" ]; then out=$(mktemp --suffix=.png -p "${XDG_RUNTIME_DIR:-/tmp}" gimbal-shot-XXXXXX); '
+            + 'else mkdir -p "$(dirname "$out")"; fi; '
+            + 'grim "$out" || exit 2; '
+            + 'if [ "$q" = "1" ]; then wl-copy --type image/png < "$out"; rm -f "$out"; '
+            + 'else wl-copy --type image/png < "$out" 2>/dev/null & printf %s "$out"; fi',
+            "_", _shot.out, _shot.quiet]
         stdout: StdioCollector { id: _shotOut }
         stderr: StdioCollector { id: _shotErr }
         onExited: (code) => {
             root.busy = false
-            Sh.captureVeil = false
+            if (code !== 0) { root._fail(_shotErr.text.trim() || "screenshot failed"); return }
+            if (root._quiet) { root._notify("Screenshot", "Copied to clipboard"); return }
             const path = _shotOut.text.trim()
-            if (code === 0 && path.length) root._ingest(path)
-            else root._fail(_shotErr.text.trim() || "screenshot failed")
+            if (path.length) root._ingest(path)
+            else root._fail("screenshot failed")
         }
     }
 
@@ -110,38 +112,50 @@ QtObject {
         } else {
             _grimRegion.geom = geom
             _grimRegion.out = root.shotDir + "/Screenshot_" + root._stamp() + ".png"
+            _grimRegion.quiet = root._quiet ? "1" : "0"
             _grimRegion.running = true
         }
     }
     function _regionCancelled() {
         root.pickerActive = false
-        Sh.captureVeil = false
         root.busy = false
     }
 
     property Process _grimRegion: Process {
         property string geom: ""
         property string out: ""
+        property string quiet: "0"
         command: ["sh", "-c",
-            'geom="$1"; out="$2"; mkdir -p "$(dirname "$out")"; grim -g "$geom" "$out" || exit 2; '
-            + 'wl-copy --type image/png < "$out" 2>/dev/null; printf %s "$out"',
-            "_", _grimRegion.geom, _grimRegion.out]
+            'geom="$1"; q="$3"; out="$2"; '
+            + 'if [ "$q" = "1" ]; then out=$(mktemp --suffix=.png -p "${XDG_RUNTIME_DIR:-/tmp}" gimbal-shot-XXXXXX); '
+            + 'else mkdir -p "$(dirname "$out")"; fi; '
+            + 'grim -g "$geom" "$out" || exit 2; '
+            + 'if [ "$q" = "1" ]; then wl-copy --type image/png < "$out"; rm -f "$out"; '
+            + 'else wl-copy --type image/png < "$out" 2>/dev/null & printf %s "$out"; fi',
+            "_", _grimRegion.geom, _grimRegion.out, _grimRegion.quiet]
         stdout: StdioCollector { id: _grimRegionOut }
         stderr: StdioCollector { id: _grimRegionErr }
         onExited: (code) => {
             root.busy = false
-            Sh.captureVeil = false
+            if (code !== 0) { root._fail(_grimRegionErr.text.trim() || "screenshot failed"); return }
+            if (root._quiet) { root._notify("Screenshot", "Copied to clipboard"); return }
             const path = _grimRegionOut.text.trim()
-            if (code === 0 && path.length) root._ingest(path)
-            else root._fail(_grimRegionErr.text.trim() || "screenshot failed")
+            if (path.length) root._ingest(path)
+            else root._fail("screenshot failed")
         }
+    }
+
+    function _notify(title, body) {
+        Quickshell.execDetached(["notify-send", "-a", "Gimbal", title, body])
     }
 
     function _ingest(path) {
         root.lastShot = path
         root.idx = -1
         root.refreshList()
-        Sh.open("capture")
+        Sh.closeLauncher()
+        if (Config.captureFastOpen) Sh.openFast("capture")
+        else Sh.open("capture")
     }
 
     property Process _probe: Process {
@@ -239,9 +253,6 @@ QtObject {
     function recStart(mode) {
         if (root.recording) return
         root.error = ""
-        Sh.closeLauncher()
-        Sh.close()
-        Sh.captureVeil = true
         if ((mode || "full") === "region") {
             root._pickerFor = "record"
             root.pickerActive = true
@@ -273,7 +284,6 @@ QtObject {
         }
         onExited: (code) => {
             root.recording = false
-            Sh.captureVeil = false
             if (code !== 0 && code !== 130 && code !== 1)
                 root._fail(_recErr.text.trim() || "recording failed")
         }
@@ -294,7 +304,6 @@ QtObject {
         }
         onExited: (code) => {
             root.recording = false
-            Sh.captureVeil = false
             if (code !== 0 && code !== 130 && code !== 1)
                 root._fail(_recRegionErr.text.trim() || "recording failed")
         }

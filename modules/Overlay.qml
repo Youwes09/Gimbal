@@ -37,11 +37,14 @@ PanelWindow {
     property bool active: false
     property real stage: 0
     property real contentFade: 0
+    property bool _fastRun: false
 
     onOpenChanged: {
         if (root.open) {
             closeAnim.stop()
             root.active = true
+            root._fastRun = Sh.fastOpen
+            Sh.fastOpen = false
             Sh.reveal = 0
             root.stage = 0
             root.contentFade = 0
@@ -57,17 +60,17 @@ PanelWindow {
         id: openAnim
         NumberAnimation {
             target: Sh; property: "reveal"; from: 0; to: 1
-            duration: 520
+            duration: root._fastRun ? 170 : 520
             easing.type: Easing.BezierSpline
             easing.bezierCurve: [0.35, 0.3, 0.55, 1.0, 1.0, 1.0]
         }
         NumberAnimation {
             target: root; property: "stage"; from: 0; to: 1
-            duration: 160; easing.type: Easing.OutCubic
+            duration: root._fastRun ? 70 : 160; easing.type: Easing.OutCubic
         }
         NumberAnimation {
             target: root; property: "contentFade"; from: 0; to: 1
-            duration: 420; easing.type: Easing.OutCubic
+            duration: root._fastRun ? 130 : 420; easing.type: Easing.OutCubic
         }
     }
 

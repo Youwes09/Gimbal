@@ -41,6 +41,8 @@ Item {
 
     function _fire(which) {
         root.armed = ""
+        root.topRaw = 0
+        root.botRaw = 0
         disarm.stop()
         if (which === "power") {
             Quickshell.execDetached(["systemctl", "poweroff"])

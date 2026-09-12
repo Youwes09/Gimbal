@@ -79,8 +79,10 @@ gimbal — summoned-overlay shell daemon control
   gimbal launch           show/hide the launcher
   gimbal wallpaper [name|next|prev|random|rescan|list]
                           manage the wallpaper (no arg prints the current one)
-  gimbal screenshot [region|full]   take a screenshot (default region)
+  gimbal screenshot [region|full] [quiet]   take a screenshot (default region; quiet skips the review page)
   gimbal record [full|region|toggle|stop]   screen recording
+  gimbal volume [up|down [step]|mute]       adjust output volume (default step 5)
+  gimbal brightness [up|down [step]]        adjust screen brightness (default step 5)
   gimbal help             show this message
 EOF
 }
@@ -130,7 +132,9 @@ wallpaper)
 screenshot)
     reap_duplicates
     ensure_daemon || exit 1
-    ipc capture screenshot "${2:-region}"
+    mode="${2:-region}"
+    [ "$3" = "quiet" ] && mode="${mode}-quiet"
+    ipc capture screenshot "$mode"
     ;;
 record)
     reap_duplicates
@@ -139,6 +143,25 @@ record)
         stop)   ipc capture stop ;;
         toggle) ipc capture recordToggle ;;
         *)      ipc capture record "${2:-full}" ;;
+    esac
+    ;;
+volume)
+    reap_duplicates
+    ensure_daemon || exit 1
+    case "$2" in
+        up)   ipc volume up "${3:-5}" ;;
+        down) ipc volume down "${3:-5}" ;;
+        mute) ipc volume mute ;;
+        *)    ipc volume get ;;
+    esac
+    ;;
+brightness)
+    reap_duplicates
+    ensure_daemon || exit 1
+    case "$2" in
+        up)   ipc brightness up "${3:-5}" ;;
+        down) ipc brightness down "${3:-5}" ;;
+        *)    ipc brightness get ;;
     esac
     ;;
 help | "")

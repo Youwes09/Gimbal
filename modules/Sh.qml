@@ -65,6 +65,10 @@ QtObject {
     readonly property string icBell:          "\ue059"
     readonly property string icBellOff:       "\ue05a"
     readonly property string icX:             "\ue1b2"
+    readonly property string icVolume:        "\ue1a9"
+    readonly property string icVolumeLow:     "\ue1aa"
+    readonly property string icVolumeHigh:    "\ue1ab"
+    readonly property string icVolumeMute:    "\ue1ac"
 
     function batteryGlyph(pct, charging) {
         if (charging)  return root.icBatteryChg
@@ -84,6 +88,11 @@ QtObject {
     property real   powerDim: 0
 
     property bool   captureVeil: false
+    property bool   fastOpen: false
+    function openFast(p) {
+        root.fastOpen = true
+        root.open(p)
+    }
 
     property double suspendAt: 0
     property int    suspendBattery: -1

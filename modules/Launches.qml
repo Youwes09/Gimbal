@@ -30,6 +30,14 @@ QtObject {
         hide.restart()
     }
 
+    function killed(title) {
+        watch.stop(); slowMark.stop(); giveUp.stop()
+        root.title = title || "App"
+        root.phase = "killed"
+        root.slow = false
+        hide.restart()
+    }
+
     property Timer watch: Timer {
         interval: 200; repeat: true
         onTriggered: {

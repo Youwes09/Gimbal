@@ -14,8 +14,8 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
     anchors { top: true }
 
-    readonly property int cardW: Sh.fs(452)
-    readonly property int cardH: Sh.fs(74)
+    readonly property int cardW: Sh.fs(492)
+    readonly property int cardH: Sh.fs(84)
     readonly property int topGap: Sh.fs(16)
     readonly property int pad: Sh.fs(90)
 
@@ -112,16 +112,27 @@ PanelWindow {
                     opacity: 1 - Math.min(0.9, Math.abs(card.dragX) / win.cardW)
 
                     Rectangle {
+                        id: backing
+                        anchors.fill: parent
+                        radius: Sh.fs(17)
+                        color: Qt.rgba(0.07, 0.07, 0.08, 0.88)
+                    }
+
+                    Rectangle {
                         id: panel
                         anchors.fill: parent
-                        radius: Sh.fs(14)
-                        color: Theme.surface
+                        radius: Sh.fs(17)
+                        gradient: Gradient {
+                            GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.05) }
+                            GradientStop { position: 0.5; color: Qt.rgba(1, 1, 1, 0.038) }
+                            GradientStop { position: 1.0; color: Qt.rgba(1, 1, 1, 0.03) }
+                        }
                         border.width: 1
-                        border.color: Qt.alpha(Theme.accent, 0.45)
+                        border.color: Qt.alpha(Theme.accent, 0.4)
                         layer.enabled: true
                         layer.effect: MultiEffect {
                             shadowEnabled: true
-                            shadowColor: Qt.rgba(0, 0, 0, 0.4)
+                            shadowColor: Qt.rgba(0, 0, 0, 0.42)
                             shadowBlur: 0.9
                             shadowVerticalOffset: Sh.fs(7)
                             blurMax: 64
@@ -132,6 +143,7 @@ PanelWindow {
                         anchors.fill: parent
                         anchors.leftMargin: Sh.fs(16)
                         anchors.rightMargin: Sh.fs(14)
+                        anchors.bottomMargin: Sh.fs(9)
                         spacing: Sh.fs(13)
 
                         AppIcon {
@@ -168,21 +180,27 @@ PanelWindow {
                     }
 
                     Rectangle {
-                        anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
-                        anchors.leftMargin: Sh.fs(14)
-                        anchors.rightMargin: Sh.fs(14)
-                        anchors.bottomMargin: Sh.fs(3)
-                        height: Sh.fs(2)
-                        radius: height / 2
-                        color: Qt.alpha(Theme.fg, 0.06)
+                        id: track
                         visible: card.front && !card.leaving && card.timeout > 0
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.bottom: parent.bottom
+                        anchors.leftMargin: Sh.fs(18)
+                        anchors.rightMargin: Sh.fs(18)
+                        anchors.bottomMargin: Sh.fs(11)
+                        height: Sh.fs(3)
+                        radius: height / 2
+                        color: Qt.rgba(1, 1, 1, 0.08)
+
+                        readonly property real remainFrac: Math.max(0, 1 - card.elapsed / card.timeout)
 
                         Rectangle {
-                            anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
+                            anchors.left: parent.left
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: parent.width * track.remainFrac
+                            height: parent.height
                             radius: height / 2
-                            color: Qt.alpha(Theme.accent, 0.6)
-                            width: parent.width * Math.max(0, 1 - card.elapsed / card.timeout)
-                            Behavior on width { NumberAnimation { duration: 60 } }
+                            color: Qt.alpha(Theme.accent, 0.85)
                         }
                     }
 

@@ -23,11 +23,22 @@ Item {
     Component.onCompleted: {
         Capture.refreshList()
         Qt.callLater(() => root._on = true)
+        shotSlot.setSource(Capture.activePath)
     }
     Connections {
         target: Sh
         function onPageChanged() { if (Sh.page === "capture") Capture.refreshList() }
     }
+    Connections {
+        target: Capture
+        function onActivePathChanged() {
+            shotSlot.setSource(Capture.activePath)
+            root._specsOn = false
+            specsBack.restart()
+        }
+    }
+    property bool _specsOn: true
+    Timer { id: specsBack; interval: 90; onTriggered: root._specsOn = true }
 
     property date now: new Date()
     Timer { interval: 30000; running: true; repeat: true; onTriggered: root.now = new Date() }
@@ -82,10 +93,11 @@ Item {
             anchors.horizontalCenter: parent.horizontalCenter
             readonly property real maxW: root.width * 0.62
             readonly property real maxH: root.height * 0.58
-            readonly property real ar: (shot.sourceSize.width > 0 && shot.sourceSize.height > 0)
-                ? shot.sourceSize.width / shot.sourceSize.height : 16 / 9
+            property real ar: 16 / 9
             width: Math.min(frame.maxW, frame.maxH * frame.ar)
             height: Math.min(frame.maxH, frame.maxW / frame.ar)
+            Behavior on width  { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
+            Behavior on height { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
             radius: root.f(14)
             color: Qt.rgba(1, 1, 1, 0.03)
             border.width: 1
@@ -101,15 +113,47 @@ Item {
                 blurMax: 64
             }
 
-            Image {
-                id: shot
+            Item {
+                id: shotSlot
                 anchors.fill: parent
                 anchors.margins: 1
-                source: root.has ? ("file://" + Capture.activePath) : ""
-                fillMode: Image.PreserveAspectFit
-                cache: false
-                asynchronous: true
-                smooth: true
+                property bool aFront: true
+
+                function _apply(img) {
+                    if (img.status !== Image.Ready) return
+                    frame.ar = img.sourceSize.width / img.sourceSize.height
+                    shotSlot.aFront = (img === shotA)
+                }
+                function setSource(path) {
+                    const url = path.length ? ("file://" + path) : ""
+                    const back = shotSlot.aFront ? shotB : shotA
+                    if (back.source === url) return
+                    back.source = url
+                    if (!url.length) shotSlot._apply(back)
+                }
+
+                Image {
+                    id: shotA
+                    anchors.fill: parent
+                    fillMode: Image.PreserveAspectFit
+                    cache: false
+                    asynchronous: true
+                    smooth: true
+                    opacity: shotSlot.aFront ? 1 : 0
+                    Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+                    onStatusChanged: if (status === Image.Ready) shotSlot._apply(shotA)
+                }
+                Image {
+                    id: shotB
+                    anchors.fill: parent
+                    fillMode: Image.PreserveAspectFit
+                    cache: false
+                    asynchronous: true
+                    smooth: true
+                    opacity: shotSlot.aFront ? 0 : 1
+                    Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+                    onStatusChanged: if (status === Image.Ready) shotSlot._apply(shotB)
+                }
             }
 
             Text {
@@ -126,6 +170,8 @@ Item {
             anchors.horizontalCenter: parent.horizontalCenter
             spacing: root.f(12)
             visible: root.has
+            opacity: root._on && root._specsOn ? 1 : 0
+            Behavior on opacity { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
 
             Repeater {
                 model: {
@@ -166,6 +212,8 @@ Item {
             text: Capture.activePath
                   + (root.browseTotal > 1 ? "   ·   " + (root.browseIdx + 1) + " / " + root.browseTotal : "")
             visible: root.has
+            opacity: root._on && root._specsOn ? 1 : 0
+            Behavior on opacity { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
             color: root.faint
             font.family: Sh.font
             font.pixelSize: root.f(11)

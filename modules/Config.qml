@@ -37,6 +37,9 @@ QtObject {
     readonly property bool raiseRunning:
         root._j.raiseRunning !== undefined ? !!root._j.raiseRunning : true
 
+    readonly property bool captureFastOpen:
+        root._j.captureFastOpen !== undefined ? !!root._j.captureFastOpen : true
+
     readonly property var notifications:
         (root._j.notifications && typeof root._j.notifications === "object")
             ? root._j.notifications : ({})

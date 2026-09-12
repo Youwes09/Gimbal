@@ -99,8 +99,10 @@ Item {
                 Launches.begin(a.name, Quickshell.iconPath(a.icon, true),
                                [a.startupClass, a.id, a.name])
             },
-            kill:     () => Compositor.killApp([a.startupClass, a.id, a.name],
-                                              (a.command && a.command[0]) || "")
+            kill:     () => {
+                Compositor.killApp([a.startupClass, a.id, a.name], (a.command && a.command[0]) || "")
+                Launches.killed(a.name)
+            }
         }
     }
     readonly property var appResults: {
@@ -270,6 +272,29 @@ Item {
         return out
     }
 
+    readonly property var _dndActions: [
+        { id: "dnd:toggle",
+          title: Notifications.dnd ? "Disable Do Not Disturb" : "Enable Do Not Disturb",
+          hint: Notifications.dnd ? "resume notifications" : "silence notifications",
+          glyph: Notifications.dnd ? Sh.icBell : Sh.icBellOff, act: () => Notifications.toggleDnd(),
+          keys: ["dnd", "do not disturb", "silence", "silence notifications",
+                 "mute notifications", "quiet mode", "focus mode"] }
+    ]
+    readonly property var dndResults: {
+        const _ = Notifications.dnd
+        const q = root.q.toLowerCase().trim()
+        if (q.length < 2) return []
+        const out = []
+        for (const a of root._dndActions) {
+            let hit = false
+            for (const k of a.keys) {
+                if (k.indexOf(q) >= 0 || q.indexOf(k) === 0) { hit = true; break }
+            }
+            if (hit) out.push(root._capRow(a))
+        }
+        return out
+    }
+
     ClipboardList {
         id: clipboard
         filterText: root.mode === "clipboard" ? root.q : ""
@@ -296,7 +321,7 @@ Item {
         : root.mode === "files"     ? root.fileResults
         : root.mode === "calc"      ? root.calcResults
         : root.mode === "run"       ? root.runResults
-        : root.captureResults.concat(root.appResults)
+        : root.captureResults.concat(root.dndResults).concat(root.appResults)
     onResultsChanged: { selected = 0; inspectOpen = false }
     readonly property var current: results.length > 0
         ? results[Math.max(0, Math.min(selected, results.length - 1))] : null

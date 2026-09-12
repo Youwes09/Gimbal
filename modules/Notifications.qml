@@ -35,7 +35,7 @@ QtObject {
 
     function _rec(n) {
         return {
-            nid:     n.id,
+            nid:     String(n.id),
             app:     n.appName || "Notification",
             appIcon: n.appIcon || "",
             desktopEntry: n.desktopEntry || "",
@@ -49,7 +49,17 @@ QtObject {
     }
 
     function _ingest(n) {
-        const r = _rec(n)
+        root._push(_rec(n))
+    }
+
+    function notifySynthetic(rec, forceShow) {
+        root._push(Object.assign({
+            nid: "synthetic:" + Date.now(), appIcon: "", desktopEntry: "",
+            body: "", image: "", urgency: "normal", time: Date.now()
+        }, rec), !!forceShow)
+    }
+
+    function _push(r, forceShow) {
         const h = root.history.slice()
         h.unshift(r)
         if (h.length > 100) h.length = 100
@@ -59,7 +69,7 @@ QtObject {
         _saveTimer.restart()
 
         const crit = r.urgency === "critical"
-        if (!root.dnd || (crit && root._c("dndBypassCritical", true))) {
+        if (!root.dnd || (crit && root._c("dndBypassCritical", true)) || forceShow) {
             while (root.popupModel.count) root.popupModel.remove(0)
             root.popupModel.append(r)
         }
@@ -106,7 +116,17 @@ QtObject {
         }
     }
 
-    function toggleDnd() { root.dnd = !root.dnd; _saveTimer.restart() }
+    function toggleDnd() {
+        root.dnd = !root.dnd
+        _saveTimer.restart()
+        root.notifySynthetic({
+            app: "Gimbal",
+            summary: root.dnd ? "Do Not Disturb enabled" : "Do Not Disturb disabled",
+            body: root.dnd ? "Notifications will stay quiet until you turn this off."
+                           : "You'll see new notifications again.",
+            urgency: "normal"
+        }, true)
+    }
 
     function focusSender(rec) {
         if (rec) Compositor.focus([rec.desktopEntry, rec.app])
@@ -126,7 +146,8 @@ QtObject {
             try {
                 const j = JSON.parse(text() || "{}")
                 root.dnd = !!j.dnd
-                root.history = Array.isArray(j.items) ? j.items : []
+                root.history = (Array.isArray(j.items) ? j.items : [])
+                    .map(r => Object.assign({}, r, { nid: String(r.nid) }))
             } catch (e) { root.dnd = false; root.history = [] }
             root._syncModel()
         }

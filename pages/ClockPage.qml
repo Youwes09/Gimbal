@@ -127,6 +127,24 @@ Item {
                     font.letterSpacing: 1
                 }
             }
+
+            Text {
+                visible: Notifications.dnd && (batSeg.visible || wxSeg.visible)
+                anchors.verticalCenter: parent.verticalCenter
+                text: "|"
+                color: root.muted
+                font.family: Sh.font
+                font.pixelSize: Sh.fs(14)
+            }
+
+            Text {
+                visible: Notifications.dnd
+                anchors.verticalCenter: parent.verticalCenter
+                text: Sh.icBellOff
+                color: root.accent
+                font.family: Sh.iconFont
+                font.pixelSize: Sh.fs(16)
+            }
         }
     }
 

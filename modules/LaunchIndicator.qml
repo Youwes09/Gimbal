@@ -31,7 +31,7 @@ PanelWindow {
         radius: Sh.fs(15)
         color: Theme.surface
         border.width: 1
-        border.color: Qt.alpha(Theme.accent, 0.4)
+        border.color: Launches.phase === "killed" ? Qt.rgba(1, 0.4, 0.4, 0.5) : Qt.alpha(Theme.accent, 0.4)
 
         opacity: win.up ? 1 : 0
         scale: win.up ? 1 : 0.94
@@ -54,8 +54,10 @@ PanelWindow {
 
             Text {
                 anchors.verticalCenter: parent.verticalCenter
-                text: Launches.phase === "ok" ? Sh.icCorner : Sh.icRefresh
-                color: Theme.accent
+                text: Launches.phase === "ok" ? Sh.icCorner
+                    : Launches.phase === "killed" ? Sh.icX
+                    : Sh.icRefresh
+                color: Launches.phase === "killed" ? Qt.rgba(1, 0.55, 0.55, 0.95) : Theme.accent
                 font.family: Sh.iconFont
                 font.pixelSize: Sh.fs(15)
                 RotationAnimation on rotation {
@@ -69,6 +71,7 @@ PanelWindow {
             Text {
                 anchors.verticalCenter: parent.verticalCenter
                 text: Launches.phase === "ok" ? (Launches.title + " ready")
+                    : Launches.phase === "killed" ? (Launches.title + " killed")
                     : Launches.slow ? (Launches.title + " — still starting…")
                     : ("Launching " + Launches.title + "…")
                 color: Theme.fg
