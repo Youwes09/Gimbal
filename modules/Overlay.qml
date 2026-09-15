@@ -8,7 +8,6 @@ import "root:/pages"
 PanelWindow {
     id: root
 
-    visible: !Sh.captureVeil
     readonly property bool open: Sh.shown === true
 
     anchors { left: true; right: true; top: true; bottom: true }
@@ -239,6 +238,17 @@ PanelWindow {
         }
         Component { id: capturePage; CapturePage {} }
 
+        Loader {
+            id: networkLoader
+            anchors.fill: parent
+            active: Sh.page === "network" || opacity > 0.01
+            sourceComponent: networkPage
+            opacity: Sh.page === "network" ? 1 : 0
+            visible: opacity > 0.01
+            Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+        }
+        Component { id: networkPage; NetworkPage {} }
+
         Rectangle {
             anchors.fill: parent
             color: "black"
@@ -260,10 +270,16 @@ PanelWindow {
         anchors.fill: parent
         focus: true
 
+        Connections {
+            target: Sh
+            function onReclaimFocus() { keyCatch.forceActiveFocus() }
+        }
+
         readonly property bool wall: Sh.page === "wallpaper"
         readonly property bool notif: Sh.page === "notifications"
         readonly property bool home: Sh.page === "clock"
         readonly property bool cap: Sh.page === "capture"
+        readonly property bool net: Sh.page === "network"
 
         Keys.onPressed: (e) => {
             if (Sh.page === "suspend") {
@@ -289,6 +305,9 @@ PanelWindow {
                 e.accepted = true
             } else if (e.key === Qt.Key_S) {
                 Sh.page = keyCatch.cap ? "clock" : "capture"
+                e.accepted = true
+            } else if (e.key === Qt.Key_B) {
+                Sh.page = keyCatch.net ? "clock" : "network"
                 e.accepted = true
             } else if (keyCatch.notif && e.key === Qt.Key_D) {
                 Notifications.toggleDnd()

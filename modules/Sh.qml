@@ -87,7 +87,6 @@ QtObject {
     property real   powerPush: 0
     property real   powerDim: 0
 
-    property bool   captureVeil: false
     property bool   fastOpen: false
     function openFast(p) {
         root.fastOpen = true
@@ -103,12 +102,13 @@ QtObject {
         root.shown = true
     }
 
+    signal reclaimFocus()
+
     function toggle(p) {
         if (root.shown) root.close()
         else            root.open(p)
     }
     function open(p) {
-        root.captureVeil = false
         if (p && p.length > 0) root.page = p
         root.shown = true
     }
@@ -117,8 +117,8 @@ QtObject {
     }
 
     property bool launcherShown: false
-    function toggleLauncher() { root.captureVeil = false; root.launcherShown = !root.launcherShown }
-    function openLauncher()   { root.captureVeil = false; root.launcherShown = true }
+    function toggleLauncher() { root.launcherShown = !root.launcherShown }
+    function openLauncher()   { root.launcherShown = true }
     function closeLauncher()  { root.launcherShown = false }
 
     property real reveal: 0

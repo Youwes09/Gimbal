@@ -14,6 +14,8 @@ QtObject {
     readonly property string _statePath: _stateDir + "/wallpaper"
     readonly property string _posterDir: (Quickshell.env("XDG_CACHE_HOME")
         || (Quickshell.env("HOME") + "/.cache")) + "/gimbal/posters"
+    readonly property string _wideDir: (Quickshell.env("XDG_CACHE_HOME")
+        || (Quickshell.env("HOME") + "/.cache")) + "/gimbal/wide"
 
     property var list: []
     property string current: ""
@@ -82,6 +84,30 @@ QtObject {
         onExited: root.posterRev++
     }
 
+    property int wideRev: 0
+    property var _widesDone: ({})
+    function _genWides() {
+        const imgs = root.list.filter(w => !w.video && w.wide && !root._widesDone[w.wide])
+        if (imgs.length === 0 || _wide.running) return
+        _wide.command = ["sh", "-c",
+            'd="$1"; mkdir -p "$d"; shift; command -v magick >/dev/null 2>&1 || exit 0; for f in "$@"; do '
+            + 'b=$(basename "$f"); n="${b%.*}"; o="$d/$n.jpg"; '
+            + '[ -s "$o" ] || magick "$f[0]" -resize "1920x1080>" -background black -alpha remove -alpha off -quality 92 "$o" '
+            + '>/dev/null 2>&1; test -s "$o" && printf "%s\\n" "$o"; done',
+            "_", root._wideDir].concat(imgs.map(w => w.path))
+        _wide.running = true
+    }
+    property Process _wide: Process {
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const done = Object.assign({}, root._widesDone)
+                this.text.trim().split("\n").filter(l => l.length > 0).forEach(o => done[o] = true)
+                root._widesDone = done
+            }
+        }
+        onExited: root.wideRev++
+    }
+
     property Process _scan: Process {
         running: true
         command: ["sh", "-c",
@@ -99,7 +125,8 @@ QtObject {
                         name:   name,
                         gif:    /\.gif$/i.test(f),
                         video:  video,
-                        poster: video ? (root._posterDir + "/" + name + ".jpg") : ""
+                        poster: video ? (root._posterDir + "/" + name + ".jpg") : "",
+                        wide:   video ? "" : (root._wideDir + "/" + name + ".jpg")
                     }
                 })
                 if (root.current === "" || !root.list.some(w => w.path === root.current)) {
@@ -107,6 +134,7 @@ QtObject {
                     Qt.callLater(() => root._restore.running = true)
                 }
                 root._genPosters()
+                root._genWides()
             }
         }
     }

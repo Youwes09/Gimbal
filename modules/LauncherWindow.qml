@@ -6,7 +6,6 @@ import "root:/pages"
 
 PanelWindow {
     id: root
-    visible: !Sh.captureVeil
     readonly property bool open: Sh.launcherShown === true
 
     anchors { left: true; right: true; top: true; bottom: true }

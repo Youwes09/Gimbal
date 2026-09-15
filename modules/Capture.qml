@@ -108,13 +108,19 @@ QtObject {
         if (root._pickerFor === "record") {
             root.recFile = root.recDir + "/Recording_" + root._stamp() + ".mp4"
             _recRegion.geom = geom
-            _recRegion.running = true
+            _regionSettle.action = () => _recRegion.running = true
         } else {
             _grimRegion.geom = geom
             _grimRegion.out = root.shotDir + "/Screenshot_" + root._stamp() + ".png"
             _grimRegion.quiet = root._quiet ? "1" : "0"
-            _grimRegion.running = true
+            _regionSettle.action = () => _grimRegion.running = true
         }
+        _regionSettle.restart()
+    }
+    property Timer _regionSettle: Timer {
+        interval: 60
+        property var action: null
+        onTriggered: if (action) action()
     }
     function _regionCancelled() {
         root.pickerActive = false

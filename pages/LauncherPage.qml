@@ -295,6 +295,25 @@ Item {
         return out
     }
 
+    readonly property var _netActions: [
+        { id: "net:open", title: "Wi-Fi & Bluetooth", hint: "network overlay",
+          glyph: Sh.icWifi, act: () => Sh.open("network"),
+          keys: ["wifi", "wi-fi", "bluetooth", "network", "internet", "connect", "airplane mode"] }
+    ]
+    readonly property var netResults: {
+        const q = root.q.toLowerCase().trim()
+        if (q.length < 2) return []
+        const out = []
+        for (const a of root._netActions) {
+            let hit = false
+            for (const k of a.keys) {
+                if (k.indexOf(q) >= 0 || q.indexOf(k) === 0) { hit = true; break }
+            }
+            if (hit) out.push(root._capRow(a))
+        }
+        return out
+    }
+
     ClipboardList {
         id: clipboard
         filterText: root.mode === "clipboard" ? root.q : ""
@@ -321,7 +340,7 @@ Item {
         : root.mode === "files"     ? root.fileResults
         : root.mode === "calc"      ? root.calcResults
         : root.mode === "run"       ? root.runResults
-        : root.captureResults.concat(root.dndResults).concat(root.appResults)
+        : root.captureResults.concat(root.dndResults).concat(root.netResults).concat(root.appResults)
     onResultsChanged: { selected = 0; inspectOpen = false }
     readonly property var current: results.length > 0
         ? results[Math.max(0, Math.min(selected, results.length - 1))] : null

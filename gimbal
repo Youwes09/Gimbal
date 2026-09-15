@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-repo="$(dirname "$(readlink -f "$0")")"
+repo="${GIMBAL_REPO:-$(dirname "$(readlink -f "$0")")}"
 
 export_render_loop() {
     [ -z "$QSG_RENDER_LOOP" ] && export QSG_RENDER_LOOP=threaded
@@ -66,6 +66,23 @@ stop_daemon() {
     reap_duplicates
     pids=$(running_pids)
     [ -n "$pids" ] && kill $pids
+    rm -f "$_pidfile"
+}
+
+# hot-path check for high-frequency callers (volume/brightness key repeat):
+# a `/proc/<pid>` existence check is orders of magnitude cheaper than the
+# `pgrep -f` full-table scan reap_duplicates/ensure_daemon do, which matters
+# when this script gets invoked dozens of times a second under key repeat.
+_pidfile="${XDG_RUNTIME_DIR:-/tmp}/gimbal-daemon.pid"
+ensure_daemon_fast() {
+    local p
+    if [ -f "$_pidfile" ]; then
+        p=$(<"$_pidfile")
+        [ -n "$p" ] && [ -d "/proc/$p" ] && return 0
+    fi
+    reap_duplicates
+    ensure_daemon || return 1
+    running_pids | sort -n | tail -1 > "$_pidfile"
 }
 
 usage() {
@@ -101,6 +118,8 @@ restart)
     for _ in $(seq 1 50); do running_pids >/dev/null || break; sleep 0.1; done
     export_env
     setsid -f qs -p "$repo" >/dev/null 2>&1
+    for _ in $(seq 1 50); do sleep 0.1; running_pids >/dev/null && break; done
+    running_pids | sort -n | tail -1 > "$_pidfile"
     ;;
 toggle)
     reap_duplicates
@@ -146,8 +165,7 @@ record)
     esac
     ;;
 volume)
-    reap_duplicates
-    ensure_daemon || exit 1
+    ensure_daemon_fast || exit 1
     case "$2" in
         up)   ipc volume up "${3:-5}" ;;
         down) ipc volume down "${3:-5}" ;;
@@ -156,8 +174,7 @@ volume)
     esac
     ;;
 brightness)
-    reap_duplicates
-    ensure_daemon || exit 1
+    ensure_daemon_fast || exit 1
     case "$2" in
         up)   ipc brightness up "${3:-5}" ;;
         down) ipc brightness down "${3:-5}" ;;

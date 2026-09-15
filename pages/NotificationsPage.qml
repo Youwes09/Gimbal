@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Effects
 import Quickshell
 import "root:/modules"
 
@@ -203,14 +202,6 @@ Item {
                         border.width: card.crit ? 1.5 : 1
                         border.color: card.crit ? Qt.alpha(root.accent, 0.42)
                                                 : Qt.rgba(1, 1, 1, card.hot ? 0.18 : 0.11)
-                        layer.enabled: true
-                        layer.effect: MultiEffect {
-                            shadowEnabled: true
-                            shadowColor: card.crit ? Qt.alpha(root.accent, 0.22) : Qt.rgba(0, 0, 0, 0.24)
-                            shadowBlur: 0.7
-                            shadowVerticalOffset: root.f(5)
-                            blurMax: 40
-                        }
                     }
 
                     Rectangle {

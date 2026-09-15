@@ -33,9 +33,13 @@ It also owns your wallpaper (static / GIF / video, cross-faded on switch) and re
 - Toasts drop from the top-centre as a shallow deck; hover pauses the timer, critical stays until dismissed
 - History page (`n` in the overlay) — grouped by app, per-item + clear-all, DND toggle, action buttons on still-live notifications
 
+**Network & Bluetooth**
+- `b` in the overlay — Wi-Fi (scan, join, forget, password prompt) and paired Bluetooth devices, one glass-card page
+- Backed by `nmcli` / `bluetoothctl`; no applet daemon needed
+
 **Capture**
 - Type `screenshot` (region / full) or `record` in the launcher — no prefix
-- Region via `slurp` + `grim`; recording via `wl-screenrec` (SIGINT to finalise), toggled from the same `record` entry
+- Region select is a built-in drag overlay, captured with `grim`; recording via `wl-screenrec` (SIGINT to finalise), toggled from the same `record` entry
 - After a screenshot the overlay opens the **Capture page** — the image, its dimensions / size / format, and `c` copy · `a` annotate · `o` open · `r` reveal · `del` discard
 - Annotate opens `satty` on the file in place
 - `gimbal screenshot [region|full]` · `gimbal record [full|region|toggle|stop]`
@@ -54,6 +58,15 @@ It also owns your wallpaper (static / GIF / video, cross-faded on switch) and re
 
 ## Install
 
+**Nix (any distro with the Nix package manager):**
+
+```sh
+nix shell github:Youwes09/Gimbal
+gimbal start
+```
+
+Self-contained — pulls in Quickshell and every runtime dependency, no system packages touched. Add the flake as an input and put `gimbal.packages.${system}.default` in your `environment.systemPackages` / home-manager profile for a permanent install.
+
 **Arch:**
 
 ```sh
@@ -71,18 +84,22 @@ The script checks dependencies, installs the missing ones (`pacman` + `paru`/`ya
 |---|---|---|
 | **required** | `quickshell` (AUR) | the runtime — needs Wayland + the UPower service |
 | | `wl-clipboard`, `cliphist` | clipboard history (`wl-paste --watch cliphist store` must run) |
-| | `imagemagick` | wallpaper colour palette |
+| | `imagemagick` | wallpaper colour palette, wallpaper still-cache |
+| | `grim` | screenshots |
+| | `networkmanager` | Wi-Fi page (`nmcli`) |
+| | `bluez` | Bluetooth page (`bluetoothctl`) |
+| | `brightnessctl` | screen brightness (used if no `oledctl` on `$PATH`) |
+| | `libnotify` | quiet-screenshot toast |
+| | `xdg-utils` | fallback opener when no file manager is configured |
 | **optional** | `qt6-multimedia` | video wallpapers |
 | | `ffmpeg` | video wallpaper poster frames |
-| | `grim`, `slurp` | screenshots (region + full) |
-| | `wayfreeze` | freezes the screen for region select — some compositors don't render a live `slurp` overlay without it |
 | | `wl-screenrec` | screen recording |
 | | `satty` | screenshot annotation |
 | | `upower` | battery on the clock page |
 | | `curl` | weather on the clock page |
 | | `file` | richer file-type detection in the inspect card |
 
-Fonts (AdwaitaMono, Lucide) are bundled in `assets/fonts/`.
+Fonts (AdwaitaMono, Lucide) are bundled in `assets/fonts/`. The Nix flake pulls in every row above automatically.
 
 ## Usage
 
@@ -95,7 +112,7 @@ gimbal screenshot …     region | full
 gimbal record …         full | region | toggle | stop
 ```
 
-**In the overlay:** `w` → wallpaper picker · `n` → notifications · `s` → last capture · `←`/`→` cycle · `enter` apply · `↑`/`↓` arm power · `esc` close
+**In the overlay:** `w` → wallpaper picker · `n` → notifications · `s` → last capture · `b` → Wi-Fi / Bluetooth · `←`/`→` cycle · `enter` apply · `↑`/`↓` arm power · `esc` close
 **Capture page:** `c` copy · `a` annotate · `o` open · `r` reveal · `del` discard
 
 **In the launcher:** type a prefix, `↑`/`↓` to move, `tab` to inspect, `enter` to run.

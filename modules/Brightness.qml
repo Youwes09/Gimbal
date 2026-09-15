@@ -22,9 +22,6 @@ QtObject {
     }
     Component.onCompleted: root.refresh()
 
-    // oledctl (wayoled) is the real control — it drives the panel through the
-    // display-protection daemon's own curve. brightnessctl is only a fallback
-    // for when that daemon isn't up (missing socket, not started yet, etc).
     property Process _get: Process {
         command: ["sh", "-c",
             'o=$(oledctl brightness get 2>/dev/null); '

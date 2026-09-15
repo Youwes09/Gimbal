@@ -18,13 +18,16 @@ required=(
   "wl-clipboard|command -v wl-copy|wl-clipboard|pacman|clipboard history"
   "cliphist|command -v cliphist|cliphist|pacman|clipboard history store"
   "imagemagick|command -v magick|imagemagick|pacman|wallpaper colour palette"
+  "grim|command -v grim|grim|pacman|screenshots"
+  "networkmanager|command -v nmcli|networkmanager|pacman|Wi-Fi page"
+  "bluez-utils|command -v bluetoothctl|bluez-utils|pacman|Bluetooth page"
+  "brightnessctl|command -v brightnessctl|brightnessctl|pacman|screen brightness"
+  "libnotify|command -v notify-send|libnotify|pacman|quiet-screenshot toast"
+  "xdg-utils|command -v xdg-open|xdg-utils|pacman|fallback file/dir opener"
 )
 optional=(
   "qt6-multimedia|qml_has QtMultimedia|qt6-multimedia|pacman|video wallpapers"
   "ffmpeg|command -v ffmpeg|ffmpeg|pacman|video wallpaper poster frames"
-  "grim|command -v grim|grim|pacman|screenshots"
-  "slurp|command -v slurp|slurp|pacman|screenshot / recording region select"
-  "wayfreeze|command -v wayfreeze|wayfreeze|aur|freezes the screen for region select"
   "wl-screenrec|command -v wl-screenrec|wl-screenrec|aur|screen recording"
   "satty|command -v satty|satty|aur|screenshot annotation"
   "upower|command -v upower|upower|pacman|battery on the clock page"
@@ -139,5 +142,5 @@ Bind the two toggles in your compositor, e.g.
              bindsym \$mod+Tab exec gimbal toggle
              exec gimbal start
 
-Inside the overlay: w = wallpaper picker, arrows = arm power / cycle, esc = close.
+Inside the overlay: w = wallpaper picker, b = Wi-Fi/Bluetooth, arrows = arm power / cycle, esc = close.
 EOF

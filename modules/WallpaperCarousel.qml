@@ -178,6 +178,8 @@ Item {
                             if (!w) return ""
                             if (w.video) return w.poster.length > 0
                                 ? "file://" + w.poster + "?v=" + Wallpapers.posterRev : ""
+                            if (w.wide && w.wide.length > 0)
+                                return "file://" + w.wide + "?v=" + Wallpapers.wideRev
                             return "file://" + w.path
                         }
                     }

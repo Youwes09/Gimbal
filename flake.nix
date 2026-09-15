@@ -24,24 +24,54 @@
             withQtSvg    = true;
           };
 
-          fonts = pkgs.makeFontsConf {
-            fontDirectories = with pkgs; [ inter nerd-fonts.fira-code ];
-          };
+          # required for the shell to actually function
+          runtimeDeps = with pkgs; [
+            qs
+            wl-clipboard # clipboard actions, screenshot copy
+            cliphist # clipboard history
+            imagemagick # wallpaper palette, wide-still cache
+            ffmpeg # video wallpapers, poster frames
+            grim # screenshots
+            networkmanager # nmcli — network page
+            bluez # bluetoothctl — bluetooth page
+            brightnessctl # brightness (falls back to this if oledctl is absent)
+            libnotify # quiet-screenshot toast
+            xdg-utils # xdg-open fallback
+          ];
+
+          # soft deps — features degrade gracefully (command -v guarded) without them
+          optionalDeps = with pkgs; [
+            satty # screenshot annotation
+            wl-screenrec # screen recording
+            file # richer mime detection in the inspect card
+            curl # weather on the clock page
+          ];
+
+          allDeps = runtimeDeps ++ optionalDeps;
         in
         {
           packages.default =
-            pkgs.runCommand "gimbal" { buildInputs = [ pkgs.makeWrapper ]; } ''
-              mkdir -p $out/bin
-              makeWrapper ${qs}/bin/qs $out/bin/gimbal \
-                --set FONTCONFIG_FILE "${fonts}" \
-                --set QSG_RENDER_LOOP threaded \
-                --add-flags "-p \$PWD"
-            '';
+            pkgs.runCommand "gimbal"
+              { nativeBuildInputs = [ pkgs.makeWrapper ]; }
+              ''
+                mkdir -p $out/share/gimbal $out/bin
+                cp -r ${./modules} $out/share/gimbal/modules
+                cp -r ${./pages} $out/share/gimbal/pages
+                cp -r ${./assets} $out/share/gimbal/assets
+                cp ${./shell.qml} $out/share/gimbal/shell.qml
+                cp ${./gimbal} $out/share/gimbal/gimbal
+                chmod +x $out/share/gimbal/gimbal
+
+                makeWrapper $out/share/gimbal/gimbal $out/bin/gimbal \
+                  --set GIMBAL_REPO "$out/share/gimbal" \
+                  --set QSG_RENDER_LOOP threaded \
+                  --prefix PATH : "${pkgs.lib.makeBinPath allDeps}"
+              ''
+              // { meta.mainProgram = "gimbal"; };
 
           devShells.default = pkgs.mkShellNoCC {
-            packages = [ qs ];
+            packages = allDeps;
             shellHook = ''
-              export FONTCONFIG_FILE="${fonts}"
               export QSG_RENDER_LOOP=threaded
               echo "gimbal — run: ./gimbal start   (toggle: ./gimbal toggle)"
             '';
