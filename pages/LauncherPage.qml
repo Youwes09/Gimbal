@@ -21,7 +21,10 @@ Item {
     readonly property int rMd: f(12)
     readonly property int rLg: f(16)
 
-    readonly property color cPanel: Theme.surface
+    readonly property color cPanel:  Qt.tint(Theme.surface, Qt.rgba(1, 1, 1, 0.035))
+    readonly property color cRim:    Qt.alpha(Theme.fg, 0.12)
+    readonly property color cShadow: Qt.rgba(0, 0, 0, 0.5)
+    readonly property real  wRim:    1
     readonly property color cSel:    Qt.alpha(Theme.accent, 0.14)
     readonly property color cSelRim: Qt.alpha(Theme.accent, 0.5)
     readonly property color cHover:  Qt.alpha(Theme.fg, 0.05)
@@ -517,7 +520,7 @@ Item {
         layer.enabled: true
         layer.effect: MultiEffect {
             shadowEnabled: true
-            shadowColor: Qt.rgba(0, 0, 0, 0.4)
+            shadowColor: root.cShadow
             shadowBlur: 1.0
             shadowVerticalOffset: root.f(10)
             blurMax: 64
@@ -534,8 +537,9 @@ Item {
                 anchors.fill: parent
                 radius: parent.radius
                 color: "transparent"
-                border.width: 1
-                border.color: Qt.rgba(1, 1, 1, 0.05)
+                border.width: root.wRim
+                border.color: root.cRim
+                z: 10
             }
 
             Item {
@@ -845,9 +849,9 @@ Item {
         width: legendText.implicitWidth + root.sp4
         height: root.f(30)
         radius: root.rSm
-        color: Theme.surface
+        color: root.cPanel
         border.width: 1
-        border.color: Qt.rgba(1, 1, 1, 0.06)
+        border.color: Qt.alpha(Theme.fg, 0.1)
         opacity: (!root.expanded && !root.inspectActive) ? 1 : 0
         visible: opacity > 0.01
         Behavior on opacity { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
@@ -931,13 +935,13 @@ Item {
             Rectangle {
                 anchors.fill: parent
                 radius: root.rLg
-                color: Theme.surface
-                border.width: 1
-                border.color: Qt.rgba(1, 1, 1, 0.06)
+                color: root.cPanel
+                border.width: root.wRim
+                border.color: root.cRim
                 layer.enabled: true
                 layer.effect: MultiEffect {
                     shadowEnabled: true
-                    shadowColor: Qt.rgba(0, 0, 0, 0.55)
+                    shadowColor: root.cShadow
                     shadowBlur: 1.0
                     shadowVerticalOffset: root.f(16)
                     blurMax: 64

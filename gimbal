@@ -6,40 +6,9 @@ export_render_loop() {
     [ -z "$QSG_RENDER_LOOP" ] && export QSG_RENDER_LOOP=threaded
 }
 
-export_qtmultimedia() {
-    local d
-    for d in /nix/store/*-qtmultimedia-*/lib/qt-6; do
-        [ -d "$d/qml/QtMultimedia" ] || continue
-        export NIXPKGS_QT6_QML_IMPORT_PATH="$d/qml${NIXPKGS_QT6_QML_IMPORT_PATH:+:$NIXPKGS_QT6_QML_IMPORT_PATH}"
-        export QML2_IMPORT_PATH="$d/qml${QML2_IMPORT_PATH:+:$QML2_IMPORT_PATH}"
-        export QT_PLUGIN_PATH="$d/plugins${QT_PLUGIN_PATH:+:$QT_PLUGIN_PATH}"
-        export QT_MEDIA_BACKEND="${QT_MEDIA_BACKEND:-ffmpeg}"
-        break
-    done
-}
-
-export_ffmpeg() {
-    command -v ffmpeg >/dev/null && return
-    local f
-    for f in /nix/store/*-ffmpeg*-bin/bin/ffmpeg; do
-        [ -x "$f" ] || continue
-        export PATH="${f%/ffmpeg}${PATH:+:$PATH}"
-        break
-    done
-}
-
-export_magick() {
-    command -v magick >/dev/null && return
-    local f
-    for f in /nix/store/*-imagemagick-*/bin/magick; do
-        [ -x "$f" ] || continue
-        export PATH="${f%/magick}${PATH:+:$PATH}"
-        break
-    done
-}
-
+# QtMultimedia, ffmpeg and ImageMagick come from the Nix wrapper (see flake.nix).
 export_env() {
-    export_render_loop; export_qtmultimedia; export_ffmpeg; export_magick
+    export_render_loop
     unset ELECTRON_RUN_AS_NODE
 }
 

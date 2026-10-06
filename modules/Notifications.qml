@@ -26,8 +26,6 @@ QtObject {
     function _c(k, d) { return (root.cfg && root.cfg[k] !== undefined) ? root.cfg[k] : d }
 
     function timeoutFor(urgency) {
-        if (urgency === "critical") return root._c("timeoutCritical", 0)
-        if (urgency === "low")      return root._c("timeoutLow", 4000)
         return root._c("timeout", 6000)
     }
 

@@ -76,6 +76,10 @@ QtObject {
         }
         if (!acc) for (const x of rows) if (!acc || x.l > acc.l) acc = x
 
+        // State colours rotate around the accent so they always read as distinct from it.
+        const accS = Math.max(0.5, Math.min(0.8, acc.s))
+        const accL = Math.max(0.58, Math.min(0.68, acc.l))
+
         return {
             background:             _hslToHex(h, tint * 0.9, 0.045),
             surface:                _hslToHex(h, tint * 0.8, 0.075),
@@ -85,7 +89,11 @@ QtObject {
             outline:                _hslToHex(h, tint * 0.7, 0.22),
             primary:                _hslToHex(acc.h,
                 Math.max(0.5, Math.min(0.9, acc.s)),
-                Math.max(0.55, Math.min(0.72, acc.l)))
+                Math.max(0.55, Math.min(0.72, acc.l))),
+            contrast:               _hslToHex(acc.h + 180, accS, accL),
+            secondary:              _hslToHex(acc.h + 120, accS, accL),
+            tertiary:               _hslToHex(acc.h - 120, accS, accL),
+            error:                  _hslToHex(0, 0.78, 0.6)
         }
     }
 

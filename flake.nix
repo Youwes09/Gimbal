@@ -14,6 +14,41 @@
     inputs.flake-parts.lib.mkFlake { inherit inputs; } {
       systems = [ "x86_64-linux" "aarch64-linux" ];
 
+      flake.homeManagerModules.default = { config, lib, pkgs, ... }:
+        let
+          cfg = config.programs.gimbal;
+        in
+        {
+          options.programs.gimbal = {
+            enable = lib.mkEnableOption "Gimbal overlay shell";
+            package = lib.mkOption {
+              type = lib.types.package;
+              default = inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.default;
+              description = "Gimbal package (provides the `gimbal` command and its quickshell).";
+            };
+            devPath = lib.mkOption {
+              type = lib.types.nullOr lib.types.str;
+              default = null;
+              example = "/home/me/Projects/Gimbal";
+              description = "Run QML from this working copy instead of the store, for live reload while hacking.";
+            };
+            settings = lib.mkOption {
+              type = lib.types.attrsOf lib.types.anything;
+              default = { };
+              example = { editor = "codium"; terminal = "foot"; };
+              description = "Written to ~/.config/gimbal/config.json.";
+            };
+          };
+
+          config = lib.mkIf cfg.enable {
+            home.packages = [ cfg.package ];
+            home.sessionVariables = lib.mkIf (cfg.devPath != null) { GIMBAL_REPO = cfg.devPath; };
+            xdg.configFile."gimbal/config.json" = lib.mkIf (cfg.settings != { }) {
+              text = builtins.toJSON cfg.settings;
+            };
+          };
+        };
+
       perSystem = { pkgs, system, ... }:
         let
           qs = inputs.quickshell.packages.${system}.default.override {
@@ -48,6 +83,9 @@
           ];
 
           allDeps = runtimeDeps ++ optionalDeps;
+
+          # QML import for video wallpapers; same nixpkgs (and so same Qt) as quickshell.
+          qtmm = pkgs.kdePackages.qtmultimedia;
         in
         {
           packages.default =
@@ -62,9 +100,14 @@
                 cp ${./gimbal} $out/share/gimbal/gimbal
                 chmod +x $out/share/gimbal/gimbal
 
+                # GIMBAL_REPO is only a default so a working copy can be run instead (HM devPath).
                 makeWrapper $out/share/gimbal/gimbal $out/bin/gimbal \
-                  --set GIMBAL_REPO "$out/share/gimbal" \
+                  --set-default GIMBAL_REPO "$out/share/gimbal" \
                   --set QSG_RENDER_LOOP threaded \
+                  --set-default QT_MEDIA_BACKEND ffmpeg \
+                  --prefix NIXPKGS_QT6_QML_IMPORT_PATH : "${qtmm}/lib/qt-6/qml" \
+                  --prefix QML2_IMPORT_PATH : "${qtmm}/lib/qt-6/qml" \
+                  --prefix QT_PLUGIN_PATH : "${qtmm}/lib/qt-6/plugins" \
                   --prefix PATH : "${pkgs.lib.makeBinPath allDeps}"
               ''
               // { meta.mainProgram = "gimbal"; };

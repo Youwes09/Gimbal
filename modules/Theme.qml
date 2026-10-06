@@ -28,4 +28,8 @@ QtObject {
     readonly property color muted:    _v("on_surface_variant",     "#968b7c")
     readonly property color accent:   _v("primary",                "#e8a24a")
     readonly property color rim:      _v("outline",                "#2b2620")
+    readonly property color contrast: _v("contrast",               "#4a90e8")
+    readonly property color second:   _v("secondary",              "#4ae8a2")
+    readonly property color third:    _v("tertiary",               "#a24ae8")
+    readonly property color error:    _v("error",                  "#e85a5a")
 }
