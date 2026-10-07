@@ -9,29 +9,10 @@ Column {
 
     readonly property real innerW: col.width
 
-    // ── clock: Enter (or a click) opens the calendar ────────────────────
+    // ── clock ───────────────────────────────────────────────────────────
     Card {
-        id: clock
         width: col.innerW
         height: DeckUi.f(150)
-        focused: DeckUi.zone === "clock"
-
-        function open() { DeckUi.section = "calendar"; DeckUi.zone = "center" }
-
-        Connections {
-            target: DeckUi
-            function onNav(key) {
-                if (DeckUi.zone !== "clock") return
-                if (key === Qt.Key_Right) DeckUi.go("right")
-                if (key === Qt.Key_Down)  DeckUi.go("down")
-                if (key === Qt.Key_Return || key === Qt.Key_Enter) clock.open()
-            }
-        }
-        MouseArea {
-            anchors.fill: parent
-            cursorShape: Qt.PointingHandCursor
-            onClicked: clock.open()
-        }
 
         Column {
             anchors.left: parent.left
@@ -152,7 +133,6 @@ Column {
             target: DeckUi
             function onNav(key) {
                 if (DeckUi.zone !== "media") return
-                if (key === Qt.Key_Up) { DeckUi.go("up"); return }
                 if (!media.p) { if (key === Qt.Key_Right) DeckUi.go("right"); return }
                 if (key === Qt.Key_Left)  media.btn = Math.max(0, media.btn - 1)
                 if (key === Qt.Key_Right) { if (media.btn === 2) DeckUi.go("right"); else media.btn++ }

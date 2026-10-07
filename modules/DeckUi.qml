@@ -28,12 +28,11 @@ QtObject {
     // Keyboard focus. Arrows move spatially; when a zone runs out of room in a direction it
     // hands focus on with go(). Left to right: media | rail | center | quick, mixer under quick.
     property string zone: "center"
-    property string section: "home"     // center panel: home | notifications | captures | calendar | session
-    readonly property var sections: ["home", "notifications", "captures", "calendar", "session"]
+    property string section: "home"     // center panel: home | notifications | captures | session
+    readonly property var sections: ["home", "notifications", "captures", "session"]
     readonly property var _next: ({
-        clock:  { right: "rail", down: "media" },
-        media:  { right: "rail", up: "clock" },
-        rail:   { left: "clock", right: "center" },
+        media:  { right: "rail" },
+        rail:   { left: "media", right: "center" },
         center: { left: "rail", right: "quick" },
         quick:  { left: "center", down: "mixer" },
         mixer:  { up: "quick" }

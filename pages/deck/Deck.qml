@@ -18,7 +18,6 @@ Item {
         { id: "home",          glyph: Sh.icHome,   label: "Home" },
         { id: "notifications", glyph: Sh.icBell,   label: "Notifications" },
         { id: "captures",      glyph: Sh.icImages, label: "Captures" },
-        { id: "calendar",      glyph: Sh.icCalendar, label: "Calendar" },
         { id: "session",       glyph: Sh.icPower,  label: "Session" }
     ]
 
@@ -155,7 +154,6 @@ Item {
                 Section { sid: "home";          sourceComponent: Home {} }
                 Section { sid: "notifications"; sourceComponent: Notifs {} }
                 Section { sid: "captures";      sourceComponent: Captures {} }
-                Section { sid: "calendar";      sourceComponent: CalendarPage {} }
                 Section { sid: "session";       sourceComponent: Session {} }
             }
         }
@@ -180,13 +178,11 @@ Item {
         readonly property var here: {
             const z = DeckUi.zone, s = DeckUi.section
             if (z === "mixer") return [["←→", "level"], ["⏎", "mute"]]
-            if (z === "clock") return [["⏎", "calendar"]]
             if (z === "quick") return [["⏎", "toggle"]]
             if (z === "media") return Status.player ? [["←→", "pick"], ["⏎", "press"]] : []
             if (z === "rail")  return [["↑↓", "page"], ["⏎", "enter"]]
             if (s === "notifications") return [["⏎", "open"], ["del", "dismiss"], ["c", "clear all"]]
             if (s === "captures") return [["⏎", "open"], ["c", "copy"], ["del", "trash"]]
-            if (s === "calendar") return [["⏎", "open day"], ["pg↑↓", "month"], ["t", "today"]]
             if (s === "session") return [["⏎", "run"]]
             return [["⏎", "open"]]
         }

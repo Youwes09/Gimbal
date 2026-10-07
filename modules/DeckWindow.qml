@@ -90,7 +90,7 @@ PanelWindow {
             if (k === Qt.Key_Escape) Sh.closeDeck()
             else if (k === Qt.Key_Tab) DeckUi.page(1)
             else if (k === Qt.Key_Backtab) DeckUi.page(-1)
-            else if (k >= Qt.Key_1 && k < Qt.Key_1 + DeckUi.sections.length) {
+            else if (k >= Qt.Key_1 && k <= Qt.Key_4) {
                 DeckUi.section = DeckUi.sections[k - Qt.Key_1]
                 DeckUi.zone = "center"
             }
