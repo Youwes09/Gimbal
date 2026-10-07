@@ -17,14 +17,15 @@ It also owns your wallpaper (static / GIF / video, cross-faded on switch), repai
 ## Features
 
 **Deck**
-- Left: clock and battery, now playing (art, seek, controls), CPU / RAM / GPU / temperature as matching ring tiles
+- Left: clock and battery (enter or click opens the calendar), now playing (art, seek, controls), CPU / RAM / GPU / temperature as matching ring tiles
 - Centre, with a section rail:
   - **Home** — greeting and a one-line summary, the folders you open most from the launcher with their git branch and uncommitted changes, your most-used apps, the latest notifications
   - **Notifications** — full history; open, dismiss, clear, Focus (Do Not Disturb)
   - **Captures** — newest screenshots and recordings; open, copy, trash; take new ones
+  - **Calendar** — month grid with dots for busy days and the selected day's events (times, location, Meet link); `pgup`/`pgdn` months, `t` today, `enter` opens the day in Google Calendar. Home's summary line shows your next event
   - **Session** — rest, suspend, log out, reboot, shut down (the last three ask twice)
 - Right: quick toggles (Focus, Stay awake, Screenshot, Record) above a mixer (output, microphone, brightness, and a slider per app playing)
-- Fully keyboard driven with arrows and `enter`: arrows move spatially across the whole deck and hand off between panels at the edges; in the mixer `←`/`→` set the level. `tab` / `1`–`4` switch pages, `space` play/pause, `esc` close. Key chips under the deck show what works where you are
+- Fully keyboard driven with arrows and `enter`: arrows move spatially across the whole deck and hand off between panels at the edges; in the mixer `←`/`→` set the level. `tab` / `1`–`5` switch pages, `space` play/pause, `esc` close. Key chips under the deck show what works where you are
 - Frosted backdrop from one blurred still of the screen; everything is built on open and torn down on close. Stats and git state are only sampled while it is open
 
 **Launcher**
@@ -187,3 +188,14 @@ State (frecency, current wallpaper, video posters) lives under `~/.local/state/g
 Gimbal is a rebuild of ideas from **[pibble](https://github.com/kianblakley/pibble)** by [kian blakley](https://github.com/kianblakley) — the summoned-shell approach, the wallpaper carousel's spatial model (parallax windows, scale falloff, continuous rank), the clipboard inspect card, live-wallpaper handling, and wallpaper-derived theming all trace back to it. If you want the full-featured version with in-app settings, custom pages, and flyouts, use pibble.
 
 Built with [Quickshell](https://github.com/quickshell-mirror/quickshell). Icons from [Lucide](https://lucide.dev).
+
+## Calendar
+
+The deck reads calendars from iCal feeds, so it works with Google Calendar without signing in.
+In Google Calendar open **Settings**, pick a calendar, and copy **Secret address in iCal format**.
+Put it on its own line in `~/.config/gimbal/calendars` (one feed per line, optionally `Work | <address>`).
+That address is a secret, which is why it lives in its own file rather than `config.json`.
+
+Feeds are fetched when the deck opens, at most every 15 minutes. It's read-only: Enter on a day
+opens it in Google Calendar for editing. Repeating events, moved and cancelled instances are handled;
+times with a named time zone are shown as local time.

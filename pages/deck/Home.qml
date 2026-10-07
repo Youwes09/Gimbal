@@ -30,6 +30,9 @@ Item {
     }
     readonly property string summary: {
         const bits = []
+        const up = Calendar.upcoming
+        if (up) bits.push((up.start <= Date.now() ? "Now: " : "") + up.title
+                          + (up.start > Date.now() ? " at " + Qt.formatTime(new Date(up.start), "h:mm AP") : ""))
         const n = Notifications.historyModel.count
         bits.push(n === 0 ? "No notifications" : n + (n === 1 ? " notification" : " notifications"))
         const d = Projects.dirtyCount
