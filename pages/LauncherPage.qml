@@ -21,15 +21,16 @@ Item {
     readonly property int rMd: f(12)
     readonly property int rLg: f(16)
 
-    // Panel sits darker than the dimmed desktop; a light rim and top sheen define its edge.
-    readonly property color cPanel:  Qt.alpha(Theme.bg, 0.97)
-    readonly property color cRim:    Qt.alpha(Theme.fg, 0.1)
-    readonly property color cSheen:  Qt.alpha(Theme.fg, 0.06)
-    readonly property color cShadow: Qt.rgba(0, 0, 0, 0.7)
+    // A brighter rim, top sheen and deep shadow lift the panel off whatever is behind it.
+    readonly property color cPanel:  Qt.tint(Theme.surface, Qt.rgba(1, 1, 1, 0.035))
+    readonly property color cRim:    Qt.alpha(Theme.fg, 0.17)
+    readonly property color cSheen:  Qt.alpha(Theme.fg, 0.08)
+    readonly property color cShadow: Qt.rgba(0, 0, 0, 0.8)
     readonly property real  wRim:    1
-    readonly property color cSel:    Qt.alpha(Theme.accent, 0.11)
-    readonly property color cHover:  Qt.alpha(Theme.fg, 0.04)
-    readonly property color cLine:   Qt.alpha(Theme.fg, 0.07)
+    readonly property color cSel:    Qt.alpha(Theme.accent, 0.14)
+    readonly property color cSelRim: Qt.alpha(Theme.accent, 0.5)
+    readonly property color cHover:  Qt.alpha(Theme.fg, 0.05)
+    readonly property color cLine:   Theme.rim
 
     readonly property int tInput:   18
     readonly property int tRow:     16
@@ -506,7 +507,8 @@ Item {
             shadowEnabled: true
             shadowColor: root.cShadow
             shadowBlur: 1.0
-            shadowVerticalOffset: root.f(10)
+            shadowVerticalOffset: root.f(14)
+            shadowScale: 1.03
             blurMax: 64
         }
 
@@ -691,12 +693,8 @@ Item {
                         x: root.sp1
                         radius: root.rSm
                         color: root.cSel
-                        Rectangle {
-                            anchors { left: parent.left; verticalCenter: parent.verticalCenter }
-                            width: 3; height: parent.height * 0.5
-                            radius: 1.5
-                            color: Theme.accent
-                        }
+                        border.width: 1
+                        border.color: root.cSelRim
                         opacity: root.results.length > 0 ? 1 : 0
                         Behavior on opacity { NumberAnimation { duration: 120 } }
                     }
@@ -843,9 +841,10 @@ Item {
         }
     }
 
-    // Glance line: what a bar would show, only while the launcher is up.
+    // Glance line (dashboard only): what a bar would show.
     Item {
         id: glance
+        visible: Sh.dash
         anchors.left: panelWrap.left
         anchors.right: panelWrap.right
         anchors.leftMargin: root.sp2
@@ -961,7 +960,10 @@ Item {
         anchors.topMargin: root.sp3
         width: legendText.implicitWidth + root.sp4
         height: root.f(30)
-        color: "transparent"
+        radius: root.rSm
+        color: root.cPanel
+        border.width: 1
+        border.color: Qt.alpha(Theme.fg, 0.1)
         opacity: (!root.expanded && !root.inspectActive && !Sh.dash) ? 1 : 0
         visible: opacity > 0.01
         Behavior on opacity { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
@@ -973,7 +975,7 @@ Item {
             show: legend.opacity > 0.5 && Sh.launcherShown
             span: 560
             content: "›  run      =  calc      /  files      ;  clipboard"
-            color: Qt.alpha(Theme.fg, 0.42)
+            color: Qt.alpha(Theme.fg, 0.6)
             font.family: Sh.font
             font.pixelSize: root.f(root.tCaption)
             font.letterSpacing: 0.5

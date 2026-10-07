@@ -37,10 +37,10 @@ PanelWindow {
         ScriptAction { script: root.active = false }
     }
 
-    // Frosted backdrop: one still of the screen per open, blurred; freed again on close.
+    // Dashboard only: frosted backdrop, one still of the screen per open, freed on close.
     Loader {
         anchors.fill: parent
-        active: root.active
+        active: root.active && Sh.dash
         sourceComponent: Item {
             // Bleed past the screen edges, where the blur would otherwise thin out.
             ScreencopyView {
@@ -64,7 +64,7 @@ PanelWindow {
     Rectangle {
         anchors.fill: parent
         visible: root.active
-        color: Qt.alpha(Theme.bg, (Sh.dash ? 0.74 : 0.6) * root.t)
+        color: Qt.alpha(Theme.bg, (Sh.dash ? 0.74 : 0.2) * root.t)
         MouseArea { anchors.fill: parent; onClicked: Sh.closeLauncher() }
     }
 
