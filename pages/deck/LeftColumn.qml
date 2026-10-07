@@ -116,7 +116,7 @@ Column {
     Card {
         id: media
         width: col.innerW
-        height: DeckUi.f(172)
+        height: col.height - DeckUi.f(150) - tiles.height - col.spacing * 2
         focused: DeckUi.zone === "media"
 
         readonly property var p: Status.player
@@ -133,8 +133,9 @@ Column {
             target: DeckUi
             function onNav(key) {
                 if (DeckUi.zone !== "media") return
+                if (!media.p) { if (key === Qt.Key_Right) DeckUi.go("right"); return }
                 if (key === Qt.Key_Left)  media.btn = Math.max(0, media.btn - 1)
-                if (key === Qt.Key_Right) media.btn = Math.min(2, media.btn + 1)
+                if (key === Qt.Key_Right) { if (media.btn === 2) DeckUi.go("right"); else media.btn++ }
                 if (key === Qt.Key_Return || key === Qt.Key_Enter) media.act(media.btn)
             }
         }
@@ -274,102 +275,109 @@ Column {
         }
     }
 
-    // ── system tiles ────────────────────────────────────────────────────
+    // ── system tiles: the same ring for each, icon and value in the middle ─
     Grid {
         id: tiles
         columns: 2
         spacing: DeckUi.f(12)
         width: col.innerW
         readonly property real tw: (col.innerW - spacing) / 2
-        readonly property real th: (col.height - DeckUi.f(150) - DeckUi.f(172) - col.spacing * 2 - spacing) / 2
+        readonly property real th: tiles.tw   // square; now playing takes what is left
 
         component Tile: Card {
             id: tile
             property string glyph: ""
             property string label: ""
             property string value: ""
-            property string sub: ""
             property real level: 0
             property color tint: Theme.accent
-            property var history: []
             width: tiles.tw
             height: tiles.th
+            border.width: 0   // the ring is the edge
 
-            // Sparkline of the last minute, drawn behind the numbers.
+            property real shown: Math.max(0, Math.min(1, tile.level))
+            Behavior on shown { NumberAnimation { duration: 700; easing.type: Easing.OutCubic } }
+            onShownChanged: ring.requestPaint()
+            onTintChanged: ring.requestPaint()
+
+            // Rounded-square progress ring tracing the tile, starting top centre, clockwise.
             Canvas {
-                id: spark
-                visible: tile.history.length > 1
-                anchors { left: parent.left; right: parent.right; bottom: parent.bottom; margins: 1 }
-                height: parent.height * 0.5
-                property var pts: tile.history
-                onPtsChanged: requestPaint()
+                id: ring
+                anchors.fill: parent
+                anchors.margins: 0
+                readonly property real lw: DeckUi.f(3)
+                onWidthChanged: requestPaint()
+                onHeightChanged: requestPaint()
                 onPaint: {
                     const ctx = getContext("2d")
                     ctx.reset()
-                    const n = pts.length
-                    if (n < 2) return
-                    const w = width, h = height, dx = w / 39
+                    const s = lw / 2, x0 = s, y0 = s, w = width - lw, h = height - lw
+                    const r = Math.max(1, DeckUi.radius - s)
+                    ctx.lineWidth = lw
+                    ctx.lineCap = "round"
+
+                    ctx.strokeStyle = DeckUi.rim
                     ctx.beginPath()
-                    ctx.moveTo(w - (n - 1) * dx, h)
-                    for (let i = 0; i < n; i++) ctx.lineTo(w - (n - 1 - i) * dx, h - pts[i] * h * 0.9)
-                    ctx.lineTo(w, h)
-                    ctx.closePath()
-                    const g = ctx.createLinearGradient(0, 0, 0, h)
-                    g.addColorStop(0, Qt.alpha(tile.tint, 0.28))
-                    g.addColorStop(1, Qt.alpha(tile.tint, 0.0))
-                    ctx.fillStyle = g
-                    ctx.fill()
+                    ctx.roundedRect(x0, y0, w, h, r, r)
+                    ctx.stroke()
+
+                    let left = (2 * (w + h) - 8 * r + 2 * Math.PI * r) * tile.shown
+                    if (left <= 0) return
+                    const H = Math.PI / 2
+                    // [kind, length, x0/cx, y0/cy, x1/startAngle, y1]
+                    const segs = [
+                        ["l", w / 2 - r, x0 + w / 2, y0, x0 + w - r, y0],
+                        ["a", H * r, x0 + w - r, y0 + r, -H],
+                        ["l", h - 2 * r, x0 + w, y0 + r, x0 + w, y0 + h - r],
+                        ["a", H * r, x0 + w - r, y0 + h - r, 0],
+                        ["l", w - 2 * r, x0 + w - r, y0 + h, x0 + r, y0 + h],
+                        ["a", H * r, x0 + r, y0 + h - r, H],
+                        ["l", h - 2 * r, x0, y0 + h - r, x0, y0 + r],
+                        ["a", H * r, x0 + r, y0 + r, 2 * H],
+                        ["l", w / 2 - r, x0 + r, y0, x0 + w / 2, y0]
+                    ]
+                    ctx.strokeStyle = tile.tint
+                    ctx.beginPath()
+                    ctx.moveTo(x0 + w / 2, y0)
+                    for (const g of segs) {
+                        const f = Math.min(1, left / g[1])
+                        if (g[0] === "l") ctx.lineTo(g[2] + (g[4] - g[2]) * f, g[3] + (g[5] - g[3]) * f)
+                        else ctx.arc(g[2], g[3], r, g[4], g[4] + H * f, false)
+                        left -= g[1]
+                        if (left <= 0) break
+                    }
+                    ctx.stroke()
                 }
             }
 
-            Text {
-                anchors { left: parent.left; top: parent.top; margins: DeckUi.f(12) }
-                text: tile.glyph
-                color: tile.tint
-                font.family: Sh.iconFont
-                font.pixelSize: DeckUi.f(14)
-            }
-            Text {
-                anchors { right: parent.right; top: parent.top; margins: DeckUi.f(12) }
-                text: tile.label
-                color: DeckUi.faint
-                font.family: Sh.font
-                font.pixelSize: DeckUi.f(10)
-                font.weight: Font.DemiBold
-                font.letterSpacing: 2
-            }
             Column {
-                anchors { left: parent.left; bottom: parent.bottom; margins: DeckUi.f(12) }
-                anchors.bottomMargin: DeckUi.f(14)
-                spacing: 0
+                anchors.centerIn: parent
+                spacing: DeckUi.f(3)
                 Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: tile.glyph
+                    color: tile.tint
+                    font.family: Sh.iconFont
+                    font.pixelSize: DeckUi.f(18)
+                    bottomPadding: DeckUi.f(3)
+                }
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
                     text: tile.value
                     color: Theme.fg
                     font.family: Sh.font
-                    font.pixelSize: DeckUi.f(21)
+                    font.pixelSize: DeckUi.f(20)
                     font.weight: Font.DemiBold
                 }
                 Text {
-                    visible: tile.sub.length > 0
-                    text: tile.sub
-                    color: DeckUi.dim
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: tile.label
+                    color: DeckUi.faint
                     font.family: Sh.font
-                    font.pixelSize: DeckUi.f(10.5)
-                }
-            }
-            Rectangle {
-                visible: tile.history.length === 0
-                anchors { left: parent.left; right: parent.right; bottom: parent.bottom; margins: DeckUi.f(12) }
-                anchors.bottomMargin: DeckUi.f(8)
-                height: 2
-                radius: 1
-                color: DeckUi.line
-                Rectangle {
-                    width: parent.width * Math.max(0, Math.min(1, tile.level))
-                    height: parent.height
-                    radius: 1
-                    color: tile.tint
-                    Behavior on width { NumberAnimation { duration: 600; easing.type: Easing.OutCubic } }
+                    font.pixelSize: DeckUi.f(9.5)
+                    font.weight: Font.DemiBold
+                    font.letterSpacing: 1.8
+                    font.capitalization: Font.AllUppercase
                 }
             }
         }
@@ -378,14 +386,13 @@ Column {
             glyph: Sh.icCpu
             label: "CPU"
             value: Math.round(SysStats.cpu * 100) + "%"
-            history: SysStats.cpuHist
+            level: SysStats.cpu
             tint: Theme.accent
         }
         Tile {
             glyph: Sh.icRam
-            label: "RAM"
-            value: SysStats.memUsed.toFixed(1) + "G"
-            sub: "of " + Math.round(SysStats.memTotal) + "G"
+            label: "RAM · " + SysStats.memUsed.toFixed(1) + "G"
+            value: SysStats.memTotal > 0 ? Math.round(SysStats.memUsed / SysStats.memTotal * 100) + "%" : "–"
             level: SysStats.memTotal > 0 ? SysStats.memUsed / SysStats.memTotal : 0
             tint: Theme.second
         }
@@ -398,9 +405,8 @@ Column {
         }
         Tile {
             glyph: Sh.icThermo
-            label: "TEMP"
+            label: "Temp"
             value: SysStats.temp >= 0 ? Math.round(SysStats.temp) + "°" : "–"
-            sub: "CPU package"
             level: SysStats.temp >= 0 ? (SysStats.temp - 30) / 65 : 0
             tint: SysStats.temp >= 85 ? Theme.error : Theme.contrast
         }

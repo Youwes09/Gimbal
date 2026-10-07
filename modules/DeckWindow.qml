@@ -86,22 +86,15 @@ PanelWindow {
         Keys.onPressed: (e) => {
             const k = e.key
             const p = Status.player
+            // Arrows + Enter do everything; Tab flips pages, Space is play/pause anywhere.
             if (k === Qt.Key_Escape) Sh.closeDeck()
-            else if (k === Qt.Key_Tab) DeckUi.cycle(1)
-            else if (k === Qt.Key_Backtab) DeckUi.cycle(-1)
+            else if (k === Qt.Key_Tab) DeckUi.page(1)
+            else if (k === Qt.Key_Backtab) DeckUi.page(-1)
             else if (k >= Qt.Key_1 && k <= Qt.Key_4) {
-                DeckUi.section = ["home", "notifications", "captures", "session"][k - Qt.Key_1]
+                DeckUi.section = DeckUi.sections[k - Qt.Key_1]
                 DeckUi.zone = "center"
             }
             else if (k === Qt.Key_Space) { if (p && p.canTogglePlaying) p.togglePlaying() }
-            else if (k === Qt.Key_BracketLeft) { if (p && p.canGoPrevious) p.previous() }
-            else if (k === Qt.Key_BracketRight) { if (p && p.canGoNext) p.next() }
-            else if (k === Qt.Key_W) Sh.walls()
-            else if (k === Qt.Key_S) Capture.shot("region")
-            else if (k === Qt.Key_R) { if (!Capture.recording) Sh.closeDeck(); Capture.recToggle() }
-            else if (k === Qt.Key_D) Notifications.toggleDnd()
-            else if (k === Qt.Key_M) Audio.toggleMute()
-            else if (k === Qt.Key_L) Sh.rest()
             else DeckUi.nav(k, e.modifiers)
             e.accepted = true
         }

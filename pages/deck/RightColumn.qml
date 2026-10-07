@@ -2,19 +2,133 @@ import QtQuick
 import Quickshell.Services.Pipewire
 import "root:/modules"
 
-// Controls: a mixer (output, mic, brightness, each app playing) and quick toggles.
+// Controls: quick toggles, then a mixer (output, mic, brightness, each app playing).
 Column {
     id: col
     spacing: DeckUi.f(12)
 
-    readonly property real quickH: DeckUi.f(188)
+    readonly property real quickH: DeckUi.f(232)
 
-    // ── sound ───────────────────────────────────────────────────────────
+    // ── quick toggles ───────────────────────────────────────────────────
+    Card {
+        id: quick
+        width: col.width
+        height: col.quickH
+        focused: DeckUi.zone === "quick"
+
+        readonly property var items: [
+            { glyph: Notifications.dnd ? Sh.icBellOff : Sh.icBell, label: "Focus",
+              state: Notifications.dnd ? "Silenced" : "Off", on: Notifications.dnd,
+              act: () => Notifications.toggleDnd() },
+            { glyph: Sh.icEye, label: "Stay awake",
+              state: DeckUi.stayAwake ? "On" : "Off", on: DeckUi.stayAwake,
+              act: () => DeckUi.stayAwake = !DeckUi.stayAwake },
+            { glyph: Sh.icCamera, label: "Screenshot", state: "Region", on: false,
+              act: () => Capture.shot("region") },
+            { glyph: Sh.icRecord, label: "Record",
+              state: Capture.recording ? "Recording" : "Screen", on: Capture.recording, tint: Theme.error,
+              act: () => { if (!Capture.recording) Sh.closeDeck(); Capture.recToggle() } }
+        ]
+        property int cur: 0
+
+        Connections {
+            target: DeckUi
+            function onNav(key) {
+                if (DeckUi.zone !== "quick") return
+                if (key === Qt.Key_Left)  { if (quick.cur % 2 === 0) DeckUi.go("left"); else quick.cur-- }
+                if (key === Qt.Key_Right && quick.cur % 2 === 0) quick.cur++
+                if (key === Qt.Key_Up && quick.cur >= 2) quick.cur -= 2
+                if (key === Qt.Key_Down)  { if (quick.cur >= 2) DeckUi.go("down"); else quick.cur += 2 }
+                if (key === Qt.Key_Return || key === Qt.Key_Enter) quick.items[quick.cur].act()
+            }
+        }
+
+        Caption {
+            id: quickCap
+            anchors { left: parent.left; right: parent.right; top: parent.top; margins: DeckUi.f(16) }
+            text: "Quick"
+        }
+
+        Grid {
+            anchors { left: parent.left; right: parent.right; top: quickCap.bottom; bottom: parent.bottom }
+            anchors.margins: DeckUi.f(16)
+            anchors.topMargin: DeckUi.f(12)
+            columns: 2
+            spacing: DeckUi.f(10)
+
+            Repeater {
+                model: quick.items
+                Rectangle {
+                    id: qt
+                    required property var modelData
+                    required property int index
+                    readonly property bool sel: quick.focused && quick.cur === index
+                    readonly property color tint: modelData.tint || Theme.accent
+                    width: (parent.width - parent.spacing) / 2
+                    height: (parent.height - parent.spacing) / 2
+                    radius: DeckUi.innerRadius
+                    color: modelData.on ? Qt.alpha(qt.tint, 0.15)
+                         : qt.sel ? DeckUi.sel : qtMa.containsMouse ? DeckUi.hover : DeckUi.well
+                    border.width: 1
+                    border.color: qt.sel ? DeckUi.selRim : modelData.on ? Qt.alpha(qt.tint, 0.4) : "transparent"
+                    Behavior on color { ColorAnimation { duration: 140 } }
+
+                    // Icon chip: filled with the tint while the toggle is on.
+                    Rectangle {
+                        id: chip
+                        anchors { left: parent.left; top: parent.top; margins: DeckUi.f(10) }
+                        width: DeckUi.f(28); height: width
+                        radius: width / 2
+                        color: qt.modelData.on ? qt.tint : Qt.alpha(Theme.fg, 0.07)
+                        Behavior on color { ColorAnimation { duration: 160 } }
+                        Text {
+                            anchors.centerIn: parent
+                            text: qt.modelData.glyph
+                            color: qt.modelData.on ? Theme.bg : Theme.fg
+                            font.family: Sh.iconFont
+                            font.pixelSize: DeckUi.f(14)
+                        }
+                    }
+                    Column {
+                        anchors { left: parent.left; right: parent.right; bottom: parent.bottom; margins: DeckUi.f(10) }
+                        anchors.leftMargin: DeckUi.f(12)
+                        spacing: 1
+                        Text {
+                            width: parent.width
+                            elide: Text.ElideRight
+                            text: qt.modelData.label
+                            color: Theme.fg
+                            font.family: Sh.font
+                            font.pixelSize: DeckUi.f(12)
+                            font.weight: Font.DemiBold
+                        }
+                        Text {
+                            width: parent.width
+                            elide: Text.ElideRight
+                            text: qt.modelData.state
+                            color: qt.modelData.on ? qt.tint : DeckUi.dim
+                            font.family: Sh.font
+                            font.pixelSize: DeckUi.f(10.5)
+                        }
+                    }
+                    MouseArea {
+                        id: qtMa
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: { quick.cur = qt.index; qt.modelData.act() }
+                    }
+                }
+            }
+        }
+    }
+
+    // ── mixer ───────────────────────────────────────────────────────────
     Card {
         id: sound
         width: col.width
         height: col.height - col.quickH - col.spacing
-        focused: DeckUi.zone === "sound"
+        focused: DeckUi.zone === "mixer"
 
         readonly property var sink: Pipewire.defaultAudioSink
         readonly property var source: Pipewire.defaultAudioSource
@@ -68,9 +182,9 @@ Column {
         Connections {
             target: DeckUi
             function onNav(key) {
-                if (DeckUi.zone !== "sound" || sound.rows.length === 0) return
+                if (DeckUi.zone !== "mixer" || sound.rows.length === 0) return
                 const r = sound.rows[sound.cur]
-                if (key === Qt.Key_Up)    sound.cur = Math.max(0, sound.cur - 1)
+                if (key === Qt.Key_Up)    { if (sound.cur === 0) DeckUi.go("up"); else sound.cur-- }
                 if (key === Qt.Key_Down)  sound.cur = Math.min(sound.rows.length - 1, sound.cur + 1)
                 if (key === Qt.Key_Left)  r.set(Math.max(0, r.value - 0.05))
                 if (key === Qt.Key_Right) r.set(Math.min(1, r.value + 0.05))
@@ -88,15 +202,18 @@ Column {
 
         Flickable {
             anchors { left: parent.left; right: parent.right; top: soundCap.bottom; bottom: parent.bottom }
-            anchors.margins: DeckUi.f(16)
-            anchors.topMargin: DeckUi.f(16)
-            contentHeight: mix.height
+            // Inset by the row highlight's overhang so clipping doesn't cut it.
+            anchors.margins: DeckUi.f(10)
+            anchors.topMargin: DeckUi.f(10)
+            contentHeight: mix.height + DeckUi.f(12)
             clip: true
             boundsBehavior: Flickable.StopAtBounds
 
             Column {
                 id: mix
-                width: parent.width
+                x: DeckUi.f(6)
+                y: DeckUi.f(6)
+                width: parent.width - DeckUi.f(12)
                 spacing: DeckUi.f(14)
 
                 Repeater {
@@ -118,109 +235,4 @@ Column {
         }
     }
 
-    // ── quick toggles ───────────────────────────────────────────────────
-    Card {
-        id: quick
-        width: col.width
-        height: col.quickH
-        focused: DeckUi.zone === "quick"
-
-        readonly property var items: [
-            { glyph: Notifications.dnd ? Sh.icBellOff : Sh.icBell, label: "Focus",
-              state: Notifications.dnd ? "Silenced" : "Off", on: Notifications.dnd,
-              act: () => Notifications.toggleDnd() },
-            { glyph: Sh.icEye, label: "Stay awake",
-              state: DeckUi.stayAwake ? "On" : "Off", on: DeckUi.stayAwake,
-              act: () => DeckUi.stayAwake = !DeckUi.stayAwake },
-            { glyph: Sh.icCamera, label: "Screenshot", state: "Region", on: false,
-              act: () => Capture.shot("region") },
-            { glyph: Sh.icRecord, label: "Record",
-              state: Capture.recording ? "Recording" : "Screen", on: Capture.recording, tint: Theme.error,
-              act: () => { if (!Capture.recording) Sh.closeDeck(); Capture.recToggle() } }
-        ]
-        property int cur: 0
-
-        Connections {
-            target: DeckUi
-            function onNav(key) {
-                if (DeckUi.zone !== "quick") return
-                if (key === Qt.Key_Left)  quick.cur = quick.cur % 2 === 1 ? quick.cur - 1 : quick.cur
-                if (key === Qt.Key_Right) quick.cur = quick.cur % 2 === 0 ? quick.cur + 1 : quick.cur
-                if (key === Qt.Key_Up)    quick.cur = quick.cur >= 2 ? quick.cur - 2 : quick.cur
-                if (key === Qt.Key_Down)  quick.cur = quick.cur < 2 ? quick.cur + 2 : quick.cur
-                if (key === Qt.Key_Return || key === Qt.Key_Enter) quick.items[quick.cur].act()
-            }
-        }
-
-        Caption {
-            id: quickCap
-            anchors { left: parent.left; right: parent.right; top: parent.top; margins: DeckUi.f(16) }
-            text: "Quick"
-        }
-
-        Grid {
-            anchors { left: parent.left; right: parent.right; top: quickCap.bottom; bottom: parent.bottom }
-            anchors.margins: DeckUi.f(16)
-            anchors.topMargin: DeckUi.f(12)
-            columns: 2
-            spacing: DeckUi.f(10)
-
-            Repeater {
-                model: quick.items
-                Rectangle {
-                    id: qt
-                    required property var modelData
-                    required property int index
-                    readonly property bool sel: quick.focused && quick.cur === index
-                    readonly property color tint: modelData.tint || Theme.accent
-                    width: (parent.width - parent.spacing) / 2
-                    height: (parent.height - parent.spacing) / 2
-                    radius: DeckUi.innerRadius
-                    color: modelData.on ? Qt.alpha(qt.tint, 0.15)
-                         : qt.sel ? DeckUi.sel : qtMa.containsMouse ? DeckUi.hover : DeckUi.well
-                    border.width: 1
-                    border.color: qt.sel ? DeckUi.selRim : modelData.on ? Qt.alpha(qt.tint, 0.4) : "transparent"
-                    Behavior on color { ColorAnimation { duration: 140 } }
-
-                    Text {
-                        anchors { left: parent.left; verticalCenter: parent.verticalCenter; leftMargin: DeckUi.f(12) }
-                        text: qt.modelData.glyph
-                        color: qt.modelData.on ? qt.tint : Theme.fg
-                        font.family: Sh.iconFont
-                        font.pixelSize: DeckUi.f(17)
-                    }
-                    Column {
-                        anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter }
-                        anchors.leftMargin: DeckUi.f(40)
-                        anchors.rightMargin: DeckUi.f(8)
-                        spacing: 1
-                        Text {
-                            width: parent.width
-                            elide: Text.ElideRight
-                            text: qt.modelData.label
-                            color: Theme.fg
-                            font.family: Sh.font
-                            font.pixelSize: DeckUi.f(12)
-                            font.weight: Font.DemiBold
-                        }
-                        Text {
-                            width: parent.width
-                            elide: Text.ElideRight
-                            text: qt.modelData.state
-                            color: qt.modelData.on ? qt.tint : DeckUi.dim
-                            font.family: Sh.font
-                            font.pixelSize: DeckUi.f(10.5)
-                        }
-                    }
-                    MouseArea {
-                        id: qtMa
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: { quick.cur = qt.index; qt.modelData.act() }
-                    }
-                }
-            }
-        }
-    }
 }

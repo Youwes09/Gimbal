@@ -47,17 +47,37 @@ Item {
         cap.cur = Math.min(cap.cur, Math.max(0, cap.files.length - 1))
     }
 
+    // Keyboard: the grid, with the header buttons one row above it (cur -1, btn picks which).
     readonly property int cols: 4
+    property bool atBar: false
+    property int btn: 0
+    readonly property var bar: [
+        () => Capture.shot("region"),
+        () => Capture.shot("full"),
+        () => { if (!Capture.recording) Sh.closeDeck(); Capture.recToggle() },
+        () => { Sh.closeDeck(); Places.openManager(Capture.shotDir) }
+    ]
+    readonly property bool kb: DeckUi.zone === "center"
+    readonly property bool barKb: kb && (atBar || files.length === 0)
     Connections {
         target: DeckUi
         function onNav(key) {
-            if (DeckUi.zone !== "center" || DeckUi.section !== "captures" || cap.files.length === 0) return
+            if (DeckUi.zone !== "center" || DeckUi.section !== "captures") return
             const n = cap.files.length
-            if (key === Qt.Key_Left)  cap.cur = Math.max(0, cap.cur - 1)
-            if (key === Qt.Key_Right) cap.cur = Math.min(n - 1, cap.cur + 1)
-            if (key === Qt.Key_Up)    cap.cur = Math.max(0, cap.cur - cap.cols)
+            const enter = key === Qt.Key_Return || key === Qt.Key_Enter
+            if (cap.atBar || n === 0) {
+                if (key === Qt.Key_Left)  { if (cap.btn === 0) DeckUi.go("left"); else cap.btn-- }
+                if (key === Qt.Key_Right) { if (cap.btn === cap.bar.length - 1) DeckUi.go("right"); else cap.btn++ }
+                if (key === Qt.Key_Down && n > 0) cap.atBar = false
+                if (enter) cap.bar[cap.btn]()
+                return
+            }
+            const col = cap.cur % cap.cols
+            if (key === Qt.Key_Left)  { if (col === 0) DeckUi.go("left"); else cap.cur-- }
+            if (key === Qt.Key_Right) { if (col === cap.cols - 1 || cap.cur === n - 1) DeckUi.go("right"); else cap.cur++ }
+            if (key === Qt.Key_Up)    { if (cap.cur < cap.cols) cap.atBar = true; else cap.cur -= cap.cols }
             if (key === Qt.Key_Down)  cap.cur = Math.min(n - 1, cap.cur + cap.cols)
-            if (key === Qt.Key_Return || key === Qt.Key_Enter) cap.open(cap.files[cap.cur])
+            if (enter) cap.open(cap.files[cap.cur])
             if (key === Qt.Key_C) cap.copy(cap.files[cap.cur])
             if (key === Qt.Key_Delete || key === Qt.Key_Backspace || key === Qt.Key_X) cap.trash(cap.files[cap.cur])
         }
@@ -85,18 +105,20 @@ Item {
         anchors.right: parent.right
         anchors.top: parent.top
         spacing: DeckUi.f(8)
-        Button { glyph: Sh.icCamera; label: "Region"; onClicked: Capture.shot("region") }
-        Button { glyph: Sh.icMonitor; label: "Screen"; onClicked: Capture.shot("full") }
+        Button { glyph: Sh.icCamera; label: "Region"; selected: cap.barKb && cap.btn === 0; onClicked: cap.bar[0]() }
+        Button { glyph: Sh.icMonitor; label: "Screen"; selected: cap.barKb && cap.btn === 1; onClicked: cap.bar[1]() }
         Button {
             glyph: Sh.icRecord
             label: Capture.recording ? "Stop" : "Record"
             on: Capture.recording
             tint: Theme.error
-            onClicked: { if (!Capture.recording) Sh.closeDeck(); Capture.recToggle() }
+            selected: cap.barKb && cap.btn === 2
+            onClicked: cap.bar[2]()
         }
         Button {
             glyph: Sh.icFolderOpen
-            onClicked: { Sh.closeDeck(); Places.openManager(Capture.shotDir) }
+            selected: cap.barKb && cap.btn === 3
+            onClicked: cap.bar[3]()
         }
     }
 
@@ -115,7 +137,7 @@ Item {
                 id: th
                 required property var modelData
                 required property int index
-                readonly property bool sel: DeckUi.zone === "center" && cap.cur === index
+                readonly property bool sel: cap.kb && !cap.atBar && cap.cur === index
                 width: grid.cw
                 height: grid.ch
 
@@ -182,7 +204,7 @@ Item {
         }
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
-            text: "No captures yet. Press s for a screenshot."
+            text: "No captures yet"
             color: DeckUi.dim
             font.family: Sh.font
             font.pixelSize: DeckUi.f(13)

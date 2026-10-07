@@ -21,13 +21,30 @@ Item {
         if (i >= 0 && i < nt.count) Notifications.dismiss(Notifications.historyModel.get(i).nid)
     }
 
+    // Keyboard: the list, with the header buttons above it (atBar; btn 0 Focus, 1 Clear all).
+    property bool atBar: false
+    property int btn: 0
+    readonly property bool kb: DeckUi.zone === "center"
+    readonly property bool barKb: kb && (atBar || count === 0)
     Connections {
         target: DeckUi
         function onNav(key) {
             if (DeckUi.zone !== "center" || DeckUi.section !== "notifications") return
-            if (key === Qt.Key_Up)   nt.cur = Math.max(0, nt.cur - 1)
-            if (key === Qt.Key_Down) nt.cur = Math.min(nt.count - 1, nt.cur + 1)
-            if (key === Qt.Key_Return || key === Qt.Key_Enter) nt.open(nt.cur)
+            const enter = key === Qt.Key_Return || key === Qt.Key_Enter
+            if (nt.atBar || nt.count === 0) {
+                const last = nt.count > 0 ? 1 : 0
+                nt.btn = Math.min(nt.btn, last)
+                if (key === Qt.Key_Left)  { if (nt.btn === 0) DeckUi.go("left"); else nt.btn-- }
+                if (key === Qt.Key_Right) { if (nt.btn === last) DeckUi.go("right"); else nt.btn++ }
+                if (key === Qt.Key_Down && nt.count > 0) nt.atBar = false
+                if (enter) { if (nt.btn === 0) Notifications.toggleDnd(); else Notifications.clearAll() }
+                return
+            }
+            if (key === Qt.Key_Left)  DeckUi.go("left")
+            if (key === Qt.Key_Right) DeckUi.go("right")
+            if (key === Qt.Key_Up)    { if (nt.cur === 0) nt.atBar = true; else nt.cur-- }
+            if (key === Qt.Key_Down)  nt.cur = Math.min(nt.count - 1, nt.cur + 1)
+            if (enter) nt.open(nt.cur)
             if (key === Qt.Key_Delete || key === Qt.Key_Backspace || key === Qt.Key_X) nt.drop(nt.cur)
             if (key === Qt.Key_C) Notifications.clearAll()
         }
@@ -60,12 +77,14 @@ Item {
             glyph: Notifications.dnd ? Sh.icBellOff : Sh.icBell
             label: "Focus"
             on: Notifications.dnd
+            selected: nt.barKb && nt.btn === 0
             onClicked: Notifications.toggleDnd()
         }
         Button {
             visible: nt.count > 0
             glyph: Sh.icTrash
             label: "Clear all"
+            selected: nt.barKb && nt.btn === 1
             onClicked: Notifications.clearAll()
         }
     }
@@ -87,7 +106,7 @@ Item {
             required property var model
             width: list.width
             rec: model
-            selected: DeckUi.zone === "center" && nt.cur === index
+            selected: nt.kb && !nt.atBar && nt.cur === index
             onClicked: nt.open(index)
         }
         displaced: Transition { NumberAnimation { property: "y"; duration: 160; easing.type: Easing.OutCubic } }

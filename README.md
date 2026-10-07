@@ -17,14 +17,14 @@ It also owns your wallpaper (static / GIF / video, cross-faded on switch), repai
 ## Features
 
 **Deck**
-- Left: clock and battery, now playing (art, seek, controls), live CPU (with a 60 s sparkline) / RAM / GPU / temperature
+- Left: clock and battery, now playing (art, seek, controls), CPU / RAM / GPU / temperature as matching ring tiles
 - Centre, with a section rail:
   - **Home** — greeting and a one-line summary, the folders you open most from the launcher with their git branch and uncommitted changes, your most-used apps, the latest notifications
   - **Notifications** — full history; open, dismiss, clear, Focus (Do Not Disturb)
   - **Captures** — newest screenshots and recordings; open, copy, trash; take new ones
   - **Session** — rest, suspend, log out, reboot, shut down (the last three ask twice)
-- Right: a mixer (output, microphone, brightness, and a slider per app playing) and quick toggles: Focus, Stay awake, Screenshot, Record
-- Fully keyboard driven: `tab` moves between zones, arrows and `enter` work inside them, `1`–`4` jump sections. Anywhere: `space` play/pause, `[` `]` previous/next, `w` wallpapers, `s` screenshot, `r` record, `d` Focus, `m` mute, `l` rest, `esc` close. The hint line under the deck always shows what works where you are
+- Right: quick toggles (Focus, Stay awake, Screenshot, Record) above a mixer (output, microphone, brightness, and a slider per app playing)
+- Fully keyboard driven with arrows and `enter`: arrows move spatially across the whole deck and hand off between panels at the edges; in the mixer `←`/`→` set the level. `tab` / `1`–`4` switch pages, `space` play/pause, `esc` close. Key chips under the deck show what works where you are
 - Frosted backdrop from one blurred still of the screen; everything is built on open and torn down on close. Stats and git state are only sampled while it is open
 
 **Launcher**

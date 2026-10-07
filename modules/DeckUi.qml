@@ -7,7 +7,7 @@ import "root:/modules"
 QtObject {
     id: root
 
-    readonly property real scale: 1.12
+    readonly property real scale: 1.3
     function f(px) { return Sh.fs(px * root.scale) }
 
     // Same surface language as the launcher, so the two read as one shell.
@@ -25,16 +25,30 @@ QtObject {
     readonly property int radius:      f(14)
     readonly property int innerRadius: f(10)
 
-    // Keyboard zones, cycled with Tab. Arrows / Enter / Delete go to the active one via nav().
-    readonly property var zones: ["center", "sound", "quick", "media"]
+    // Keyboard focus. Arrows move spatially; when a zone runs out of room in a direction it
+    // hands focus on with go(). Left to right: media | rail | center | quick, mixer under quick.
     property string zone: "center"
     property string section: "home"     // center panel: home | notifications | captures | session
+    readonly property var sections: ["home", "notifications", "captures", "session"]
+    readonly property var _next: ({
+        media:  { right: "rail" },
+        rail:   { left: "media", right: "center" },
+        center: { left: "rail", right: "quick" },
+        quick:  { left: "center", down: "mixer" },
+        mixer:  { up: "quick" }
+    })
 
     signal nav(int key, int modifiers)
 
-    function cycle(dir) {
-        const i = root.zones.indexOf(root.zone)
-        root.zone = root.zones[(i + dir + root.zones.length) % root.zones.length]
+    // Deferred so the zone being entered doesn't also act on the key that got it there.
+    function go(dir) {
+        const z = (root._next[root.zone] || {})[dir]
+        if (z && !(z === "media" && !Status.player)) Qt.callLater(() => root.zone = z)
+    }
+    function page(dir) {
+        const i = root.sections.indexOf(root.section)
+        root.section = root.sections[(i + dir + root.sections.length) % root.sections.length]
+        root.zone = "center"
     }
     function reset() {
         root.zone = "center"

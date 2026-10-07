@@ -33,8 +33,14 @@ Item {
         target: DeckUi
         function onNav(key) {
             if (DeckUi.zone !== "center" || DeckUi.section !== "session") return
-            if (key === Qt.Key_Left || key === Qt.Key_Up)    { ses.cur = Math.max(0, ses.cur - 1); ses.armed = "" }
-            if (key === Qt.Key_Right || key === Qt.Key_Down) { ses.cur = Math.min(ses.actions.length - 1, ses.cur + 1); ses.armed = "" }
+            if (key === Qt.Key_Left) {
+                if (ses.cur === 0) DeckUi.go("left")
+                else { ses.cur--; ses.armed = "" }
+            }
+            if (key === Qt.Key_Right) {
+                if (ses.cur === ses.actions.length - 1) DeckUi.go("right")
+                else { ses.cur++; ses.armed = "" }
+            }
             if (key === Qt.Key_Return || key === Qt.Key_Enter) ses.act(ses.actions[ses.cur])
         }
     }

@@ -16,7 +16,6 @@ QtObject {
     property real memTotal: 0  // GiB
     property real gpu: -1      // 0..1, -1 when the driver doesn't report it
     property real temp: -1     // CPU package °C, -1 when unknown
-    property var cpuHist: []   // last 40 samples (60s), for the sparkline
 
     property var _prev: null
 
@@ -42,10 +41,7 @@ QtObject {
                 const total = c.reduce((a, b) => a + b, 0)
                 if (root._prev) {
                     const dt = total - root._prev.total
-                    if (dt > 0) {
-                        root.cpu = Math.max(0, Math.min(1, 1 - (idle - root._prev.idle) / dt))
-                        root.cpuHist = root.cpuHist.concat([root.cpu]).slice(-40)
-                    }
+                    if (dt > 0) root.cpu = Math.max(0, Math.min(1, 1 - (idle - root._prev.idle) / dt))
                 }
                 root._prev = { idle: idle, total: total }
 

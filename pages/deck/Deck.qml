@@ -51,11 +51,23 @@ Item {
             x: deck.sideW + deck.gap
             width: deck.centerW
             height: frame.height
-            focused: DeckUi.zone === "center"
+            focused: DeckUi.zone === "center" || DeckUi.zone === "rail"
             scale: 0.985 + 0.015 * deck.t
             opacity: deck.t
 
-            // Rail
+            // Rail: ↑↓ flip pages live, → or Enter steps into the page.
+            Connections {
+                target: DeckUi
+                function onNav(key) {
+                    if (DeckUi.zone !== "rail") return
+                    const i = DeckUi.sections.indexOf(DeckUi.section), n = DeckUi.sections.length
+                    if (key === Qt.Key_Up)    DeckUi.section = DeckUi.sections[Math.max(0, i - 1)]
+                    if (key === Qt.Key_Down)  DeckUi.section = DeckUi.sections[Math.min(n - 1, i + 1)]
+                    if (key === Qt.Key_Left)  DeckUi.go("left")
+                    if (key === Qt.Key_Right || key === Qt.Key_Return || key === Qt.Key_Enter) DeckUi.go("right")
+                }
+            }
+
             Item {
                 id: rail
                 readonly property real spacing: DeckUi.f(8)
@@ -72,14 +84,15 @@ Item {
                         required property var modelData
                         required property int index
                         readonly property bool on: DeckUi.section === modelData.id
+                        readonly property bool kb: rb.on && DeckUi.zone === "rail"
                         // Session sits at the bottom of the rail, like a settings cog.
                         y: index === deck.sections.length - 1 ? rail.height - height : index * (height + rail.spacing)
                         width: rail.width
                         height: width
                         radius: DeckUi.innerRadius
-                        color: rb.on ? DeckUi.sel : rbMa.containsMouse ? DeckUi.hover : "transparent"
+                        color: rb.kb ? Qt.alpha(Theme.accent, 0.22) : rb.on ? DeckUi.sel : rbMa.containsMouse ? DeckUi.hover : "transparent"
                         border.width: 1
-                        border.color: rb.on ? DeckUi.selRim : "transparent"
+                        border.color: rb.kb ? Theme.accent : rb.on ? Qt.alpha(Theme.accent, 0.25) : "transparent"
                         Behavior on color { ColorAnimation { duration: 120 } }
 
                         Text {
@@ -162,28 +175,76 @@ Item {
         }
     }
 
-    // ── key hints: what works right here ──────────────────────────────
-    Text {
+    // ── key hints: chips for what works right here, then the constants ─
+    Row {
+        id: hints
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: frame.bottom
-        anchors.topMargin: DeckUi.f(18)
+        anchors.topMargin: DeckUi.f(20)
+        spacing: DeckUi.f(18)
         opacity: deck.t
-        textFormat: Text.StyledText
-        readonly property string dot: "<font color='" + Theme.accent + "'>  ·  </font>"
-        readonly property string here: {
+
+        readonly property var here: {
             const z = DeckUi.zone, s = DeckUi.section
-            if (z === "sound") return "↑↓ pick · ←→ level · enter mute"
-            if (z === "quick") return "arrows pick · enter toggle"
-            if (z === "media") return "←→ pick · enter press"
-            if (s === "notifications") return "↑↓ pick · enter open · del dismiss · c clear"
-            if (s === "captures") return "arrows pick · enter open · c copy · del trash"
-            if (s === "session") return "←→ pick · enter run"
-            return "arrows pick · enter open"
+            if (z === "mixer") return [["←→", "level"], ["⏎", "mute"]]
+            if (z === "quick") return [["⏎", "toggle"]]
+            if (z === "media") return Status.player ? [["←→", "pick"], ["⏎", "press"]] : []
+            if (z === "rail")  return [["↑↓", "page"], ["⏎", "enter"]]
+            if (s === "notifications") return [["⏎", "open"], ["del", "dismiss"], ["c", "clear all"]]
+            if (s === "captures") return [["⏎", "open"], ["c", "copy"], ["del", "trash"]]
+            if (s === "session") return [["⏎", "run"]]
+            return [["⏎", "open"]]
         }
-        text: "tab zone" + dot + "1–4 section" + dot + here + dot + "space play" + dot + "w wallpapers" + dot + "esc close"
-        color: DeckUi.faint
-        font.family: Sh.font
-        font.pixelSize: DeckUi.f(11)
-        font.letterSpacing: 0.5
+        readonly property var always: [["←↑↓→", "move"], ["tab", "page"]]
+            .concat(Status.player ? [["space", "play"]] : [])
+            .concat([["esc", "close"]])
+
+        Repeater {
+            model: (hints.here.length ? hints.here.concat([null]) : []).concat(hints.always)
+            Item {
+                id: hint
+                required property var modelData
+                implicitWidth: modelData ? hintRow.implicitWidth : DeckUi.f(1)
+                implicitHeight: DeckUi.f(22)
+                // A null entry is the divider between contextual and constant keys.
+                Rectangle {
+                    visible: !hint.modelData
+                    anchors.centerIn: parent
+                    width: 1; height: DeckUi.f(14)
+                    color: DeckUi.line
+                }
+                Row {
+                    id: hintRow
+                    visible: !!hint.modelData
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: DeckUi.f(7)
+                    Rectangle {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: Math.max(height, keyText.implicitWidth + DeckUi.f(12))
+                        height: DeckUi.f(20)
+                        radius: DeckUi.f(5)
+                        color: Qt.alpha(Theme.fg, 0.07)
+                        border.width: 1
+                        border.color: Qt.alpha(Theme.fg, 0.12)
+                        Text {
+                            id: keyText
+                            anchors.centerIn: parent
+                            text: hint.modelData ? hint.modelData[0] : ""
+                            color: Theme.fg
+                            font.family: Sh.font
+                            font.pixelSize: DeckUi.f(10)
+                            font.weight: Font.DemiBold
+                        }
+                    }
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: hint.modelData ? hint.modelData[1] : ""
+                        color: DeckUi.dim
+                        font.family: Sh.font
+                        font.pixelSize: DeckUi.f(11)
+                    }
+                }
+            }
+        }
     }
 }

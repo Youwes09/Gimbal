@@ -46,28 +46,70 @@ Item {
         return Math.round(s / 86400) + "d ago"
     }
 
-    // ── keyboard: row 0 projects, rows 1–2 the app grid ─────────────────
-    property int row: 0
-    property int colIdx: 0
-    readonly property int rows: 1 + Math.ceil(home.apps.length / 3)
-    function rowLen(r) { return r === 0 ? Projects.list.length : Math.max(0, Math.min(3, home.apps.length - (r - 1) * 3)) }
-    function _clamp() { home.colIdx = Math.max(0, Math.min(home.colIdx, home.rowLen(home.row) - 1)) }
+    // ── keyboard: four panes laid out like the page ─────────────────────
+    //   head (Wallpapers) / projects row / apps grid | latest notifications
+    property string pane: "proj"
+    property int idx: 0
+    readonly property int notes: Math.min(3, Notifications.historyModel.count)
+    readonly property bool kb: DeckUi.zone === "center"
+    function _count(p) {
+        return p === "head" ? 1 : p === "proj" ? Projects.list.length : p === "apps" ? home.apps.length : home.notes
+    }
+    function _to(p, i) {
+        if (home._count(p) === 0) return false
+        home.pane = p
+        home.idx = Math.max(0, Math.min(i, home._count(p) - 1))
+        return true
+    }
+    function openNote(i) {
+        const r = Notifications.historyModel.get(i)
+        Sh.closeDeck()
+        Notifications.focusSender(r)
+        Notifications.invoke(r.nid, "")
+        Notifications.dismiss(r.nid)
+    }
 
     Connections {
         target: DeckUi
         function onNav(key) {
             if (DeckUi.zone !== "center" || DeckUi.section !== "home") return
-            if (key === Qt.Key_Up)    { home.row = Math.max(0, home.row - 1); home._clamp() }
-            if (key === Qt.Key_Down)  { home.row = Math.min(home.rows - 1, home.row + 1); home._clamp() }
-            if (key === Qt.Key_Left)  home.colIdx = Math.max(0, home.colIdx - 1)
-            if (key === Qt.Key_Right) home.colIdx = Math.min(home.rowLen(home.row) - 1, home.colIdx + 1)
+            if (home._count(home.pane) === 0 && !home._to("proj", 0) && !home._to("apps", 0)) home._to("head", 0)
+            const p = home.pane, i = home.idx, n = home._count(p)
+            const L = key === Qt.Key_Left, R = key === Qt.Key_Right, U = key === Qt.Key_Up, D = key === Qt.Key_Down
             if (key === Qt.Key_Return || key === Qt.Key_Enter) {
-                if (home.row === 0) { const p = Projects.list[home.colIdx]; if (p) home.openProject(p) }
-                else { const a = home.apps[(home.row - 1) * 3 + home.colIdx]; if (a) home.launch(a) }
+                if (p === "head") Sh.walls()
+                if (p === "proj") home.openProject(Projects.list[i])
+                if (p === "apps") home.launch(home.apps[i])
+                if (p === "notes") home.openNote(i)
+                return
+            }
+            if (p === "notes" && (key === Qt.Key_Delete || key === Qt.Key_Backspace || key === Qt.Key_X)) {
+                Notifications.dismiss(Notifications.historyModel.get(i).nid)
+                return
+            }
+            if (p === "head") {
+                if (L) DeckUi.go("left")
+                if (R) DeckUi.go("right")
+                if (D) home._to("proj", 0) || home._to("apps", 0)
+            } else if (p === "proj") {
+                if (L) { if (i === 0) DeckUi.go("left"); else home.idx-- }
+                if (R) { if (i === n - 1) DeckUi.go("right"); else home.idx++ }
+                if (U) home._to("head", 0)
+                if (D) home._to("apps", i) || home._to("notes", 0)
+            } else if (p === "apps") {
+                const c = i % 3
+                if (L) { if (c === 0) DeckUi.go("left"); else home.idx-- }
+                if (R) { if (c === 2 || i === n - 1) { if (!home._to("notes", Math.floor(i / 3))) DeckUi.go("right") } else home.idx++ }
+                if (U) { if (i < 3) home._to("proj", c) || home._to("head", 0); else home.idx -= 3 }
+                if (D) home.idx = Math.min(n - 1, i + 3)
+            } else if (p === "notes") {
+                if (L) home._to("apps", Math.min(home.apps.length - 1, i * 3 + 2)) || DeckUi.go("left")
+                if (R) DeckUi.go("right")
+                if (U) { if (i === 0) home._to("proj", 2) || home._to("head", 0); else home.idx-- }
+                if (D) home.idx = Math.min(n - 1, i + 1)
             }
         }
     }
-    readonly property bool kb: DeckUi.zone === "center"
 
     // ── header ──────────────────────────────────────────────────────────
     Column {
@@ -98,6 +140,7 @@ Item {
         anchors.top: parent.top
         glyph: Sh.icWallpaper
         label: "Wallpapers"
+        selected: home.kb && home.pane === "head"
         onClicked: Sh.walls()
     }
 
@@ -121,7 +164,7 @@ Item {
                 id: pc
                 required property var modelData
                 required property int index
-                readonly property bool sel: home.kb && home.row === 0 && home.colIdx === index
+                readonly property bool sel: home.kb && home.pane === "proj" && home.idx === index
                 width: projRow.w
                 height: projRow.height
                 radius: DeckUi.innerRadius
@@ -239,8 +282,7 @@ Item {
                         id: ap
                         required property var modelData
                         required property int index
-                        readonly property bool sel: home.kb && home.row === 1 + Math.floor(index / 3)
-                                                    && home.colIdx === index % 3
+                        readonly property bool sel: home.kb && home.pane === "apps" && home.idx === index
                         width: appGrid.cw
                         height: appGrid.ch
                         radius: DeckUi.innerRadius
@@ -285,7 +327,7 @@ Item {
                 id: notCap
                 anchors { left: parent.left; right: parent.right; top: parent.top }
                 text: "Notifications"
-                trailing: Notifications.historyModel.count > 0 ? "2 to see all" : ""
+                trailing: Notifications.historyModel.count > 3 ? "+" + (Notifications.historyModel.count - 3) + " more on 2" : ""
             }
             Column {
                 anchors { left: parent.left; right: parent.right; top: notCap.bottom; topMargin: DeckUi.f(12) }
@@ -297,7 +339,8 @@ Item {
                         width: parent.width
                         rec: Notifications.historyModel.get(index)
                         compact: true
-                        onClicked: DeckUi.section = "notifications"
+                        selected: home.kb && home.pane === "notes" && home.idx === index
+                        onClicked: home.openNote(index)
                     }
                 }
             }
