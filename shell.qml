@@ -13,6 +13,7 @@ ShellRoot {
     WallpaperWindow { }
     Overlay { id: overlay }
     LauncherWindow { id: launcher }
+    DeckWindow { }
     NotificationToasts { }
     LaunchIndicator { }
     RecordingIndicator { }
@@ -20,12 +21,19 @@ ShellRoot {
     RegionPicker { }
 
     IpcHandler {
+        target: "deck"
+
+        function toggle(): void { Sh.toggleDeck() }
+        function open():   void { Sh.openDeck() }
+        function close():  void { Sh.closeDeck() }
+    }
+
+    IpcHandler {
         target: "overlay"
 
-        function toggle(): void { Sh.toggleDash() }
-        function open():   void { Sh.openDash() }
-        function close():  void { Sh.close() }
+        function walls():  void { Sh.toggleWalls() }
         function rest():   void { Sh.rest() }
+        function close():  void { Sh.close() }
     }
 
     IpcHandler {

@@ -61,9 +61,6 @@ Item {
     readonly property string q:    root._parsed.q
 
     readonly property bool expanded: root.query.length > 0 || root.results.length > 0
-    // For the dashboard: it lays out around the search panel and steps back while you search.
-    property alias panel: panelWrap
-    readonly property bool searching: root.expanded || root.inspectActive
 
     readonly property var _apps: [...DesktopEntries.applications.values]
         .sort((a, b) => (a.name || "").localeCompare(b.name || ""))
@@ -484,9 +481,7 @@ Item {
     Item {
         id: panelWrap
         anchors.horizontalCenter: parent.horizontalCenter
-        // Lower in dashboard mode so the whole card layout sits centred.
-        y: Math.round(parent.height * (Sh.dash ? 0.41 : 0.26))
-        Behavior on y { enabled: Sh.launcherShown; NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+        y: Math.round(parent.height * 0.26)
 
         readonly property real barH: root.f(58)
         readonly property real resultsMax: Math.min(root.f(460), root.height * 0.5)
@@ -577,13 +572,6 @@ Item {
                                 else Sh.closeLauncher()
                             }
                             Keys.onPressed: (ev) => {
-                                if (Sh.dash && root.query.length === 0) {
-                                    if (ev.key === Qt.Key_Left)  { Sh.dashStep(-1); ev.accepted = true; return }
-                                    if (ev.key === Qt.Key_Right) { Sh.dashStep(1);  ev.accepted = true; return }
-                                    if (ev.key === Qt.Key_Return || ev.key === Qt.Key_Enter) {
-                                        Sh.dashApply(); ev.accepted = true; return
-                                    }
-                                }
                                 if (ev.key === Qt.Key_Tab || ev.key === Qt.Key_Backtab) {
                                     root.toggleInspect()
                                     ev.accepted = true
@@ -841,118 +829,6 @@ Item {
         }
     }
 
-    // Glance line (dashboard only): what a bar would show.
-    Item {
-        id: glance
-        visible: Sh.dash
-        anchors.left: panelWrap.left
-        anchors.right: panelWrap.right
-        anchors.leftMargin: root.sp2
-        anchors.rightMargin: root.sp2
-        anchors.bottom: panelWrap.top
-        anchors.bottomMargin: root.sp5
-        height: Math.max(glanceL.height, glanceR.height)
-        opacity: root.inspectActive ? 1 - root.iT : 1
-
-        Column {
-            id: glanceL
-            anchors.left: parent.left
-            anchors.bottom: parent.bottom
-            spacing: root.sp1
-
-            Text {
-                text: Status.day + ", " + Status.date
-                color: Qt.alpha(Theme.fg, 0.55)
-                font.family: Sh.font
-                font.pixelSize: root.f(12)
-                font.weight: Font.Medium
-                font.letterSpacing: 2.5
-                font.capitalization: Font.AllUppercase
-            }
-            Row {
-                spacing: root.sp2
-                Text {
-                    id: glanceTime
-                    text: Status.time
-                    color: Theme.fg
-                    font.family: Sh.font
-                    font.pixelSize: root.f(44)
-                    font.weight: Font.DemiBold
-                }
-                Text {
-                    anchors.baseline: glanceTime.baseline
-                    text: Status.meridiem
-                    color: Theme.accent
-                    font.family: Sh.font
-                    font.pixelSize: root.f(14)
-                    font.weight: Font.Medium
-                    font.letterSpacing: 1.5
-                }
-            }
-        }
-
-        Column {
-            id: glanceR
-            anchors.right: parent.right
-            anchors.bottom: parent.bottom
-            anchors.bottomMargin: root.sp1
-            spacing: root.sp2
-
-            Row {
-                anchors.right: parent.right
-                visible: Status.track.length > 0 && !Sh.dash   // the dashboard has a media card
-                spacing: root.sp2
-                opacity: Status.playing ? 1 : 0.55
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: Math.min(implicitWidth, glance.width * 0.42)
-                    text: Status.track
-                    elide: Text.ElideRight
-                    color: Qt.alpha(Theme.fg, 0.6)
-                    font.family: Sh.font
-                    font.pixelSize: root.f(12)
-                }
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: Status.playing ? Sh.icMusic : Sh.icPause
-                    color: Theme.accent
-                    font.family: Sh.iconFont
-                    font.pixelSize: root.f(13)
-                }
-            }
-
-            Row {
-                anchors.right: parent.right
-                spacing: root.sp2
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    visible: Notifications.dnd
-                    text: Sh.icBellOff
-                    color: Theme.accent
-                    font.family: Sh.iconFont
-                    font.pixelSize: root.f(14)
-                }
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    visible: Status.hasBattery
-                    text: Status.pct + "%" + (Status.batteryNote ? "  ·  " + Status.batteryNote : "")
-                    color: Status.low ? Theme.error : Qt.alpha(Theme.fg, 0.75)
-                    font.family: Sh.font
-                    font.pixelSize: root.f(13)
-                    font.weight: Font.Medium
-                }
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    visible: Status.hasBattery
-                    text: Sh.batteryGlyph(Status.pct, Status.charging)
-                    color: Status.charging ? Theme.accent : Status.low ? Theme.error : Qt.alpha(Theme.fg, 0.75)
-                    font.family: Sh.iconFont
-                    font.pixelSize: root.f(16)
-                }
-            }
-        }
-    }
-
     Rectangle {
         id: legend
         anchors.horizontalCenter: panelWrap.horizontalCenter
@@ -964,7 +840,7 @@ Item {
         color: root.cPanel
         border.width: 1
         border.color: Qt.alpha(Theme.fg, 0.1)
-        opacity: (!root.expanded && !root.inspectActive && !Sh.dash) ? 1 : 0
+        opacity: (!root.expanded && !root.inspectActive) ? 1 : 0
         visible: opacity > 0.01
         Behavior on opacity { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
 

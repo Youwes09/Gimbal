@@ -69,6 +69,25 @@ QtObject {
     readonly property string icVolumeLow:     "\ue1aa"
     readonly property string icVolumeHigh:    "\ue1ab"
     readonly property string icVolumeMute:    "\ue1ac"
+    readonly property string icHome:          "\ue0f5"
+    readonly property string icImages:        "\ue5c4"
+    readonly property string icCpu:           "\ue0a9"
+    readonly property string icRam:           "\ue445"
+    readonly property string icGauge:         "\ue1bf"
+    readonly property string icThermo:        "\ue186"
+    readonly property string icGitBranch:     "\ue0e2"
+    readonly property string icFolderGit:     "\ue40a"
+    readonly property string icCamera:        "\ue064"
+    readonly property string icRecord:        "\ue345"
+    readonly property string icEye:           "\ue0ba"
+    readonly property string icWallpaper:     "\ue44b"
+    readonly property string icTrash:         "\ue18d"
+    readonly property string icCopy:          "\ue09e"
+    readonly property string icFolderOpen:    "\ue247"
+    readonly property string icRotate:        "\ue149"
+    readonly property string icLogOut:        "\ue10e"
+    readonly property string icSparkles:      "\ue412"
+    readonly property string icChevronRight:  "\ue06f"
 
     function batteryGlyph(pct, charging) {
         if (charging)  return root.icBatteryChg
@@ -80,24 +99,28 @@ QtObject {
     property real fontScale: 1.06
     function fs(px) { return Math.round(px * root.fontScale) }
 
-    // The overlay window now only hosts the rest screen (idle / Super+L).
-    property bool shown: false
-    function rest()  { root.closeLauncher(); root.shown = true }
-    function close() { root.shown = false }
+    // Only one summoned surface at a time.
+    function _closeAll() { root.launcherShown = false; root.deckShown = false; root.shown = false }
 
-    // The launcher window: search alone, or the full dashboard around it.
+    // The overlay window: the "wallpaper" carousel or the "rest" screen (idle / Super+L).
+    property bool   shown: false
+    property string page:  "wallpaper"
+    function walls()  { root._closeAll(); root.page = "wallpaper"; root.shown = true }
+    function toggleWalls() { if (root.shown && root.page === "wallpaper") root.close(); else root.walls() }
+    function rest()   { root._closeAll(); root.page = "rest"; root.shown = true }
+    function close()  { root.shown = false }
+
+    // The launcher (Super+Shift+A).
     property bool launcherShown: false
-    property bool dash: false
     function toggleLauncher() { if (root.launcherShown) root.closeLauncher(); else root.openLauncher() }
-    function openLauncher()   { root.dash = false; root.launcherShown = true }
+    function openLauncher()   { root._closeAll(); root.launcherShown = true }
     function closeLauncher()  { root.launcherShown = false }
-    // From search-only, Super+Tab expands into the dashboard instead of closing.
-    function toggleDash() { if (root.launcherShown && root.dash) root.closeLauncher(); else root.openDash() }
-    function openDash()   { root.dash = true; root.launcherShown = true }
 
-    // Keyboard on the dashboard while the search box is empty.
-    signal dashStep(int dir)
-    signal dashApply()
+    // The deck (Super+Tab).
+    property bool deckShown: false
+    function toggleDeck() { if (root.deckShown) root.closeDeck(); else root.openDeck() }
+    function openDeck()   { root._closeAll(); root.deckShown = true }
+    function closeDeck()  { root.deckShown = false }
 
     property real reveal: 0
 

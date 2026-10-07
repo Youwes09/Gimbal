@@ -9,12 +9,14 @@ import "root:/modules"
 QtObject {
     id: root
 
-    readonly property bool _on: Sh.launcherShown && Sh.dash
+    readonly property bool _on: Sh.deckShown
 
     property real cpu: 0       // 0..1
     property real memUsed: 0   // GiB
     property real memTotal: 0  // GiB
     property real gpu: -1      // 0..1, -1 when the driver doesn't report it
+    property real temp: -1     // CPU package °C, -1 when unknown
+    property var cpuHist: []   // last 40 samples (60s), for the sparkline
 
     property var _prev: null
 
@@ -30,7 +32,8 @@ QtObject {
     property Process _read: Process {
         command: ["sh", "-c",
             'head -1 /proc/stat; grep -E "^(MemTotal|MemAvailable):" /proc/meminfo; '
-            + 'cat /sys/class/drm/card*/device/gpu_busy_percent 2>/dev/null | head -1']
+            + 'g=$(cat /sys/class/drm/card*/device/gpu_busy_percent 2>/dev/null | head -1); echo "${g:--}"; '
+            + 'for h in /sys/class/hwmon/hwmon*; do case "$(cat $h/name 2>/dev/null)" in k10temp|coretemp|zenpower) cat $h/temp1_input; break;; esac; done']
         stdout: StdioCollector {
             onStreamFinished: {
                 const ln = this.text.split("\n")
@@ -39,7 +42,10 @@ QtObject {
                 const total = c.reduce((a, b) => a + b, 0)
                 if (root._prev) {
                     const dt = total - root._prev.total
-                    if (dt > 0) root.cpu = Math.max(0, Math.min(1, 1 - (idle - root._prev.idle) / dt))
+                    if (dt > 0) {
+                        root.cpu = Math.max(0, Math.min(1, 1 - (idle - root._prev.idle) / dt))
+                        root.cpuHist = root.cpuHist.concat([root.cpu]).slice(-40)
+                    }
                 }
                 root._prev = { idle: idle, total: total }
 
@@ -50,6 +56,9 @@ QtObject {
 
                 const g = parseInt(ln[3])
                 root.gpu = isNaN(g) ? -1 : g / 100
+
+                const tc = parseInt(ln[4])
+                root.temp = isNaN(tc) ? -1 : tc / 1000
             }
         }
     }

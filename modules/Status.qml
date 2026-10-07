@@ -6,12 +6,12 @@ import Quickshell.Services.Mpris
 import Quickshell.Services.UPower
 import "root:/modules"
 
-// Glanceable state shared by the launcher header and the rest screen.
+// Glanceable state shared by the deck and the rest screen.
 QtObject {
     id: root
 
     // Only tick while something showing it is up.
-    readonly property bool _watched: Sh.launcherShown || Sh.shown
+    readonly property bool _watched: Sh.deckShown || Sh.shown
     property date now: new Date()
     property Timer _tick: Timer {
         running: root._watched

@@ -6,14 +6,26 @@
 
 ## What it is
 
-Gimbal has no persistent chrome. You bind two keys:
+Gimbal has no persistent chrome. You bind three keys:
 
-- **the dashboard** — a game-bar style overlay around the search bar: now playing (art, seek, controls), volume / brightness sliders, screenshot / record / DND, live CPU / RAM / GPU, power (rest, suspend, reboot and shut down with a confirm click), and a wallpaper strip
-- **the launcher** — the search bar on its own: a Spotlight-style bar: apps, files, clipboard history, a calculator, and run-a-command, all behind single-character prefixes, ranked by frecency, with an inspect card for previews
+- **the deck** — a three-column overview: at a glance on the left, a main panel in the middle, controls on the right
+- **the launcher** — a Spotlight-style bar: apps, files, clipboard history, a calculator, and run-a-command, all behind single-character prefixes, ranked by frecency, with an inspect card for previews
+- **the wallpaper carousel** — a circular reveal onto an infinite parallax carousel of your wallpapers
 
-It also owns your wallpaper (static / GIF / video, cross-faded on switch), repaints itself from the wallpaper's colours, and quietly handles notifications, volume/brightness popups and screenshots.
+It also owns your wallpaper (static / GIF / video, cross-faded on switch), repaints itself from the wallpaper's colours, and quietly handles notifications, volume/brightness popups, idle and screenshots.
 
 ## Features
+
+**Deck**
+- Left: clock and battery, now playing (art, seek, controls), live CPU (with a 60 s sparkline) / RAM / GPU / temperature
+- Centre, with a section rail:
+  - **Home** — greeting and a one-line summary, the folders you open most from the launcher with their git branch and uncommitted changes, your most-used apps, the latest notifications
+  - **Notifications** — full history; open, dismiss, clear, Focus (Do Not Disturb)
+  - **Captures** — newest screenshots and recordings; open, copy, trash; take new ones
+  - **Session** — rest, suspend, log out, reboot, shut down (the last three ask twice)
+- Right: a mixer (output, microphone, brightness, and a slider per app playing) and quick toggles: Focus, Stay awake, Screenshot, Record
+- Fully keyboard driven: `tab` moves between zones, arrows and `enter` work inside them, `1`–`4` jump sections. Anywhere: `space` play/pause, `[` `]` previous/next, `w` wallpapers, `s` screenshot, `r` record, `d` Focus, `m` mute, `l` rest, `esc` close. The hint line under the deck always shows what works where you are
+- Frosted backdrop from one blurred still of the screen; everything is built on open and torn down on close. Stats and git state are only sampled while it is open
 
 **Launcher**
 - `apps` (default) · `>` run a command · `=` calculator · `/` or `~` files & folders · `;` clipboard history
@@ -22,8 +34,6 @@ It also owns your wallpaper (static / GIF / video, cross-faded on switch), repai
 - Inspect card (`tab`) — text/image/video previews, colour swatches, binary metadata, app details; scrollable, mouse-locked
 - Clipboard rows show image thumbnails
 - Type `dnd` to toggle Do Not Disturb
-- Glance line above the bar: time, date, battery, now playing — the bar you don't have
-- Frosted backdrop: one blurred still of the screen per open, freed on close
 
 **Rest screen**
 - Big clock, date, battery (with time left / to full), now playing; no password, any key or click returns
@@ -31,9 +41,9 @@ It also owns your wallpaper (static / GIF / video, cross-faded on switch), repai
 - Drifts a few pixels each minute so an OLED never holds the same image
 
 **Wallpaper**
-- Picked from the dashboard strip (`←`/`→` + `enter` while the search box is empty, or click); thumbnails cached under `~/.cache/gimbal/thumbs`
+- Carousel — circular reveal, infinite parallax, live video previews, cross-fade apply; `w` in the deck or `gimbal walls`
 - Quickshell draws the wallpaper directly (kills `wbg` on start)
-- `~/Pictures/Wallpapers` scanned on every dashboard open
+- `~/Pictures/Wallpapers` scanned on every carousel open
 - Video via QtMultimedia (ffmpeg backend); first-frame posters via ffmpeg
 - `gimbal wallpaper next|prev|random|set <name>|list`
 
@@ -98,14 +108,15 @@ Fonts (AdwaitaMono, Lucide) are bundled in `assets/fonts/`. The Nix flake pulls 
 ```
 gimbal start            run the daemon (compositor autostart)
 gimbal launch           the launcher
-gimbal toggle           summon / dismiss the dashboard
+gimbal toggle           summon / dismiss the deck
+gimbal walls            summon / dismiss the wallpaper carousel
 gimbal rest             show the rest screen
 gimbal wallpaper …      next | prev | random | rescan | list | <name>
 gimbal screenshot …     region | full
 gimbal record …         full | region | toggle | stop
 ```
 
-**In the dashboard:** type to search (the cards step back) · with an empty search, `←`/`→` browse wallpapers · `enter` apply · `esc` close
+**In the carousel:** `←`/`→` cycle · `enter` apply · `esc` close
 
 **In the launcher:** type a prefix, `↑`/`↓` to move, `tab` to inspect, `enter` to run.
 

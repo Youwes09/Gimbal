@@ -9,8 +9,8 @@ QtObject {
     property string kind: ""
 
     function pulse(k) {
-        // The dashboard has its own sliders; no popup on top of them.
-        if (Sh.launcherShown && Sh.dash) return
+        // The deck has its own sliders; no popup on top of them.
+        if (Sh.deckShown) return
         root.kind = k
         hide.restart()
     }

@@ -66,7 +66,8 @@ gimbal — summoned-overlay shell daemon control
   gimbal start            start the persistent daemon (spawn-at-startup)
   gimbal stop             stop the daemon
   gimbal restart          stop, then start
-  gimbal toggle           show/hide the dashboard
+  gimbal toggle           show/hide the deck
+  gimbal walls            show/hide the wallpaper carousel
   gimbal rest             show the rest screen (any key returns)
   gimbal launch           show/hide the launcher
   gimbal wallpaper [name|next|prev|random|rescan|list]
@@ -98,15 +99,20 @@ restart)
     ;;
 toggle)
     reap_duplicates
-    ipc overlay toggle && exit 0
+    ipc deck toggle && exit 0
     ensure_daemon || exit 1
-    for _ in $(seq 1 50); do sleep 0.1; ipc overlay toggle && exit 0; done
+    for _ in $(seq 1 50); do sleep 0.1; ipc deck toggle && exit 0; done
     exit 1
     ;;
 rest)
     reap_duplicates
     ensure_daemon || exit 1
     ipc overlay rest
+    ;;
+walls)
+    reap_duplicates
+    ensure_daemon || exit 1
+    ipc overlay walls
     ;;
 launch)
     reap_duplicates

@@ -81,29 +81,7 @@ QtObject {
                 root._postersDone = done
             }
         }
-        onExited: { root.posterRev++; root._genThumbs() }
-    }
-
-    // Small stills for the dashboard strip (images directly, videos from their poster).
-    readonly property string _thumbDir: (Quickshell.env("XDG_CACHE_HOME")
-        || (Quickshell.env("HOME") + "/.cache")) + "/gimbal/thumbs"
-    property int thumbRev: 0
-    function _genThumbs() {
-        if (_thumbs.running) { _thumbs.again = true; return }
-        _thumbs.command = ["sh", "-c",
-            'd="$1"; shift; mkdir -p "$d"; command -v magick >/dev/null 2>&1 || exit 0; '
-            + 'for f in "$@"; do b=$(basename "$f"); n="${b%.*}"; o="$d/$n.jpg"; [ -s "$o" ] && continue; '
-            + 'case "$f" in *.mp4|*.webm|*.mkv|*.mov) s="$(dirname "$d")/posters/$n.jpg"; [ -s "$s" ] || continue ;; *) s="$f[0]" ;; esac; '
-            + 'magick "$s" -resize "480x300^" -gravity center -extent 480x300 -quality 88 "$o" >/dev/null 2>&1; done',
-            "_", root._thumbDir].concat(root.list.map(w => w.path))
-        _thumbs.running = true
-    }
-    property Process _thumbs: Process {
-        property bool again: false
-        onExited: {
-            root.thumbRev++
-            if (again) { again = false; Qt.callLater(root._genThumbs) }
-        }
+        onExited: root.posterRev++
     }
 
     property int wideRev: 0
@@ -148,7 +126,6 @@ QtObject {
                         gif:    /\.gif$/i.test(f),
                         video:  video,
                         poster: video ? (root._posterDir + "/" + name + ".jpg") : "",
-                        thumb:  root._thumbDir + "/" + name + ".jpg",
                         wide:   video ? "" : (root._wideDir + "/" + name + ".jpg")
                     }
                 })
@@ -158,7 +135,6 @@ QtObject {
                 }
                 root._genPosters()
                 root._genWides()
-                root._genThumbs()
             }
         }
     }

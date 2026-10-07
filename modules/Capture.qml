@@ -72,9 +72,10 @@ QtObject {
         const m = mode || "region"
         root._quiet = /-quiet$/.test(m)
         root._pickerFor = m.replace(/-quiet$/, "") === "region" ? "shot" : ""
-        // From the launcher, let its 110ms close finish so it isn't in the grab.
-        _grabDelay.interval = Sh.launcherShown ? 160 : 0
+        // From the launcher or deck, let its close animation finish so it isn't in the grab.
+        _grabDelay.interval = Sh.deckShown ? 240 : Sh.launcherShown ? 160 : 0
         Sh.closeLauncher()
+        Sh.closeDeck()
         _grabDelay.restart()
     }
     property Timer _grabDelay: Timer {
