@@ -10,24 +10,41 @@ QtObject {
     readonly property real scale: 1.3
     function f(px) { return Sh.fs(px * root.scale) }
 
-    // Same surface language as the launcher, so the two read as one shell.
-    // Cards are lit from above: a slightly lifted top fading into the base, a hairline rim,
-    // and a brighter lip along the top edge. Inside them colour is kept for state only.
-    readonly property color card:    Qt.tint(Theme.surface, Qt.rgba(1, 1, 1, 0.03))
-    readonly property color cardTop: Qt.tint(Theme.surface, Qt.rgba(1, 1, 1, 0.065))
-    readonly property color rim:     Qt.alpha(Theme.fg, 0.08)
-    readonly property color sheen:   Qt.alpha(Theme.fg, 0.14)
-    readonly property color well:    Qt.alpha(Theme.fg, 0.035)   // inset blocks inside cards
-    readonly property color line:    Qt.alpha(Theme.fg, 0.06)
-    readonly property color dim:     Qt.alpha(Theme.fg, 0.58)
-    readonly property color faint:   Qt.alpha(Theme.fg, 0.32)
-    readonly property color sel:     Qt.alpha(Theme.fg, 0.075)
-    readonly property color selRim:  Qt.alpha(Theme.accent, 0.5)
-    readonly property color focusRim: Qt.alpha(Theme.accent, 0.28)  // whole card with keyboard focus
-    readonly property color hover:   Qt.alpha(Theme.fg, 0.045)
+    // Raycast's system: an achromatic near-black stack, edges instead of shadows (a hairline
+    // ring plus a faint inset highlight along the top, the "key"), neutral fills for anything
+    // selected or on, and one coral accent rationed to badges and destructive/recording states.
+    // Fixed rather than wallpaper-themed on purpose.
+    readonly property color canvas:   "#040506"
+    readonly property color card:     "#07080a"
+    readonly property color recessed: "#111214"
+    readonly property color graphite: "#1b1c1e"
+    readonly property color text:     "#ffffff"
+    readonly property color dim:      "#9c9c9d"   // ash: secondary text
+    readonly property color faint:    "#6a6b6c"   // smoke: muted labels
+    readonly property color mist:     "#e6e6e6"   // the one filled surface: on / primary
+    readonly property color iron:     "#454647"   // text and glyphs sitting on mist
+    readonly property color accent:   "#ff6363"
+    readonly property color danger:   "#ff6363"
+    readonly property color good:     "#59d499"
 
-    readonly property int radius:      f(14)
-    readonly property int innerRadius: f(10)
+    readonly property color rim:      Qt.rgba(1, 1, 1, 0.09)    // card edge
+    readonly property color sheen:    Qt.rgba(1, 1, 1, 0.09)    // inset top highlight
+    readonly property color well:     Qt.rgba(1, 1, 1, 0.04)    // recessed blocks inside cards
+    readonly property color line:     Qt.rgba(1, 1, 1, 0.07)
+    readonly property color sel:      Qt.rgba(1, 1, 1, 0.085)
+    readonly property color selRim:   Qt.rgba(1, 1, 1, 0.2)
+    readonly property color focusRim: Qt.rgba(1, 1, 1, 0.16)    // whole card with keyboard focus
+    readonly property color hover:    Qt.rgba(1, 1, 1, 0.045)
+
+    readonly property int radius:      f(16)
+    readonly property int innerRadius: f(8)
+    readonly property int badgeRadius: f(6)
+
+    // Inter for the interface; Geist Mono only for eyebrows, key hints and metadata.
+    property FontLoader _sans: FontLoader { source: "root:/assets/fonts/InterVariable.ttf" }
+    property FontLoader _mono: FontLoader { source: "root:/assets/fonts/GeistMonoVariable.ttf" }
+    readonly property string sans: _sans.status === FontLoader.Ready ? _sans.name : Sh.font
+    readonly property string mono: _mono.status === FontLoader.Ready ? _mono.name : Sh.font
 
     // Keyboard focus. Arrows move spatially; when a zone runs out of room in a direction it
     // hands focus on with go(). Left to right: media | rail | center | quick, mixer under quick.

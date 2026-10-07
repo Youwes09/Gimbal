@@ -67,15 +67,15 @@ Item {
         spacing: DeckUi.f(4)
         Text {
             text: "Session"
-            color: Theme.fg
-            font.family: Sh.font
+            color: DeckUi.text
+            font.family: DeckUi.sans
             font.pixelSize: DeckUi.f(24)
-            font.weight: Font.DemiBold
+            font.weight: Font.Medium
         }
         Text {
             text: "Up " + ses.uptime + "  ·  " + Quickshell.env("USER") + " on " + ses.host
             color: DeckUi.dim
-            font.family: Sh.font
+            font.family: DeckUi.sans
             font.pixelSize: DeckUi.f(12)
         }
     }
@@ -98,16 +98,16 @@ Item {
                 width: row.w
                 height: row.w * 1.1
                 radius: DeckUi.radius
-                color: ab.arm ? Qt.alpha(Theme.error, 0.16) : ab.sel ? DeckUi.sel : abMa.containsMouse ? DeckUi.hover : DeckUi.well
+                color: ab.arm ? Qt.alpha(DeckUi.danger, 0.16) : ab.sel ? DeckUi.sel : abMa.containsMouse ? DeckUi.hover : DeckUi.well
                 border.width: 1
-                border.color: ab.arm ? Qt.alpha(Theme.error, 0.6) : ab.sel ? DeckUi.selRim : "transparent"
+                border.color: ab.arm ? Qt.alpha(DeckUi.danger, 0.6) : ab.sel ? DeckUi.selRim : "transparent"
                 Behavior on color { ColorAnimation { duration: 140 } }
 
                 Text {
                     anchors.centerIn: parent
                     anchors.verticalCenterOffset: -DeckUi.f(10)
                     text: ab.modelData.glyph
-                    color: ab.arm ? Theme.error : ab.sel ? Theme.accent : Theme.fg
+                    color: ab.arm ? DeckUi.danger : DeckUi.text
                     font.family: Sh.iconFont
                     font.pixelSize: DeckUi.f(26)
                 }
@@ -116,8 +116,8 @@ Item {
                     anchors.bottom: parent.bottom
                     anchors.bottomMargin: DeckUi.f(16)
                     text: ab.arm ? "Again to confirm" : ab.modelData.label
-                    color: ab.arm ? Theme.error : Theme.fg
-                    font.family: Sh.font
+                    color: ab.arm ? DeckUi.danger : DeckUi.text
+                    font.family: DeckUi.sans
                     font.pixelSize: DeckUi.f(ab.arm ? 10.5 : 12.5)
                     font.weight: Font.Medium
                 }
@@ -139,7 +139,7 @@ Item {
         anchors.topMargin: DeckUi.f(18)
         text: ses.actions[ses.cur].hint
         color: DeckUi.faint
-        font.family: Sh.font
+        font.family: DeckUi.sans
         font.pixelSize: DeckUi.f(11.5)
     }
 }

@@ -56,16 +56,16 @@ Item {
         spacing: DeckUi.f(4)
         Text {
             text: "Notifications"
-            color: Theme.fg
-            font.family: Sh.font
+            color: DeckUi.text
+            font.family: DeckUi.sans
             font.pixelSize: DeckUi.f(24)
-            font.weight: Font.DemiBold
+            font.weight: Font.Medium
         }
         Text {
             text: nt.count === 0 ? "Nothing new" : nt.count + (nt.count === 1 ? " notification" : " notifications")
                   + (Notifications.dnd ? "  ·  Focus is on, popups are silenced" : "")
             color: DeckUi.dim
-            font.family: Sh.font
+            font.family: DeckUi.sans
             font.pixelSize: DeckUi.f(12)
         }
     }
@@ -128,7 +128,7 @@ Item {
             anchors.horizontalCenter: parent.horizontalCenter
             text: "All caught up"
             color: DeckUi.dim
-            font.family: Sh.font
+            font.family: DeckUi.sans
             font.pixelSize: DeckUi.f(13)
         }
     }

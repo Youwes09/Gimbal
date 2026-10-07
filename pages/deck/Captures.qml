@@ -89,15 +89,15 @@ Item {
         spacing: DeckUi.f(4)
         Text {
             text: "Captures"
-            color: Theme.fg
-            font.family: Sh.font
+            color: DeckUi.text
+            font.family: DeckUi.sans
             font.pixelSize: DeckUi.f(24)
-            font.weight: Font.DemiBold
+            font.weight: Font.Medium
         }
         Text {
             text: Capture.recording ? "Recording…" : "Screenshots and recordings, newest first"
-            color: Capture.recording ? Theme.error : DeckUi.dim
-            font.family: Sh.font
+            color: Capture.recording ? DeckUi.danger : DeckUi.dim
+            font.family: DeckUi.sans
             font.pixelSize: DeckUi.f(12)
         }
     }
@@ -111,7 +111,7 @@ Item {
             glyph: Sh.icRecord
             label: Capture.recording ? "Stop" : "Record"
             on: Capture.recording
-            tint: Theme.error
+            danger: true
             selected: cap.barKb && cap.btn === 2
             onClicked: cap.bar[2]()
         }
@@ -170,14 +170,14 @@ Item {
                     radius: DeckUi.innerRadius + DeckUi.f(3)
                     color: "transparent"
                     border.width: 2
-                    border.color: th.sel ? Theme.accent : thMa.containsMouse ? DeckUi.rim : "transparent"
+                    border.color: th.sel ? DeckUi.text : thMa.containsMouse ? DeckUi.rim : "transparent"
                 }
                 Text {
                     anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
                     elide: Text.ElideMiddle
                     text: th.modelData.name
-                    color: th.sel ? Theme.fg : DeckUi.faint
-                    font.family: Sh.font
+                    color: th.sel ? DeckUi.text : DeckUi.faint
+                    font.family: DeckUi.sans
                     font.pixelSize: DeckUi.f(10.5)
                 }
                 MouseArea {
@@ -206,7 +206,7 @@ Item {
             anchors.horizontalCenter: parent.horizontalCenter
             text: "No captures yet"
             color: DeckUi.dim
-            font.family: Sh.font
+            font.family: DeckUi.sans
             font.pixelSize: DeckUi.f(13)
         }
     }

@@ -30,7 +30,7 @@ Item {
         anchors.bottomMargin: -DeckUi.f(3)
         width: DeckUi.f(20)
         text: sl.glyph
-        color: sl.muted ? Theme.error : Theme.fg
+        color: sl.muted ? DeckUi.danger : DeckUi.text
         font.family: Sh.iconFont
         font.pixelSize: DeckUi.f(15)
         MouseArea { anchors.fill: parent; anchors.margins: -DeckUi.f(6); onClicked: sl.glyphClicked() }
@@ -42,7 +42,7 @@ Item {
         text: sl.label
         elide: Text.ElideRight
         color: DeckUi.dim
-        font.family: Sh.font
+        font.family: DeckUi.sans
         font.pixelSize: DeckUi.f(11.5)
     }
     Text {
@@ -50,8 +50,8 @@ Item {
         anchors.right: parent.right
         anchors.top: parent.top
         text: sl.muted ? "muted" : Math.round(sl.value * 100) + "%"
-        color: sl.muted ? Theme.error : DeckUi.faint
-        font.family: Sh.font
+        color: sl.muted ? DeckUi.danger : DeckUi.faint
+        font.family: DeckUi.sans
         font.pixelSize: DeckUi.f(11)
     }
     Item {
@@ -67,14 +67,14 @@ Item {
             width: Math.max(height, track.width * Math.max(0, Math.min(1, sl.value)))
             height: parent.height
             radius: height / 2
-            color: sl.muted ? DeckUi.faint : Qt.alpha(Theme.fg, 0.86)
+            color: sl.muted ? DeckUi.faint : Qt.alpha(DeckUi.text, 0.86)
             Behavior on width { enabled: !ma.pressed; NumberAnimation { duration: 120 } }
         }
         Rectangle {
             width: DeckUi.f(13); height: width; radius: width / 2
             x: track.width * Math.max(0, Math.min(1, sl.value)) - width / 2
             anchors.verticalCenter: parent.verticalCenter
-            color: Theme.fg
+            color: DeckUi.text
             opacity: ma.containsMouse || ma.pressed || sl.selected ? 1 : 0
             scale: ma.pressed ? 1.15 : 1
             Behavior on opacity { NumberAnimation { duration: 120 } }

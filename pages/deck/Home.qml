@@ -120,17 +120,17 @@ Item {
         spacing: DeckUi.f(4)
         Text {
             text: home.greeting
-            color: Theme.fg
-            font.family: Sh.font
+            color: DeckUi.text
+            font.family: DeckUi.sans
             font.pixelSize: DeckUi.f(24)
-            font.weight: Font.DemiBold
+            font.weight: Font.Medium
         }
         Text {
             width: parent.width
             elide: Text.ElideRight
             text: home.summary
             color: DeckUi.dim
-            font.family: Sh.font
+            font.family: DeckUi.sans
             font.pixelSize: DeckUi.f(12)
         }
     }
@@ -179,7 +179,7 @@ Item {
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         text: Sh.icFolderGit
-                        color: Theme.accent
+                        color: DeckUi.dim
                         font.family: Sh.iconFont
                         font.pixelSize: DeckUi.f(14)
                     }
@@ -188,10 +188,10 @@ Item {
                         width: parent.width - DeckUi.f(22)
                         elide: Text.ElideRight
                         text: pc.modelData.name
-                        color: Theme.fg
-                        font.family: Sh.font
+                        color: DeckUi.text
+                        font.family: DeckUi.sans
                         font.pixelSize: DeckUi.f(13.5)
-                        font.weight: Font.DemiBold
+                        font.weight: Font.Medium
                     }
                 }
                 Text {
@@ -200,7 +200,7 @@ Item {
                     elide: Text.ElideMiddle
                     text: pc.modelData.short
                     color: DeckUi.faint
-                    font.family: Sh.font
+                    font.family: DeckUi.sans
                     font.pixelSize: DeckUi.f(10.5)
                 }
                 Row {
@@ -218,23 +218,23 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                         text: pc.modelData.branch
                         color: DeckUi.dim
-                        font.family: Sh.font
+                        font.family: DeckUi.sans
                         font.pixelSize: DeckUi.f(11)
                     }
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         text: pc.modelData.dirty > 0 ? "+" + pc.modelData.dirty : "clean"
-                        color: pc.modelData.dirty > 0 ? Theme.accent : DeckUi.faint
-                        font.family: Sh.font
+                        color: pc.modelData.dirty > 0 ? DeckUi.text : DeckUi.faint
+                        font.family: DeckUi.sans
                         font.pixelSize: DeckUi.f(11)
-                        font.weight: Font.DemiBold
+                        font.weight: Font.Medium
                     }
                 }
                 Text {
                     anchors { right: parent.right; bottom: parent.bottom; margins: DeckUi.f(14) }
                     text: home.ago(pc.modelData.last)
                     color: DeckUi.faint
-                    font.family: Sh.font
+                    font.family: DeckUi.sans
                     font.pixelSize: DeckUi.f(10.5)
                 }
                 MouseArea {
@@ -252,7 +252,7 @@ Item {
         visible: Projects.list.length === 0
         text: "Open folders from the launcher and they'll show up here."
         color: DeckUi.dim
-        font.family: Sh.font
+        font.family: DeckUi.sans
         font.pixelSize: DeckUi.f(12)
     }
 
@@ -304,8 +304,8 @@ Item {
                             horizontalAlignment: Text.AlignHCenter
                             elide: Text.ElideRight
                             text: ap.modelData.name
-                            color: ap.sel ? Theme.fg : DeckUi.dim
-                            font.family: Sh.font
+                            color: ap.sel ? DeckUi.text : DeckUi.dim
+                            font.family: DeckUi.sans
                             font.pixelSize: DeckUi.f(10.5)
                         }
                         MouseArea {
@@ -360,7 +360,7 @@ Item {
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: "All caught up"
                     color: DeckUi.dim
-                    font.family: Sh.font
+                    font.family: DeckUi.sans
                     font.pixelSize: DeckUi.f(12)
                 }
             }

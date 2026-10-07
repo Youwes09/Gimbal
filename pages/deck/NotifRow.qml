@@ -41,7 +41,7 @@ Rectangle {
         anchors { left: parent.left; top: parent.top; bottom: parent.bottom; margins: DeckUi.f(10) }
         width: 2
         radius: 1
-        color: Theme.error
+        color: DeckUi.danger
     }
 
     AppIcon {
@@ -74,10 +74,10 @@ Rectangle {
                 anchors.rightMargin: DeckUi.f(8)
                 elide: Text.ElideRight
                 text: nr.rec ? nr._strip(nr.rec.summary) || nr.rec.app : ""
-                color: Theme.fg
-                font.family: Sh.font
+                color: DeckUi.text
+                font.family: DeckUi.sans
                 font.pixelSize: DeckUi.f(12.5)
-                font.weight: Font.DemiBold
+                font.weight: Font.Medium
             }
             Text {
                 id: age
@@ -85,7 +85,7 @@ Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
                 text: nr.rec ? nr.rec.app + "  ·  " + nr._ago(nr.rec.time) : ""
                 color: DeckUi.faint
-                font.family: Sh.font
+                font.family: DeckUi.sans
                 font.pixelSize: DeckUi.f(10)
             }
         }
@@ -97,7 +97,7 @@ Rectangle {
             wrapMode: nr.compact ? Text.NoWrap : Text.WordWrap
             maximumLineCount: nr.compact ? 1 : 2
             color: DeckUi.dim
-            font.family: Sh.font
+            font.family: DeckUi.sans
             font.pixelSize: DeckUi.f(11.5)
         }
     }

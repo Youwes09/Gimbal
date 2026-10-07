@@ -86,15 +86,15 @@ Item {
                         width: rail.width
                         height: width
                         radius: DeckUi.innerRadius
-                        color: rb.kb ? Qt.alpha(Theme.accent, 0.22) : rb.on ? DeckUi.sel : rbMa.containsMouse ? DeckUi.hover : "transparent"
+                        color: rb.on ? DeckUi.sel : rbMa.containsMouse ? DeckUi.hover : "transparent"
                         border.width: 1
-                        border.color: rb.kb ? Theme.accent : rb.on ? Qt.alpha(Theme.accent, 0.25) : "transparent"
+                        border.color: rb.kb ? DeckUi.selRim : "transparent"
                         Behavior on color { ColorAnimation { duration: 120 } }
 
                         Text {
                             anchors.centerIn: parent
                             text: rb.modelData.glyph
-                            color: rb.on ? Theme.accent : DeckUi.dim
+                            color: rb.on ? DeckUi.text : DeckUi.faint
                             font.family: Sh.iconFont
                             font.pixelSize: DeckUi.f(17)
                         }
@@ -105,13 +105,13 @@ Item {
                             width: Math.max(DeckUi.f(15), badge.implicitWidth + DeckUi.f(8))
                             height: DeckUi.f(15)
                             radius: height / 2
-                            color: Theme.accent
+                            color: DeckUi.accent
                             Text {
                                 id: badge
                                 anchors.centerIn: parent
                                 text: Math.min(99, Notifications.historyModel.count)
-                                color: Theme.bg
-                                font.family: Sh.font
+                                color: DeckUi.canvas
+                                font.family: DeckUi.sans
                                 font.pixelSize: DeckUi.f(9)
                                 font.weight: Font.Bold
                             }
@@ -210,24 +210,24 @@ Item {
                         width: Math.max(height, keyText.implicitWidth + DeckUi.f(12))
                         height: DeckUi.f(20)
                         radius: DeckUi.f(5)
-                        color: Qt.alpha(Theme.fg, 0.07)
+                        color: DeckUi.graphite
                         border.width: 1
-                        border.color: Qt.alpha(Theme.fg, 0.12)
+                        border.color: DeckUi.rim
                         Text {
                             id: keyText
                             anchors.centerIn: parent
                             text: hint.modelData ? hint.modelData[0] : ""
-                            color: Theme.fg
-                            font.family: Sh.font
+                            color: DeckUi.text
+                            font.family: DeckUi.mono
                             font.pixelSize: DeckUi.f(10)
-                            font.weight: Font.DemiBold
+                            font.weight: Font.Medium
                         }
                     }
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         text: hint.modelData ? hint.modelData[1] : ""
                         color: DeckUi.dim
-                        font.family: Sh.font
+                        font.family: DeckUi.mono
                         font.pixelSize: DeckUi.f(11)
                     }
                 }

@@ -26,7 +26,7 @@ Column {
             { glyph: Sh.icCamera, label: "Screenshot", state: "Region", on: false,
               act: () => Capture.shot("region") },
             { glyph: Sh.icRecord, label: "Record",
-              state: Capture.recording ? "Recording" : "Screen", on: Capture.recording, tint: Theme.error,
+              state: Capture.recording ? "Recording" : "Screen", on: Capture.recording, tint: DeckUi.danger,
               act: () => { if (!Capture.recording) Sh.closeDeck(); Capture.recToggle() } }
         ]
         property int cur: 0
@@ -63,28 +63,29 @@ Column {
                     required property var modelData
                     required property int index
                     readonly property bool sel: quick.focused && quick.cur === index
-                    readonly property color tint: modelData.tint || Theme.accent
+                    // On is neutral (a Mist chip); only Record goes coral.
+                    readonly property color tint: modelData.tint || DeckUi.mist
                     width: (parent.width - parent.spacing) / 2
                     height: (parent.height - parent.spacing) / 2
                     radius: DeckUi.innerRadius
-                    color: modelData.on ? Qt.alpha(qt.tint, 0.15)
+                    color: modelData.on ? DeckUi.sel
                          : qt.sel ? DeckUi.sel : qtMa.containsMouse ? DeckUi.hover : DeckUi.well
                     border.width: 1
-                    border.color: qt.sel ? DeckUi.selRim : modelData.on ? Qt.alpha(qt.tint, 0.4) : "transparent"
+                    border.color: qt.sel ? DeckUi.selRim : "transparent"
                     Behavior on color { ColorAnimation { duration: 140 } }
 
-                    // Icon chip: filled with the tint while the toggle is on.
+                    // Icon chip: filled while the toggle is on.
                     Rectangle {
                         id: chip
                         anchors { left: parent.left; top: parent.top; margins: DeckUi.f(10) }
                         width: DeckUi.f(28); height: width
                         radius: width / 2
-                        color: qt.modelData.on ? qt.tint : Qt.alpha(Theme.fg, 0.07)
+                        color: qt.modelData.on ? qt.tint : DeckUi.graphite
                         Behavior on color { ColorAnimation { duration: 160 } }
                         Text {
                             anchors.centerIn: parent
                             text: qt.modelData.glyph
-                            color: qt.modelData.on ? Theme.bg : Theme.fg
+                            color: qt.modelData.on ? (qt.modelData.tint ? DeckUi.canvas : DeckUi.iron) : DeckUi.text
                             font.family: Sh.iconFont
                             font.pixelSize: DeckUi.f(14)
                         }
@@ -97,17 +98,17 @@ Column {
                             width: parent.width
                             elide: Text.ElideRight
                             text: qt.modelData.label
-                            color: Theme.fg
-                            font.family: Sh.font
+                            color: DeckUi.text
+                            font.family: DeckUi.sans
                             font.pixelSize: DeckUi.f(12)
-                            font.weight: Font.DemiBold
+                            font.weight: Font.Medium
                         }
                         Text {
                             width: parent.width
                             elide: Text.ElideRight
                             text: qt.modelData.state
-                            color: qt.modelData.on ? qt.tint : DeckUi.dim
-                            font.family: Sh.font
+                            color: qt.modelData.on ? DeckUi.text : DeckUi.dim
+                            font.family: DeckUi.sans
                             font.pixelSize: DeckUi.f(10.5)
                         }
                     }

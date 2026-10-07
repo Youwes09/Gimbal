@@ -25,16 +25,16 @@ Column {
                 Text {
                     id: clockText
                     text: Status.time
-                    color: Theme.fg
-                    font.family: Sh.font
+                    color: DeckUi.text
+                    font.family: DeckUi.sans
                     font.pixelSize: DeckUi.f(50)
-                    font.weight: Font.DemiBold
+                    font.weight: Font.Medium
                 }
                 Text {
                     anchors.baseline: clockText.baseline
                     text: Status.meridiem
-                    color: Theme.accent
-                    font.family: Sh.font
+                    color: DeckUi.dim
+                    font.family: DeckUi.sans
                     font.pixelSize: DeckUi.f(14)
                     font.weight: Font.Medium
                     font.letterSpacing: 1.5
@@ -43,7 +43,7 @@ Column {
             Text {
                 text: Status.day + "  ·  " + Status.date
                 color: DeckUi.dim
-                font.family: Sh.font
+                font.family: DeckUi.sans
                 font.pixelSize: DeckUi.f(11)
                 font.weight: Font.Medium
                 font.letterSpacing: 2.2
@@ -60,24 +60,24 @@ Column {
             Text {
                 anchors.verticalCenter: parent.verticalCenter
                 text: Sh.batteryGlyph(Status.pct, Status.charging)
-                color: Status.charging ? Theme.accent : Status.low ? Theme.error : Theme.fg
+                color: Status.charging ? DeckUi.good : Status.low ? DeckUi.danger : DeckUi.text
                 font.family: Sh.iconFont
                 font.pixelSize: DeckUi.f(15)
             }
             Text {
                 anchors.verticalCenter: parent.verticalCenter
                 text: Status.pct + "%"
-                color: Status.low ? Theme.error : Theme.fg
-                font.family: Sh.font
+                color: Status.low ? DeckUi.danger : DeckUi.text
+                font.family: DeckUi.sans
                 font.pixelSize: DeckUi.f(12.5)
-                font.weight: Font.DemiBold
+                font.weight: Font.Medium
             }
             Text {
                 anchors.verticalCenter: parent.verticalCenter
                 visible: Status.batteryNote.length > 0
                 text: Status.batteryNote
                 color: DeckUi.dim
-                font.family: Sh.font
+                font.family: DeckUi.sans
                 font.pixelSize: DeckUi.f(11.5)
             }
         }
@@ -91,21 +91,21 @@ Column {
             Text {
                 visible: Notifications.dnd
                 text: Sh.icBellOff
-                color: Theme.accent
+                color: DeckUi.text
                 font.family: Sh.iconFont
                 font.pixelSize: DeckUi.f(14)
             }
             Text {
                 visible: DeckUi.stayAwake
                 text: Sh.icEye
-                color: Theme.accent
+                color: DeckUi.text
                 font.family: Sh.iconFont
                 font.pixelSize: DeckUi.f(14)
             }
             Text {
                 visible: Capture.recording
                 text: Sh.icRecord
-                color: Theme.error
+                color: DeckUi.danger
                 font.family: Sh.iconFont
                 font.pixelSize: DeckUi.f(14)
             }
@@ -171,7 +171,7 @@ Column {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: "Nothing playing"
                 color: DeckUi.dim
-                font.family: Sh.font
+                font.family: DeckUi.sans
                 font.pixelSize: DeckUi.f(12)
             }
         }
@@ -205,17 +205,17 @@ Column {
                     width: parent.width
                     elide: Text.ElideRight
                     text: media.p ? media.p.trackTitle : ""
-                    color: Theme.fg
-                    font.family: Sh.font
+                    color: DeckUi.text
+                    font.family: DeckUi.sans
                     font.pixelSize: DeckUi.f(14)
-                    font.weight: Font.DemiBold
+                    font.weight: Font.Medium
                 }
                 Text {
                     width: parent.width
                     elide: Text.ElideRight
                     text: media.p ? media.p.trackArtist : ""
                     color: DeckUi.dim
-                    font.family: Sh.font
+                    font.family: DeckUi.sans
                     font.pixelSize: DeckUi.f(12)
                 }
             }
@@ -234,7 +234,7 @@ Column {
                     width: seekTrack.len > 0 ? parent.width * Math.min(1, media.p.position / seekTrack.len) : 0
                     height: parent.height
                     radius: height / 2
-                    color: Theme.accent
+                    color: DeckUi.mist
                 }
                 MouseArea {
                     anchors.fill: parent
@@ -291,7 +291,7 @@ Column {
             property string value: ""
             property real level: 0
             property real hot: 0.9      // level at which the ring turns red
-            readonly property color tint: tile.level >= tile.hot ? Theme.error : Qt.alpha(Theme.fg, 0.82)
+            readonly property color tint: tile.level >= tile.hot ? DeckUi.danger : Qt.alpha(DeckUi.text, 0.82)
             width: tiles.tw
             height: tiles.th
             border.width: 0   // the ring is the edge
@@ -357,7 +357,7 @@ Column {
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: tile.glyph
-                    color: tile.level >= tile.hot ? Theme.error : DeckUi.dim
+                    color: tile.level >= tile.hot ? DeckUi.danger : DeckUi.dim
                     font.family: Sh.iconFont
                     font.pixelSize: DeckUi.f(18)
                     bottomPadding: DeckUi.f(3)
@@ -365,18 +365,18 @@ Column {
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: tile.value
-                    color: Theme.fg
-                    font.family: Sh.font
+                    color: DeckUi.text
+                    font.family: DeckUi.sans
                     font.pixelSize: DeckUi.f(20)
-                    font.weight: Font.DemiBold
+                    font.weight: Font.Medium
                 }
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: tile.label
                     color: DeckUi.faint
-                    font.family: Sh.font
+                    font.family: DeckUi.sans
                     font.pixelSize: DeckUi.f(9.5)
-                    font.weight: Font.DemiBold
+                    font.weight: Font.Medium
                     font.letterSpacing: 1.8
                     font.capitalization: Font.AllUppercase
                 }
