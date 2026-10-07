@@ -22,6 +22,13 @@ It also owns your wallpaper (static / GIF / video, cross-faded on switch), repai
 - Inspect card (`tab`) — text/image/video previews, colour swatches, binary metadata, app details; scrollable, mouse-locked
 - Clipboard rows show image thumbnails
 - Type `dnd` to toggle Do Not Disturb
+- Glance line above the bar: time, date, battery, now playing — the bar you don't have
+- Frosted backdrop: one blurred still of the screen per open, freed on close
+
+**Rest screen**
+- Big clock, date, battery (with time left / to full), now playing; no password, any key or click returns
+- Comes up after `idleRest` seconds idle (default 300) or on `gimbal rest`; fades to true black after `idleDark` (default 600). Idle inhibitors (video, calls) hold it off
+- Drifts a few pixels each minute so an OLED never holds the same image
 
 **Wallpaper**
 - Picker — circular reveal, infinite parallax carousel, live video previews, cross-fade apply; built on open and torn down on close
@@ -92,6 +99,7 @@ Fonts (AdwaitaMono, Lucide) are bundled in `assets/fonts/`. The Nix flake pulls 
 gimbal start            run the daemon (compositor autostart)
 gimbal launch           the launcher
 gimbal toggle           summon / dismiss the wallpaper picker
+gimbal rest             show the rest screen
 gimbal wallpaper …      next | prev | random | rescan | list | <name>
 gimbal screenshot …     region | full
 gimbal record …         full | region | toggle | stop
@@ -151,6 +159,8 @@ bindsym $mod+Tab exec gimbal toggle
   "fileManager": "nautilus",
   "terminal": "foot",
   "dirOpen": "smart",
+  "idleRest": 300,
+  "idleDark": 600,
   "fileRoots": ["~/Projects", "~/Documents", "~/Downloads"]
 }
 ```
