@@ -90,7 +90,7 @@ The script checks dependencies, installs the missing ones (`pacman` + `paru`/`ya
 |---|---|---|
 | **required** | `quickshell` (AUR) | the runtime — needs Wayland + the UPower service |
 | | `wl-clipboard`, `cliphist` | clipboard history (`wl-paste --watch cliphist store` must run) |
-| | `imagemagick` | wallpaper colour palette, wallpaper still-cache |
+| | `imagemagick` | wallpaper colour palette, wallpaper still-cache, app icon normalisation |
 | | `grim` | screenshots |
 | | `brightnessctl` | screen brightness (used if no `oledctl` on `$PATH`) |
 | | `libnotify` | screenshot toasts |
