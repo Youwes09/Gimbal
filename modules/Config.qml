@@ -37,8 +37,9 @@ QtObject {
     readonly property bool raiseRunning:
         root._j.raiseRunning !== undefined ? !!root._j.raiseRunning : true
 
-    readonly property bool captureFastOpen:
-        root._j.captureFastOpen !== undefined ? !!root._j.captureFastOpen : true
+    // Seconds of idle before the rest screen, and before it fades to black. 0 disables.
+    readonly property int idleRest: root._j.idleRest !== undefined ? root._j.idleRest : 300
+    readonly property int idleDark: root._j.idleDark !== undefined ? root._j.idleDark : 600
 
     readonly property var notifications:
         (root._j.notifications && typeof root._j.notifications === "object")

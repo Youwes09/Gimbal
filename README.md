@@ -1,6 +1,6 @@
 <h1 align="center">Gimbal</h1>
 
-<p align="center">A summoned-overlay <a href="https://github.com/quickshell-mirror/quickshell">Quickshell</a> shell for wlroots Wayland. No bar — nothing is on screen until you call it.</p>
+<p align="center">A summoned <a href="https://github.com/quickshell-mirror/quickshell">Quickshell</a> shell for wlroots Wayland. No bar — nothing is on screen until you call it.</p>
 
 ---
 
@@ -8,18 +8,12 @@
 
 Gimbal has no persistent chrome. You bind two keys:
 
-- **the overlay** — a circular reveal onto a clock page, a wallpaper picker, and notification history, with a hold-to-confirm power/suspend arm
 - **the launcher** — a Spotlight-style bar: apps, files, clipboard history, a calculator, and run-a-command, all behind single-character prefixes, ranked by frecency, with an inspect card for previews
+- **the wallpaper picker** — a circular reveal onto an infinite parallax carousel of your wallpapers
 
-It also owns your wallpaper (static / GIF / video, cross-faded on switch) and repaints itself from the wallpaper's colours.
+It also owns your wallpaper (static / GIF / video, cross-faded on switch), repaints itself from the wallpaper's colours, and quietly handles notifications, volume/brightness popups and screenshots.
 
 ## Features
-
-**Overlay**
-- Circular reveal in/out from a configurable origin
-- Clock page — time, date, weather, battery
-- Wallpaper picker — infinite parallax carousel, live video previews, cross-fade apply
-- Power arm — `↑`/`↓` arms shutdown / suspend, `enter` confirms; entering the wallpaper picker cancels it
 
 **Launcher**
 - `apps` (default) · `>` run a command · `=` calculator · `/` or `~` files & folders · `;` clipboard history
@@ -27,34 +21,29 @@ It also owns your wallpaper (static / GIF / video, cross-faded on switch) and re
 - Files: `enter` = smart open (project dir → editor, else file manager), `ctrl+enter` = editor, `alt+enter` = file manager, `shift+enter` = terminal there. It **learns** your pick per directory.
 - Inspect card (`tab`) — text/image/video previews, colour swatches, binary metadata, app details; scrollable, mouse-locked
 - Clipboard rows show image thumbnails
-
-**Notifications**
-- Own `org.freedesktop.Notifications` server (disable mako / dunst / swaync)
-- Toasts drop from the top-centre as a shallow deck; hover pauses the timer, critical stays until dismissed
-- History page (`n` in the overlay) — grouped by app, per-item + clear-all, DND toggle, action buttons on still-live notifications
-
-**Network & Bluetooth**
-- `b` in the overlay — Wi-Fi (scan, join, forget, password prompt) and paired Bluetooth devices, one glass-card page
-- Backed by `nmcli` / `bluetoothctl`; no applet daemon needed
-
-**Capture**
-- Type `screenshot` (region / full) or `record` in the launcher — no prefix
-- Region select is a built-in drag overlay, captured with `grim`; recording via `wl-screenrec` (SIGINT to finalise), toggled from the same `record` entry
-- After a screenshot the overlay opens the **Capture page** — the image, its dimensions / size / format, and `c` copy · `a` annotate · `o` open · `r` reveal · `del` discard
-- Annotate opens `satty` on the file in place
-- `gimbal screenshot [region|full]` · `gimbal record [full|region|toggle|stop]`
-- Files land in `~/Pictures/Screenshots` and `~/Videos/Recordings`; the image is also put on the clipboard
+- Type `dnd` to toggle Do Not Disturb
 
 **Wallpaper**
-- Quickshell draws it directly (kills `wbg` on start)
+- Picker — circular reveal, infinite parallax carousel, live video previews, cross-fade apply; built on open and torn down on close
+- Quickshell draws the wallpaper directly (kills `wbg` on start)
 - `~/Pictures/Wallpapers` scanned on every picker open
 - Video via QtMultimedia (ffmpeg backend); first-frame posters via ffmpeg
-- Cross-fade transition on both the desktop and the overlay's frosted backdrop
 - `gimbal wallpaper next|prev|random|set <name>|list`
 
 **Colours**
 - Wallpaper → palette written to `~/.config/gimbal/colors.json`, live-reloaded by the theme
-- Derived from an ImageMagick histogram of the current wallpaper
+- Derived from an ImageMagick histogram of the current wallpaper: surfaces, accent, and contrast/secondary/tertiary/error state colours rotated around the accent
+
+**Notifications**
+- Own `org.freedesktop.Notifications` server (disable mako / dunst / swaync)
+- Toasts drop from the top-centre as a shallow deck; hover pauses the timer, critical stays until dismissed
+
+**Capture**
+- Type `screenshot` (region / full) or `record` in the launcher — no prefix
+- Region select freezes the screen first, then crops your drag from that still
+- Screenshots land in `~/Pictures/Screenshots` and on the clipboard; `quiet` skips the file
+- Recording via `wl-screenrec` (SIGINT to finalise), toggled from the same `record` entry, saved to `~/Videos/Recordings`
+- `gimbal screenshot [region|full] [quiet]` · `gimbal record [full|region|toggle|stop]`
 
 ## Install
 
@@ -86,17 +75,13 @@ The script checks dependencies, installs the missing ones (`pacman` + `paru`/`ya
 | | `wl-clipboard`, `cliphist` | clipboard history (`wl-paste --watch cliphist store` must run) |
 | | `imagemagick` | wallpaper colour palette, wallpaper still-cache |
 | | `grim` | screenshots |
-| | `networkmanager` | Wi-Fi page (`nmcli`) |
-| | `bluez` | Bluetooth page (`bluetoothctl`) |
 | | `brightnessctl` | screen brightness (used if no `oledctl` on `$PATH`) |
-| | `libnotify` | quiet-screenshot toast |
+| | `libnotify` | screenshot toasts |
 | | `xdg-utils` | fallback opener when no file manager is configured |
 | **optional** | `qt6-multimedia` | video wallpapers |
 | | `ffmpeg` | video wallpaper poster frames |
 | | `wl-screenrec` | screen recording |
-| | `satty` | screenshot annotation |
-| | `upower` | battery on the clock page |
-| | `curl` | weather on the clock page |
+| | `upower` | low-battery warnings |
 | | `file` | richer file-type detection in the inspect card |
 
 Fonts (AdwaitaMono, Lucide) are bundled in `assets/fonts/`. The Nix flake pulls in every row above automatically.
@@ -106,14 +91,13 @@ Fonts (AdwaitaMono, Lucide) are bundled in `assets/fonts/`. The Nix flake pulls 
 ```
 gimbal start            run the daemon (compositor autostart)
 gimbal launch           the launcher
-gimbal toggle [page]    summon / dismiss the overlay  (page: clock | wallpaper | notifications | capture)
+gimbal toggle           summon / dismiss the wallpaper picker
 gimbal wallpaper …      next | prev | random | rescan | list | <name>
 gimbal screenshot …     region | full
 gimbal record …         full | region | toggle | stop
 ```
 
-**In the overlay:** `w` → wallpaper picker · `n` → notifications · `s` → last capture · `b` → Wi-Fi / Bluetooth · `←`/`→` cycle · `enter` apply · `↑`/`↓` arm power · `esc` close
-**Capture page:** `c` copy · `a` annotate · `o` open · `r` reveal · `del` discard
+**In the wallpaper picker:** `←`/`→` cycle · `enter` apply · `esc` close
 
 **In the launcher:** type a prefix, `↑`/`↓` to move, `tab` to inspect, `enter` to run.
 

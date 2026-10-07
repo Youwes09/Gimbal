@@ -8,6 +8,7 @@ ShellRoot {
 
     readonly property int _trayCount: SystemTray.items ? SystemTray.items.values.length : 0
     readonly property int _batteryWatch: BatteryWatch.pct
+    readonly property bool _idle: Idle.dark
 
     WallpaperWindow { }
     Overlay { id: overlay }
@@ -21,9 +22,10 @@ ShellRoot {
     IpcHandler {
         target: "overlay"
 
-        function toggle(page: string): void { Sh.toggle(page ?? "") }
-        function open(page: string):   void { Sh.open(page ?? "") }
-        function close():              void { Sh.close() }
+        function toggle(): void { Sh.toggle() }
+        function open():   void { Sh.open() }
+        function close():  void { Sh.close() }
+        function rest():   void { Sh.rest() }
     }
 
     IpcHandler {
@@ -52,8 +54,6 @@ ShellRoot {
     IpcHandler {
         target: "notifications"
 
-        function toggle(): void { Sh.toggle("notifications") }
-        function open():   void { Sh.open("notifications") }
         function dnd():  string { Notifications.toggleDnd(); return Notifications.dnd ? "on" : "off" }
         function clear():  void { Notifications.clearAll() }
         function state(): string { return Notifications.dnd ? "dnd" : "on" }
@@ -66,7 +66,6 @@ ShellRoot {
         function record(mode: string):     void { Capture.recStart(mode ?? "full") }
         function stop():                   void { Capture.recStop() }
         function recordToggle():           void { Capture.recToggle() }
-        function annotate():               void { Capture.annotate() }
         function recording():            string { return Capture.recording ? "on" : "off" }
     }
 

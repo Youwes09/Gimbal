@@ -36,14 +36,11 @@ PanelWindow {
     property bool active: false
     property real stage: 0
     property real contentFade: 0
-    property bool _fastRun: false
 
     onOpenChanged: {
         if (root.open) {
             closeAnim.stop()
             root.active = true
-            root._fastRun = Sh.fastOpen
-            Sh.fastOpen = false
             Sh.reveal = 0
             root.stage = 0
             root.contentFade = 0
@@ -59,17 +56,17 @@ PanelWindow {
         id: openAnim
         NumberAnimation {
             target: Sh; property: "reveal"; from: 0; to: 1
-            duration: root._fastRun ? 170 : 520
+            duration: 520
             easing.type: Easing.BezierSpline
             easing.bezierCurve: [0.35, 0.3, 0.55, 1.0, 1.0, 1.0]
         }
         NumberAnimation {
             target: root; property: "stage"; from: 0; to: 1
-            duration: root._fastRun ? 70 : 160; easing.type: Easing.OutCubic
+            duration: 160; easing.type: Easing.OutCubic
         }
         NumberAnimation {
             target: root; property: "contentFade"; from: 0; to: 1
-            duration: root._fastRun ? 130 : 420; easing.type: Easing.OutCubic
+            duration: 420; easing.type: Easing.OutCubic
         }
     }
 
@@ -102,7 +99,6 @@ PanelWindow {
                 root.active = false
                 Sh.reveal = 0
                 root.contentFade = 0
-                Sh.page = "clock"
             }
         }
     }
@@ -172,97 +168,32 @@ PanelWindow {
             maskSpreadAtMin: 0.05
         }
 
-        TapHandler {
-            enabled: Sh.page === "clock" || Sh.page === "suspend"
-            onTapped: {
-                if (Sh.page === "suspend") {
-                    if (suspendLoader.item) suspendLoader.item.tryDismiss()
-                    return
-                }
-                Sh.close()
-            }
-        }
-
-        Loader {
-            id: clockLoader
-            anchors.fill: parent
-            sourceComponent: clockPage
-            opacity: Sh.page === "clock" ? 1 : 0
-            visible: opacity > 0.01
-            Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
-            transform: Translate { y: Sh.powerPush }
-        }
-        Component { id: clockPage; ClockPage {} }
-
+        // Pages are built on open and torn down on close, so they hold no memory while hidden.
         Loader {
             id: wallLoader
             anchors.fill: parent
-            active: Sh.page === "wallpaper" || opacity > 0.01
-            sourceComponent: wallpaperPage
-            opacity: Sh.page === "wallpaper" ? 1 : 0
-            visible: opacity > 0.01
-            Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+            active: root.active && Sh.page === "wallpaper"
+            sourceComponent: WallpaperCarousel {}
         }
-        Component { id: wallpaperPage; WallpaperCarousel {} }
-
         Loader {
-            id: notifLoader
             anchors.fill: parent
-            active: Sh.page === "notifications" || opacity > 0.01
-            sourceComponent: notifPage
-            opacity: Sh.page === "notifications" ? 1 : 0
-            visible: opacity > 0.01
-            Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
-        }
-        Component { id: notifPage; NotificationsPage {} }
-
-        Loader {
-            id: suspendLoader
-            anchors.fill: parent
-            active: Sh.page === "suspend" || opacity > 0.01
-            sourceComponent: suspendPage
-            opacity: Sh.page === "suspend" ? 1 : 0
-            visible: opacity > 0.01
-            Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
-        }
-        Component { id: suspendPage; SuspendScreen {} }
-
-        Loader {
-            id: captureLoader
-            anchors.fill: parent
-            active: Sh.page === "capture" || opacity > 0.01
-            sourceComponent: capturePage
-            opacity: Sh.page === "capture" ? 1 : 0
-            visible: opacity > 0.01
-            Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
-        }
-        Component { id: capturePage; CapturePage {} }
-
-        Loader {
-            id: networkLoader
-            anchors.fill: parent
-            active: Sh.page === "network" || opacity > 0.01
-            sourceComponent: networkPage
-            opacity: Sh.page === "network" ? 1 : 0
-            visible: opacity > 0.01
-            Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
-        }
-        Component { id: networkPage; NetworkPage {} }
-
-        Rectangle {
-            anchors.fill: parent
-            color: "black"
-            opacity: Sh.powerDim
+            active: root.active && Sh.page === "rest"
+            sourceComponent: RestPage {}
         }
 
-        PowerArm { id: powerArm; anchors.fill: parent; enabled: Sh.page === "clock" }
+        TapHandler {
+            enabled: Sh.page === "rest"
+            onTapped: Sh.close()
+        }
     }
 
-    Connections {
-        target: Sh
-        function onPageChanged() {
-            if (Sh.page !== "clock" && powerArm.armed !== "") powerArm.cancel()
-        }
+    // Long idle on the rest screen: fade to true black (OLED pixels off). Any input brings it back.
+    Rectangle {
+        anchors.fill: parent
+        color: "black"
+        visible: opacity > 0
+        opacity: root.active && Sh.page === "rest" && Idle.dark ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: 1800; easing.type: Easing.InOutSine } }
     }
 
     Item {
@@ -270,92 +201,15 @@ PanelWindow {
         anchors.fill: parent
         focus: true
 
-        Connections {
-            target: Sh
-            function onReclaimFocus() { keyCatch.forceActiveFocus() }
-        }
-
-        readonly property bool wall: Sh.page === "wallpaper"
-        readonly property bool notif: Sh.page === "notifications"
-        readonly property bool home: Sh.page === "clock"
-        readonly property bool cap: Sh.page === "capture"
-        readonly property bool net: Sh.page === "network"
+        readonly property bool rest: Sh.page === "rest"
 
         Keys.onPressed: (e) => {
-            if (Sh.page === "suspend") {
-                if (suspendLoader.item) suspendLoader.item.tryDismiss()
-                e.accepted = true
-                return
-            }
-            if (keyCatch.cap && captureLoader.item) {
-                const it = captureLoader.item
-                if (e.key === Qt.Key_C) { it.copy(); e.accepted = true; return }
-                if (e.key === Qt.Key_A) { it.annotate(); e.accepted = true; return }
-                if (e.key === Qt.Key_O) { it.open(); e.accepted = true; return }
-                if (e.key === Qt.Key_R) { it.reveal(); e.accepted = true; return }
-                if (e.key === Qt.Key_Delete || e.key === Qt.Key_Backspace || e.key === Qt.Key_X) {
-                    it.discard(); e.accepted = true; return
-                }
-            }
-            if (e.key === Qt.Key_W) {
-                Sh.page = keyCatch.wall ? "clock" : "wallpaper"
-                e.accepted = true
-            } else if (e.key === Qt.Key_N) {
-                Sh.page = keyCatch.notif ? "clock" : "notifications"
-                e.accepted = true
-            } else if (e.key === Qt.Key_S) {
-                Sh.page = keyCatch.cap ? "clock" : "capture"
-                e.accepted = true
-            } else if (e.key === Qt.Key_B) {
-                Sh.page = keyCatch.net ? "clock" : "network"
-                e.accepted = true
-            } else if (keyCatch.notif && e.key === Qt.Key_D) {
-                Notifications.toggleDnd()
-                e.accepted = true
-            } else if (keyCatch.notif && e.key === Qt.Key_C) {
-                Notifications.clearAll()
-                e.accepted = true
-            } else if (keyCatch.notif && notifLoader.item
-                       && (e.key === Qt.Key_Delete || e.key === Qt.Key_Backspace || e.key === Qt.Key_X)) {
-                notifLoader.item.dropSel()
-                e.accepted = true
-            }
+            if (keyCatch.rest) { Sh.close(); e.accepted = true }
         }
-        Keys.onEscapePressed: {
-            if (Sh.page === "suspend") {
-                if (suspendLoader.item) suspendLoader.item.tryDismiss()
-                return
-            }
-            if (!keyCatch.home) { Sh.close(); return }
-            if (powerArm.armed !== "") powerArm.cancel(); else Sh.close()
-        }
-        Keys.onLeftPressed: {
-            if (keyCatch.wall && wallLoader.item) wallLoader.item.step(-1)
-            else if (keyCatch.cap) Capture.browse(-1)
-        }
-        Keys.onRightPressed: {
-            if (keyCatch.wall && wallLoader.item) wallLoader.item.step(1)
-            else if (keyCatch.cap) Capture.browse(1)
-        }
-        Keys.onUpPressed: {
-            if (keyCatch.home) powerArm.key(true)
-            else if (keyCatch.notif && notifLoader.item) notifLoader.item.moveSel(-1)
-        }
-        Keys.onDownPressed: {
-            if (keyCatch.home) powerArm.key(false)
-            else if (keyCatch.notif && notifLoader.item) notifLoader.item.moveSel(1)
-        }
-        Keys.onReturnPressed: {
-            if (keyCatch.wall && wallLoader.item) wallLoader.item.apply()
-            else if (keyCatch.notif && notifLoader.item) notifLoader.item.actSel()
-            else if (keyCatch.cap && captureLoader.item) captureLoader.item.copyAndClose()
-            else if (keyCatch.home) powerArm.confirm()
-        }
-        Keys.onEnterPressed: {
-            if (keyCatch.wall && wallLoader.item) wallLoader.item.apply()
-            else if (keyCatch.notif && notifLoader.item) notifLoader.item.actSel()
-            else if (keyCatch.cap && captureLoader.item) captureLoader.item.copyAndClose()
-            else if (keyCatch.home) powerArm.confirm()
-        }
+        Keys.onEscapePressed: Sh.close()
+        Keys.onLeftPressed:   if (wallLoader.item) wallLoader.item.step(-1)
+        Keys.onRightPressed:  if (wallLoader.item) wallLoader.item.step(1)
+        Keys.onReturnPressed: if (wallLoader.item) wallLoader.item.apply()
+        Keys.onEnterPressed:  if (wallLoader.item) wallLoader.item.apply()
     }
 }

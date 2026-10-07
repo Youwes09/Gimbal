@@ -19,19 +19,15 @@ required=(
   "cliphist|command -v cliphist|cliphist|pacman|clipboard history store"
   "imagemagick|command -v magick|imagemagick|pacman|wallpaper colour palette"
   "grim|command -v grim|grim|pacman|screenshots"
-  "networkmanager|command -v nmcli|networkmanager|pacman|Wi-Fi page"
-  "bluez-utils|command -v bluetoothctl|bluez-utils|pacman|Bluetooth page"
   "brightnessctl|command -v brightnessctl|brightnessctl|pacman|screen brightness"
-  "libnotify|command -v notify-send|libnotify|pacman|quiet-screenshot toast"
+  "libnotify|command -v notify-send|libnotify|pacman|screenshot toasts"
   "xdg-utils|command -v xdg-open|xdg-utils|pacman|fallback file/dir opener"
 )
 optional=(
   "qt6-multimedia|qml_has QtMultimedia|qt6-multimedia|pacman|video wallpapers"
   "ffmpeg|command -v ffmpeg|ffmpeg|pacman|video wallpaper poster frames"
   "wl-screenrec|command -v wl-screenrec|wl-screenrec|aur|screen recording"
-  "satty|command -v satty|satty|aur|screenshot annotation"
-  "upower|command -v upower|upower|pacman|battery on the clock page"
-  "curl|command -v curl|curl|pacman|weather on the clock page"
+  "upower|command -v upower|upower|pacman|low-battery warnings"
   "file|command -v file|file|pacman|richer metadata in the inspect card"
 )
 

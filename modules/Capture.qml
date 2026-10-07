@@ -13,19 +13,15 @@ QtObject {
     readonly property string recDir: root._home + "/Videos/Recordings"
 
     property string lastShot: ""
-    property var list: []
-    property int idx: -1
-
-    property int shotW: 0
-    property int shotH: 0
-    property int shotBytes: 0
-    property string shotFmt: ""
-    property double shotAt: 0
 
     property bool busy: false
     property bool pickerActive: false
     property string _pickerFor: ""
     property bool _quiet: false
+
+    // Still of the whole layout taken before a region pick: the picker shows it and the
+    // selection is cropped from it, so the screen is frozen while you drag.
+    property string frozen: ""
 
     property bool recording: false
     property string recFile: ""
@@ -38,28 +34,35 @@ QtObject {
         root.errorAt = Date.now()
     }
 
-    readonly property string activePath: {
-        if (root.idx >= 0 && root.idx < root.list.length) return root.list[root.idx].path
-        if (root.lastShot.length) return root.lastShot
-        return root.list.length ? root.list[0].path : ""
-    }
-    onActivePathChanged: {
-        if (!root.activePath.length) {
-            root.shotW = 0; root.shotH = 0; root.shotBytes = 0; root.shotFmt = ""
-            return
+    // Bounding box of all outputs in logical coords; grim's full capture covers exactly this.
+    readonly property var layout: {
+        const s = Quickshell.screens
+        if (!s || s.length === 0) return { x: 0, y: 0, w: 1, h: 1 }
+        let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity
+        for (const m of s) {
+            x0 = Math.min(x0, m.x); y0 = Math.min(y0, m.y)
+            x1 = Math.max(x1, m.x + m.width); y1 = Math.max(y1, m.y + m.height)
         }
-        const row = root.list.find(x => x.path === root.activePath)
-        root.shotAt = row ? row.mtime * 1000 : Date.now()
-        _probe.path = root.activePath
-        _probe.running = true
+        return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 }
     }
 
-    function _q(s) { return "'" + String(s).replace(/'/g, "'\\''") + "'" }
     function _stamp() {
         const d = new Date()
         const p = n => (n < 10 ? "0" : "") + n
         return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate())
             + "_" + p(d.getHours()) + p(d.getMinutes()) + p(d.getSeconds())
+    }
+    function _notify(title, body) {
+        Quickshell.execDetached(["notify-send", "-a", "Gimbal", title, body])
+    }
+    function _done(code, outText, errText) {
+        root.busy = false
+        if (code !== 0) { root._fail(errText.trim() || "screenshot failed"); return }
+        if (root._quiet) { root._notify("Screenshot", "Copied to clipboard"); return }
+        const path = outText.trim()
+        if (!path.length) { root._fail("screenshot failed"); return }
+        root.lastShot = path
+        root._notify("Screenshot", "Saved and copied")
     }
 
     function shot(mode) {
@@ -68,14 +71,23 @@ QtObject {
         root.busy = true
         const m = mode || "region"
         root._quiet = /-quiet$/.test(m)
-        if (m.replace(/-quiet$/, "") === "region") {
-            root._pickerFor = "shot"
-            root.pickerActive = true
-            return
+        root._pickerFor = m.replace(/-quiet$/, "") === "region" ? "shot" : ""
+        // From the launcher, let its 110ms close finish so it isn't in the grab.
+        _grabDelay.interval = Sh.launcherShown ? 160 : 0
+        Sh.closeLauncher()
+        _grabDelay.restart()
+    }
+    property Timer _grabDelay: Timer {
+        onTriggered: {
+            if (root._pickerFor === "shot") { _freeze.running = true; return }
+            _shot.out = root.shotDir + "/Screenshot_" + root._stamp() + ".png"
+            _shot.quiet = root._quiet ? "1" : "0"
+            _shot.running = true
         }
-        _shot.out = root.shotDir + "/Screenshot_" + root._stamp() + ".png"
-        _shot.quiet = root._quiet ? "1" : "0"
-        _shot.running = true
+    }
+
+    function openLast() {
+        if (root.lastShot.length) Quickshell.execDetached(["xdg-open", root.lastShot])
     }
 
     property Process _shot: Process {
@@ -83,22 +95,30 @@ QtObject {
         property string quiet: "0"
         command: ["sh", "-c",
             'q="$2"; out="$1"; '
-            + 'if [ "$q" = "1" ]; then out=$(mktemp --suffix=.png -p "${XDG_RUNTIME_DIR:-/tmp}" gimbal-shot-XXXXXX); '
-            + 'else mkdir -p "$(dirname "$out")"; fi; '
-            + 'grim "$out" || exit 2; '
-            + 'if [ "$q" = "1" ]; then wl-copy --type image/png < "$out"; rm -f "$out"; '
-            + 'else wl-copy --type image/png < "$out" 2>/dev/null & printf %s "$out"; fi',
+            + 'if [ "$q" = "1" ]; then grim - | wl-copy --type image/png || exit 2; exit 0; fi; '
+            + 'mkdir -p "$(dirname "$out")"; grim "$out" || exit 2; '
+            + 'wl-copy --type image/png < "$out" 2>/dev/null & printf %s "$out"',
             "_", _shot.out, _shot.quiet]
         stdout: StdioCollector { id: _shotOut }
         stderr: StdioCollector { id: _shotErr }
+        onExited: (code) => root._done(code, _shotOut.text, _shotErr.text)
+    }
+
+    // Uncompressed PPM: the grab is ~10ms, so the picker appears without a visible delay.
+    property Process _freeze: Process {
+        command: ["sh", "-c",
+            'f=$(mktemp --suffix=.ppm -p "${XDG_RUNTIME_DIR:-/tmp}" gimbal-freeze-XXXXXX) || exit 2; '
+            + 'grim -t ppm "$f" || { rm -f "$f"; exit 2; }; printf %s "$f"']
+        stdout: StdioCollector { id: _freezeOut }
         onExited: (code) => {
-            root.busy = false
-            if (code !== 0) { root._fail(_shotErr.text.trim() || "screenshot failed"); return }
-            if (root._quiet) { root._notify("Screenshot", "Copied to clipboard"); return }
-            const path = _shotOut.text.trim()
-            if (path.length) root._ingest(path)
-            else root._fail("screenshot failed")
+            root.frozen = code === 0 ? _freezeOut.text.trim() : ""
+            root.pickerActive = true
         }
+    }
+
+    function _dropFrozen() {
+        if (root.frozen.length) Quickshell.execDetached(["rm", "-f", root.frozen])
+        root.frozen = ""
     }
 
     function _regionPicked(gx, gy, gw, gh) {
@@ -108,23 +128,49 @@ QtObject {
         if (root._pickerFor === "record") {
             root.recFile = root.recDir + "/Recording_" + root._stamp() + ".mp4"
             _recRegion.geom = geom
-            _regionSettle.action = () => _recRegion.running = true
-        } else {
-            _grimRegion.geom = geom
-            _grimRegion.out = root.shotDir + "/Screenshot_" + root._stamp() + ".png"
-            _grimRegion.quiet = root._quiet ? "1" : "0"
-            _regionSettle.action = () => _grimRegion.running = true
+            _regionSettle.restart()
+            return
         }
-        _regionSettle.restart()
+        const out = root.shotDir + "/Screenshot_" + root._stamp() + ".png"
+        const q = root._quiet ? "1" : "0"
+        if (root.frozen.length) {
+            const L = root.layout
+            _crop.args = [root.frozen, out, q, String(L.w),
+                String(gx - L.x), String(gy - L.y), String(gw), String(gh)]
+            root.frozen = ""
+            _crop.running = true
+        } else {
+            // Freeze grab failed: fall back to grabbing the live screen once the picker is gone.
+            _grimRegion.geom = geom
+            _grimRegion.out = out
+            _grimRegion.quiet = q
+            _regionSettle.restart()
+        }
     }
     property Timer _regionSettle: Timer {
         interval: 60
-        property var action: null
-        onTriggered: if (action) action()
+        onTriggered: root._pickerFor === "record" ? (_recRegion.running = true) : (_grimRegion.running = true)
     }
     function _regionCancelled() {
         root.pickerActive = false
         root.busy = false
+        root._dropFrozen()
+    }
+
+    property Process _crop: Process {
+        property var args: []
+        command: ["sh", "-c",
+            'f="$1"; out="$2"; q="$3"; trap \'rm -f "$f"\' EXIT; '
+            + 'iw=$(magick identify -format %w "$f") || exit 2; '
+            + 'crop=$(awk -v iw="$iw" -v lw="$4" -v x="$5" -v y="$6" -v w="$7" -v h="$8" '
+            + '\'BEGIN { k = iw / lw; printf "%dx%d+%d+%d", w*k + .5, h*k + .5, x*k + .5, y*k + .5 }\'); '
+            + 'if [ "$q" = "1" ]; then magick "$f" -crop "$crop" +repage png:- | wl-copy --type image/png || exit 2; exit 0; fi; '
+            + 'mkdir -p "$(dirname "$out")"; magick "$f" -crop "$crop" +repage "$out" || exit 2; '
+            + 'wl-copy --type image/png < "$out" 2>/dev/null & printf %s "$out"',
+            "_"].concat(_crop.args)
+        stdout: StdioCollector { id: _cropOut }
+        stderr: StdioCollector { id: _cropErr }
+        onExited: (code) => root._done(code, _cropOut.text, _cropErr.text)
     }
 
     property Process _grimRegion: Process {
@@ -133,123 +179,13 @@ QtObject {
         property string quiet: "0"
         command: ["sh", "-c",
             'geom="$1"; q="$3"; out="$2"; '
-            + 'if [ "$q" = "1" ]; then out=$(mktemp --suffix=.png -p "${XDG_RUNTIME_DIR:-/tmp}" gimbal-shot-XXXXXX); '
-            + 'else mkdir -p "$(dirname "$out")"; fi; '
-            + 'grim -g "$geom" "$out" || exit 2; '
-            + 'if [ "$q" = "1" ]; then wl-copy --type image/png < "$out"; rm -f "$out"; '
-            + 'else wl-copy --type image/png < "$out" 2>/dev/null & printf %s "$out"; fi',
+            + 'if [ "$q" = "1" ]; then grim -g "$geom" - | wl-copy --type image/png || exit 2; exit 0; fi; '
+            + 'mkdir -p "$(dirname "$out")"; grim -g "$geom" "$out" || exit 2; '
+            + 'wl-copy --type image/png < "$out" 2>/dev/null & printf %s "$out"',
             "_", _grimRegion.geom, _grimRegion.out, _grimRegion.quiet]
         stdout: StdioCollector { id: _grimRegionOut }
         stderr: StdioCollector { id: _grimRegionErr }
-        onExited: (code) => {
-            root.busy = false
-            if (code !== 0) { root._fail(_grimRegionErr.text.trim() || "screenshot failed"); return }
-            if (root._quiet) { root._notify("Screenshot", "Copied to clipboard"); return }
-            const path = _grimRegionOut.text.trim()
-            if (path.length) root._ingest(path)
-            else root._fail("screenshot failed")
-        }
-    }
-
-    function _notify(title, body) {
-        Quickshell.execDetached(["notify-send", "-a", "Gimbal", title, body])
-    }
-
-    function _ingest(path) {
-        root.lastShot = path
-        root.idx = -1
-        root.refreshList()
-        Sh.closeLauncher()
-        if (Config.captureFastOpen) Sh.openFast("capture")
-        else Sh.open("capture")
-    }
-
-    property Process _probe: Process {
-        property string path: ""
-        command: ["sh", "-c",
-            'magick identify -format "%w %h %B %m" "$1" 2>/dev/null || stat -c "%s" "$1"',
-            "_", _probe.path]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const p = this.text.trim().split(/\s+/)
-                if (p.length >= 4) {
-                    root.shotW = parseInt(p[0]) || 0
-                    root.shotH = parseInt(p[1]) || 0
-                    root.shotBytes = parseInt(p[2]) || 0
-                    root.shotFmt = p[3] || "PNG"
-                } else if (p.length === 1) {
-                    root.shotBytes = parseInt(p[0]) || 0
-                    root.shotFmt = "PNG"
-                }
-            }
-        }
-    }
-
-    function refreshList() {
-        _scan.running = false
-        Qt.callLater(() => _scan.running = true)
-    }
-    property Process _scan: Process {
-        command: ["sh", "-c",
-            'd="$1"; mkdir -p "$d"; cd "$d" 2>/dev/null || exit 0; '
-            + 'for f in $(ls -t -- *.png 2>/dev/null); do printf "%s\\t%s\\n" "$(stat -c %Y -- "$f")" "$d/$f"; done',
-            "_", root.shotDir]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const out = []
-                for (const ln of this.text.split("\n")) {
-                    if (!ln.length) continue
-                    const i = ln.indexOf("\t")
-                    if (i < 0) continue
-                    out.push({ mtime: parseInt(ln.slice(0, i)) || 0, path: ln.slice(i + 1) })
-                }
-                root.list = out
-            }
-        }
-    }
-
-    function browse(delta) {
-        if (!root.list.length) return
-        let cur = root.idx
-        if (cur < 0) {
-            cur = root.lastShot.length ? Math.max(0, root.list.findIndex(x => x.path === root.lastShot)) : 0
-        }
-        root.idx = Math.max(0, Math.min(root.list.length - 1, cur + delta))
-    }
-
-    function copyImage() {
-        if (!root.activePath.length) return
-        Quickshell.execDetached(["sh", "-c", 'wl-copy --type image/png < "$1"', "_", root.activePath])
-    }
-    function copyPath() {
-        if (!root.activePath.length) return
-        Quickshell.execDetached(["sh", "-c", 'printf %s "$1" | wl-copy', "_", root.activePath])
-    }
-    function open() {
-        if (!root.activePath.length) return
-        Quickshell.execDetached(["xdg-open", root.activePath])
-    }
-    function reveal() {
-        if (!root.activePath.length) return
-        Quickshell.execDetached(["sh", "-c",
-            _q(Config.fileManager) + ' "$1" 2>/dev/null || xdg-open "$(dirname "$1")"',
-            "_", root.activePath])
-    }
-    function annotate() {
-        if (!root.activePath.length) return
-        Sh.close()
-        Quickshell.execDetached(["sh", "-c",
-            'command -v satty >/dev/null || exit 0; '
-            + 'satty --filename "$1" --output-filename "$1" --early-exit --initial-tool rectangle',
-            "_", root.activePath])
-    }
-    function remove() {
-        const p = root.activePath
-        if (!p.length) return
-        Quickshell.execDetached(["rm", "-f", p])
-        if (p === root.lastShot) root.lastShot = ""
-        root.list = root.list.filter(x => x.path !== p)
-        root.idx = root.list.length ? Math.min(root.idx < 0 ? 0 : root.idx, root.list.length - 1) : -1
+        onExited: (code) => root._done(code, _grimRegionOut.text, _grimRegionErr.text)
     }
 
     function recToggle() {
@@ -261,6 +197,7 @@ QtObject {
         root.error = ""
         if ((mode || "full") === "region") {
             root._pickerFor = "record"
+            root.frozen = ""
             root.pickerActive = true
             return
         }

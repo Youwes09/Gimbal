@@ -80,41 +80,14 @@ QtObject {
     property real fontScale: 1.06
     function fs(px) { return Math.round(px * root.fontScale) }
 
+    // The overlay: "wallpaper" picker, or the "rest" screen (idle / Super+L).
     property bool   shown: false
-    property string page:  "clock"
+    property string page:  "wallpaper"
 
-    property string powerZone: ""
-    property real   powerPush: 0
-    property real   powerDim: 0
-
-    property bool   fastOpen: false
-    function openFast(p) {
-        root.fastOpen = true
-        root.open(p)
-    }
-
-    property double suspendAt: 0
-    property int    suspendBattery: -1
-    property bool   suspendCharging: false
-    function beginSuspend() {
-        root.suspendAt = Date.now()
-        root.page = "suspend"
-        root.shown = true
-    }
-
-    signal reclaimFocus()
-
-    function toggle(p) {
-        if (root.shown) root.close()
-        else            root.open(p)
-    }
-    function open(p) {
-        if (p && p.length > 0) root.page = p
-        root.shown = true
-    }
-    function close() {
-        root.shown = false
-    }
+    function toggle() { if (root.shown) root.close(); else root.open() }
+    function open()   { root.page = "wallpaper"; root.shown = true }
+    function rest()   { root.closeLauncher(); root.page = "rest"; root.shown = true }
+    function close()  { root.shown = false }
 
     property bool launcherShown: false
     function toggleLauncher() { root.launcherShown = !root.launcherShown }

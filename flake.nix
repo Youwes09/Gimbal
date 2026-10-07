@@ -67,19 +67,15 @@
             imagemagick # wallpaper palette, wide-still cache
             ffmpeg # video wallpapers, poster frames
             grim # screenshots
-            networkmanager # nmcli — network page
-            bluez # bluetoothctl — bluetooth page
             brightnessctl # brightness (falls back to this if oledctl is absent)
-            libnotify # quiet-screenshot toast
+            libnotify # screenshot toasts
             xdg-utils # xdg-open fallback
           ];
 
           # soft deps — features degrade gracefully (command -v guarded) without them
           optionalDeps = with pkgs; [
-            satty # screenshot annotation
             wl-screenrec # screen recording
             file # richer mime detection in the inspect card
-            curl # weather on the clock page
           ];
 
           allDeps = runtimeDeps ++ optionalDeps;

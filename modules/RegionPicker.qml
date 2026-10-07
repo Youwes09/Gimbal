@@ -22,6 +22,17 @@ Variants {
         property real y0: 0
         property bool dragging: false
 
+        // The frozen grab spans every output; offset it so this screen shows its own slice.
+        Image {
+            visible: Capture.frozen.length > 0
+            source: Capture.frozen.length ? "file://" + Capture.frozen : ""
+            x: Capture.layout.x - win.screen.x
+            y: Capture.layout.y - win.screen.y
+            width: Capture.layout.w
+            height: Capture.layout.h
+            cache: false
+        }
+
         Rectangle {
             anchors.fill: parent
             color: Qt.rgba(0, 0, 0, 0.32)

@@ -62,16 +62,11 @@ Item {
         root.pos = root.stepCount
         posBehavior.enabled = true
     }
-    Component.onCompleted: root._resync()
-    Connections {
-        target: Sh
-        function onPageChanged() {
-            if (Sh.page === "wallpaper") {
-                Wallpapers.rescan()
-                root._resync()
-                enterAnim.restart()
-            }
-        }
+    // Created fresh each time the overlay opens.
+    Component.onCompleted: {
+        Wallpapers.rescan()
+        root._resync()
+        enterAnim.restart()
     }
     Connections {
         target: Wallpapers
@@ -258,7 +253,7 @@ Item {
             const applied = root.centeredWall && root.centeredWall.path === Wallpapers.current
             const a = "<font color='" + Theme.accent + "'>&middot;</font>"
             return (applied ? "current wallpaper" : "← → cycle") + "   " + a
-                 + "   enter apply   " + a + "   w back"
+                 + "   enter apply   " + a + "   esc close"
         }
         color: Theme.muted
         font.family: Sh.font

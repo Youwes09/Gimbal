@@ -21,14 +21,15 @@ Item {
     readonly property int rMd: f(12)
     readonly property int rLg: f(16)
 
-    readonly property color cPanel:  Qt.tint(Theme.surface, Qt.rgba(1, 1, 1, 0.035))
-    readonly property color cRim:    Qt.alpha(Theme.fg, 0.12)
-    readonly property color cShadow: Qt.rgba(0, 0, 0, 0.5)
+    // Panel sits darker than the dimmed desktop; a light rim and top sheen define its edge.
+    readonly property color cPanel:  Qt.alpha(Theme.bg, 0.97)
+    readonly property color cRim:    Qt.alpha(Theme.fg, 0.1)
+    readonly property color cSheen:  Qt.alpha(Theme.fg, 0.06)
+    readonly property color cShadow: Qt.rgba(0, 0, 0, 0.7)
     readonly property real  wRim:    1
-    readonly property color cSel:    Qt.alpha(Theme.accent, 0.14)
-    readonly property color cSelRim: Qt.alpha(Theme.accent, 0.5)
-    readonly property color cHover:  Qt.alpha(Theme.fg, 0.05)
-    readonly property color cLine:   Theme.rim
+    readonly property color cSel:    Qt.alpha(Theme.accent, 0.11)
+    readonly property color cHover:  Qt.alpha(Theme.fg, 0.04)
+    readonly property color cLine:   Qt.alpha(Theme.fg, 0.07)
 
     readonly property int tInput:   18
     readonly property int tRow:     16
@@ -245,11 +246,8 @@ Item {
           keys: ["record", "screen record", "recording", "screencast", "capture video"] },
         { id: "cap:rec-region", title: "Record — region", hint: "record an area",
           glyph: Sh.icPlay, act: () => Capture.recStart("region"), keys: ["record region"] },
-        { id: "cap:annotate", title: "Annotate last screenshot", hint: "arrows · text · blur",
-          glyph: Sh.icTheme, act: () => Capture.annotate(), need: () => Capture.lastShot.length > 0,
-          keys: ["annotate", "markup", "edit screenshot", "draw"] },
-        { id: "cap:last", title: "Open last capture", hint: "view · specs · actions",
-          glyph: Sh.icFile, act: () => Sh.open("capture"),
+        { id: "cap:last", title: "Open last screenshot", hint: "default image viewer",
+          glyph: Sh.icFile, act: () => Capture.openLast(), need: () => Capture.lastShot.length > 0,
           keys: ["screenshots", "last screenshot", "captures", "last capture"] }
     ]
     function _capRow(a) {
@@ -298,25 +296,6 @@ Item {
         return out
     }
 
-    readonly property var _netActions: [
-        { id: "net:open", title: "Wi-Fi & Bluetooth", hint: "network overlay",
-          glyph: Sh.icWifi, act: () => Sh.open("network"),
-          keys: ["wifi", "wi-fi", "bluetooth", "network", "internet", "connect", "airplane mode"] }
-    ]
-    readonly property var netResults: {
-        const q = root.q.toLowerCase().trim()
-        if (q.length < 2) return []
-        const out = []
-        for (const a of root._netActions) {
-            let hit = false
-            for (const k of a.keys) {
-                if (k.indexOf(q) >= 0 || q.indexOf(k) === 0) { hit = true; break }
-            }
-            if (hit) out.push(root._capRow(a))
-        }
-        return out
-    }
-
     ClipboardList {
         id: clipboard
         filterText: root.mode === "clipboard" ? root.q : ""
@@ -343,7 +322,7 @@ Item {
         : root.mode === "files"     ? root.fileResults
         : root.mode === "calc"      ? root.calcResults
         : root.mode === "run"       ? root.runResults
-        : root.captureResults.concat(root.dndResults).concat(root.netResults).concat(root.appResults)
+        : root.captureResults.concat(root.dndResults).concat(root.appResults)
     onResultsChanged: { selected = 0; inspectOpen = false }
     readonly property var current: results.length > 0
         ? results[Math.max(0, Math.min(selected, results.length - 1))] : null
@@ -541,6 +520,13 @@ Item {
                 border.color: root.cRim
                 z: 10
             }
+            Rectangle {
+                anchors { top: parent.top; left: parent.left; right: parent.right; margins: root.rLg }
+                anchors.topMargin: 1
+                height: 1
+                color: root.cSheen
+                z: 10
+            }
 
             Item {
                 id: bar
@@ -693,8 +679,12 @@ Item {
                         x: root.sp1
                         radius: root.rSm
                         color: root.cSel
-                        border.width: 1
-                        border.color: root.cSelRim
+                        Rectangle {
+                            anchors { left: parent.left; verticalCenter: parent.verticalCenter }
+                            width: 3; height: parent.height * 0.5
+                            radius: 1.5
+                            color: Theme.accent
+                        }
                         opacity: root.results.length > 0 ? 1 : 0
                         Behavior on opacity { NumberAnimation { duration: 120 } }
                     }
@@ -841,6 +831,117 @@ Item {
         }
     }
 
+    // Glance line: what a bar would show, only while the launcher is up.
+    Item {
+        id: glance
+        anchors.left: panelWrap.left
+        anchors.right: panelWrap.right
+        anchors.leftMargin: root.sp2
+        anchors.rightMargin: root.sp2
+        anchors.bottom: panelWrap.top
+        anchors.bottomMargin: root.sp5
+        height: Math.max(glanceL.height, glanceR.height)
+        opacity: root.inspectActive ? 1 - root.iT : 1
+
+        Column {
+            id: glanceL
+            anchors.left: parent.left
+            anchors.bottom: parent.bottom
+            spacing: root.sp1
+
+            Text {
+                text: Status.day + ", " + Status.date
+                color: Qt.alpha(Theme.fg, 0.55)
+                font.family: Sh.font
+                font.pixelSize: root.f(12)
+                font.weight: Font.Medium
+                font.letterSpacing: 2.5
+                font.capitalization: Font.AllUppercase
+            }
+            Row {
+                spacing: root.sp2
+                Text {
+                    id: glanceTime
+                    text: Status.time
+                    color: Theme.fg
+                    font.family: Sh.font
+                    font.pixelSize: root.f(44)
+                    font.weight: Font.DemiBold
+                }
+                Text {
+                    anchors.baseline: glanceTime.baseline
+                    text: Status.meridiem
+                    color: Theme.accent
+                    font.family: Sh.font
+                    font.pixelSize: root.f(14)
+                    font.weight: Font.Medium
+                    font.letterSpacing: 1.5
+                }
+            }
+        }
+
+        Column {
+            id: glanceR
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: root.sp1
+            spacing: root.sp2
+
+            Row {
+                anchors.right: parent.right
+                visible: Status.track.length > 0
+                spacing: root.sp2
+                opacity: Status.playing ? 1 : 0.55
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: Math.min(implicitWidth, glance.width * 0.42)
+                    text: Status.track
+                    elide: Text.ElideRight
+                    color: Qt.alpha(Theme.fg, 0.6)
+                    font.family: Sh.font
+                    font.pixelSize: root.f(12)
+                }
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: Status.playing ? Sh.icMusic : Sh.icPause
+                    color: Theme.accent
+                    font.family: Sh.iconFont
+                    font.pixelSize: root.f(13)
+                }
+            }
+
+            Row {
+                anchors.right: parent.right
+                spacing: root.sp2
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: Notifications.dnd
+                    text: Sh.icBellOff
+                    color: Theme.accent
+                    font.family: Sh.iconFont
+                    font.pixelSize: root.f(14)
+                }
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: Status.hasBattery
+                    text: Status.pct + "%" + (Status.batteryNote ? "  ·  " + Status.batteryNote : "")
+                    color: Status.low ? Theme.error : Qt.alpha(Theme.fg, 0.75)
+                    font.family: Sh.font
+                    font.pixelSize: root.f(13)
+                    font.weight: Font.Medium
+                }
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: Status.hasBattery
+                    text: Sh.batteryGlyph(Status.pct, Status.charging)
+                    color: Status.charging ? Theme.accent : Status.low ? Theme.error : Qt.alpha(Theme.fg, 0.75)
+                    font.family: Sh.iconFont
+                    font.pixelSize: root.f(16)
+                }
+            }
+        }
+    }
+
     Rectangle {
         id: legend
         anchors.horizontalCenter: panelWrap.horizontalCenter
@@ -848,10 +949,7 @@ Item {
         anchors.topMargin: root.sp3
         width: legendText.implicitWidth + root.sp4
         height: root.f(30)
-        radius: root.rSm
-        color: root.cPanel
-        border.width: 1
-        border.color: Qt.alpha(Theme.fg, 0.1)
+        color: "transparent"
         opacity: (!root.expanded && !root.inspectActive) ? 1 : 0
         visible: opacity > 0.01
         Behavior on opacity { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
@@ -863,7 +961,7 @@ Item {
             show: legend.opacity > 0.5 && Sh.launcherShown
             span: 560
             content: "›  run      =  calc      /  files      ;  clipboard"
-            color: Qt.alpha(Theme.fg, 0.6)
+            color: Qt.alpha(Theme.fg, 0.42)
             font.family: Sh.font
             font.pixelSize: root.f(root.tCaption)
             font.letterSpacing: 0.5
