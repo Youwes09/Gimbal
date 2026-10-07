@@ -13,7 +13,7 @@ QtObject {
     readonly property int dirtyCount: root.list.filter(p => p.dirty > 0).length
 
     function refresh() {
-        const dirs = Frecency.top("dir:", 3).map(k => k.slice(4))
+        const dirs = Frecency.top("dir:", 5).map(k => k.slice(4))
         if (dirs.length === 0) { root.list = []; return }
         _git.command = ["sh", "-c",
             'for d in "$@"; do [ -d "$d" ] || continue; '

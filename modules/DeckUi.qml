@@ -12,8 +12,8 @@ QtObject {
 
     // Raycast's system: an achromatic near-black stack, edges instead of shadows (a hairline
     // ring plus a faint inset highlight along the top, the "key"), neutral fills for anything
-    // selected or on, and one coral accent rationed to badges and destructive/recording states.
-    // Fixed rather than wallpaper-themed on purpose.
+    // selected or on, and one accent (the wallpaper's), rationed to focus, active and on states.
+    // The neutrals are fixed; only the accent follows the wallpaper.
     readonly property color canvas:   "#040506"
     readonly property color card:     "#07080a"
     readonly property color recessed: "#111214"
@@ -23,8 +23,10 @@ QtObject {
     readonly property color faint:    "#6a6b6c"   // smoke: muted labels
     readonly property color mist:     "#e6e6e6"   // the one filled surface: on / primary
     readonly property color iron:     "#454647"   // text and glyphs sitting on mist
-    readonly property color accent:   "#ff6363"
+    readonly property color accent:   Theme.accent
     readonly property color danger:   "#ff6363"
+    // Glyphs sitting on an accent fill: dark on a light accent, white on a deep one.
+    readonly property color accentInk: 0.299 * accent.r + 0.587 * accent.g + 0.114 * accent.b > 0.6 ? canvas : "#ffffff"
     readonly property color good:     "#59d499"
 
     readonly property color rim:      Qt.rgba(1, 1, 1, 0.09)    // card edge
@@ -32,8 +34,8 @@ QtObject {
     readonly property color well:     Qt.rgba(1, 1, 1, 0.04)    // recessed blocks inside cards
     readonly property color line:     Qt.rgba(1, 1, 1, 0.07)
     readonly property color sel:      Qt.rgba(1, 1, 1, 0.085)
-    readonly property color selRim:   Qt.rgba(1, 1, 1, 0.2)
-    readonly property color focusRim: Qt.rgba(1, 1, 1, 0.16)    // whole card with keyboard focus
+    readonly property color selRim:   Qt.alpha(accent, 0.6)
+    readonly property color focusRim: Qt.alpha(accent, 0.3)     // whole card with keyboard focus
     readonly property color hover:    Qt.rgba(1, 1, 1, 0.045)
 
     readonly property int radius:      f(16)

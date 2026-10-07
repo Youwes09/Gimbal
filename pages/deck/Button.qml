@@ -1,9 +1,8 @@
 import QtQuick
 import "root:/modules"
 
-// Icon (+ label) button. At rest a quiet recessed well; `on` is the system's one filled
-// surface (Mist with Iron text), or a warm coral wash when `danger` (recording);
-// `selected` shows keyboard focus as a brighter ring.
+// Icon (+ label) button. At rest a quiet recessed well; `on` is an accent wash (coral when
+// `danger`, i.e. recording); `selected` shows keyboard focus as an accent ring.
 Rectangle {
     id: b
     property string glyph: ""
@@ -14,16 +13,17 @@ Rectangle {
     property real glyphSize: DeckUi.f(15)
     signal clicked()
 
-    readonly property color ink: b.on ? (b.danger ? DeckUi.accent : DeckUi.iron) : DeckUi.text
+    readonly property color tint: b.danger ? DeckUi.danger : DeckUi.accent
+    readonly property color ink: b.on ? b.tint : DeckUi.text
 
     implicitWidth: row.implicitWidth + DeckUi.f(24)
     implicitHeight: DeckUi.f(34)
     radius: DeckUi.innerRadius
-    color: b.on ? (b.danger ? "#452324" : DeckUi.mist)
+    color: b.on ? Qt.alpha(b.tint, 0.16)
          : b.selected ? DeckUi.sel
          : ma.containsMouse ? DeckUi.hover : DeckUi.well
     border.width: 1
-    border.color: b.selected ? DeckUi.selRim : "transparent"
+    border.color: b.selected ? DeckUi.selRim : b.on ? Qt.alpha(b.tint, 0.35) : "transparent"
     Behavior on color { ColorAnimation { duration: 120 } }
 
     Row {

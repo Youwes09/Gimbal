@@ -33,7 +33,7 @@ Column {
                 Text {
                     anchors.baseline: clockText.baseline
                     text: Status.meridiem
-                    color: DeckUi.dim
+                    color: DeckUi.accent
                     font.family: DeckUi.sans
                     font.pixelSize: DeckUi.f(14)
                     font.weight: Font.Medium
@@ -234,7 +234,7 @@ Column {
                     width: seekTrack.len > 0 ? parent.width * Math.min(1, media.p.position / seekTrack.len) : 0
                     height: parent.height
                     radius: height / 2
-                    color: DeckUi.mist
+                    color: DeckUi.accent
                 }
                 MouseArea {
                     anchors.fill: parent
@@ -291,7 +291,7 @@ Column {
             property string value: ""
             property real level: 0
             property real hot: 0.9      // level at which the ring turns red
-            readonly property color tint: tile.level >= tile.hot ? DeckUi.danger : Qt.alpha(DeckUi.text, 0.82)
+            readonly property color tint: tile.level >= tile.hot ? DeckUi.danger : DeckUi.accent
             width: tiles.tw
             height: tiles.th
             border.width: 0   // the ring is the edge

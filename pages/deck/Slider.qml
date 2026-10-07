@@ -67,7 +67,7 @@ Item {
             width: Math.max(height, track.width * Math.max(0, Math.min(1, sl.value)))
             height: parent.height
             radius: height / 2
-            color: sl.muted ? DeckUi.faint : Qt.alpha(DeckUi.text, 0.86)
+            color: sl.muted ? DeckUi.faint : DeckUi.accent
             Behavior on width { enabled: !ma.pressed; NumberAnimation { duration: 120 } }
         }
         Rectangle {

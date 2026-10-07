@@ -63,8 +63,8 @@ Column {
                     required property var modelData
                     required property int index
                     readonly property bool sel: quick.focused && quick.cur === index
-                    // On is neutral (a Mist chip); only Record goes coral.
-                    readonly property color tint: modelData.tint || DeckUi.mist
+                    // On fills the chip with the accent; Record uses coral.
+                    readonly property color tint: modelData.tint || DeckUi.accent
                     width: (parent.width - parent.spacing) / 2
                     height: (parent.height - parent.spacing) / 2
                     radius: DeckUi.innerRadius
@@ -85,7 +85,7 @@ Column {
                         Text {
                             anchors.centerIn: parent
                             text: qt.modelData.glyph
-                            color: qt.modelData.on ? (qt.modelData.tint ? DeckUi.canvas : DeckUi.iron) : DeckUi.text
+                            color: qt.modelData.on ? (qt.modelData.tint ? "#ffffff" : DeckUi.accentInk) : DeckUi.text
                             font.family: Sh.iconFont
                             font.pixelSize: DeckUi.f(14)
                         }

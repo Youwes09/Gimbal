@@ -2,7 +2,9 @@ import QtQuick
 import Quickshell
 import "root:/modules"
 
-// Overview: greeting, projects to pick back up, frequent apps, latest notifications.
+// Overview. A greeting, your most-used apps as one row of keys, then two lists side by side:
+// folders to pick back up and the latest notifications. Both lists share one row style and
+// grow to fill the page.
 Item {
     id: home
 
@@ -23,6 +25,13 @@ Item {
         else go()
     }
     function openProject(p) { Sh.closeDeck(); Projects.open(p.path) }
+    function openNote(i) {
+        const r = Notifications.historyModel.get(i)
+        Sh.closeDeck()
+        Notifications.focusSender(r)
+        Notifications.invoke(r.nid, "")
+        Notifications.dismiss(r.nid)
+    }
 
     readonly property string greeting: {
         const h = Status.now.getHours()
@@ -41,19 +50,33 @@ Item {
     function ago(ms) {
         if (!ms) return ""
         const s = Math.max(0, (Date.now() - ms) / 1000)
-        if (s < 3600) return Math.max(1, Math.round(s / 60)) + "m ago"
-        if (s < 86400) return Math.round(s / 3600) + "h ago"
-        return Math.round(s / 86400) + "d ago"
+        if (s < 3600) return Math.max(1, Math.round(s / 60)) + "m"
+        if (s < 86400) return Math.round(s / 3600) + "h"
+        return Math.round(s / 86400) + "d"
+    }
+    function strip(s) {
+        return String(s || "").replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&lt;/g, "<")
+            .replace(/&gt;/g, ">").replace(/&#39;|&apos;/g, "'").replace(/&quot;/g, '"').replace(/\s+/g, " ").trim()
+    }
+    function noteIcon(r) {
+        const s = (/^image:\/\/qsimage/.test(r.image) ? "" : r.image) || r.appIcon || r.desktopEntry
+        if (!s) return ""
+        return (s.indexOf("/") === 0 || s.indexOf("://") >= 0) ? s : Quickshell.iconPath(s, true)
     }
 
+    readonly property real rowH: DeckUi.f(52)
+    readonly property real rowGap: DeckUi.f(4)
+    // As many notifications as the right list has room for.
+    readonly property int notes: Math.min(Notifications.historyModel.count,
+        Math.max(1, Math.floor((notesList.height + home.rowGap) / (home.rowH + home.rowGap))))
+
     // ── keyboard: four panes laid out like the page ─────────────────────
-    //   head (Wallpapers) / projects row / apps grid | latest notifications
-    property string pane: "proj"
+    //   head (Wallpapers) / app keys / projects | notifications
+    property string pane: "apps"
     property int idx: 0
-    readonly property int notes: Math.min(3, Notifications.historyModel.count)
     readonly property bool kb: DeckUi.zone === "center"
     function _count(p) {
-        return p === "head" ? 1 : p === "proj" ? Projects.list.length : p === "apps" ? home.apps.length : home.notes
+        return p === "head" ? 1 : p === "apps" ? home.apps.length : p === "proj" ? Projects.list.length : home.notes
     }
     function _to(p, i) {
         if (home._count(p) === 0) return false
@@ -61,25 +84,18 @@ Item {
         home.idx = Math.max(0, Math.min(i, home._count(p) - 1))
         return true
     }
-    function openNote(i) {
-        const r = Notifications.historyModel.get(i)
-        Sh.closeDeck()
-        Notifications.focusSender(r)
-        Notifications.invoke(r.nid, "")
-        Notifications.dismiss(r.nid)
-    }
 
     Connections {
         target: DeckUi
         function onNav(key) {
             if (DeckUi.zone !== "center" || DeckUi.section !== "home") return
-            if (home._count(home.pane) === 0 && !home._to("proj", 0) && !home._to("apps", 0)) home._to("head", 0)
+            if (home._count(home.pane) === 0 && !home._to("apps", 0) && !home._to("proj", 0)) home._to("head", 0)
             const p = home.pane, i = home.idx, n = home._count(p)
             const L = key === Qt.Key_Left, R = key === Qt.Key_Right, U = key === Qt.Key_Up, D = key === Qt.Key_Down
             if (key === Qt.Key_Return || key === Qt.Key_Enter) {
                 if (p === "head") Sh.walls()
-                if (p === "proj") home.openProject(Projects.list[i])
                 if (p === "apps") home.launch(home.apps[i])
+                if (p === "proj") home.openProject(Projects.list[i])
                 if (p === "notes") home.openNote(i)
                 return
             }
@@ -90,22 +106,22 @@ Item {
             if (p === "head") {
                 if (L) DeckUi.go("left")
                 if (R) DeckUi.go("right")
-                if (D) home._to("proj", 0) || home._to("apps", 0)
-            } else if (p === "proj") {
+                if (D) home._to("apps", 0) || home._to("proj", 0)
+            } else if (p === "apps") {
                 if (L) { if (i === 0) DeckUi.go("left"); else home.idx-- }
                 if (R) { if (i === n - 1) DeckUi.go("right"); else home.idx++ }
                 if (U) home._to("head", 0)
-                if (D) home._to("apps", i) || home._to("notes", 0)
-            } else if (p === "apps") {
-                const c = i % 3
-                if (L) { if (c === 0) DeckUi.go("left"); else home.idx-- }
-                if (R) { if (c === 2 || i === n - 1) { if (!home._to("notes", Math.floor(i / 3))) DeckUi.go("right") } else home.idx++ }
-                if (U) { if (i < 3) home._to("proj", c) || home._to("head", 0); else home.idx -= 3 }
-                if (D) home.idx = Math.min(n - 1, i + 3)
+                // Down lands in whichever list sits under this key.
+                if (D) (i < 3 ? home._to("proj", 0) || home._to("notes", 0) : home._to("notes", 0) || home._to("proj", 0))
+            } else if (p === "proj") {
+                if (L) DeckUi.go("left")
+                if (R) { if (!home._to("notes", i)) DeckUi.go("right") }
+                if (U) { if (i === 0) home._to("apps", 1) || home._to("head", 0); else home.idx-- }
+                if (D) home.idx = Math.min(n - 1, i + 1)
             } else if (p === "notes") {
-                if (L) home._to("apps", Math.min(home.apps.length - 1, i * 3 + 2)) || DeckUi.go("left")
+                if (L) { if (!home._to("proj", i)) DeckUi.go("left") }
                 if (R) DeckUi.go("right")
-                if (U) { if (i === 0) home._to("proj", 2) || home._to("head", 0); else home.idx-- }
+                if (U) { if (i === 0) home._to("apps", 4) || home._to("head", 0); else home.idx-- }
                 if (D) home.idx = Math.min(n - 1, i + 1)
             }
         }
@@ -117,13 +133,14 @@ Item {
         anchors.left: parent.left
         anchors.right: wallBtn.left
         anchors.rightMargin: DeckUi.f(12)
-        spacing: DeckUi.f(4)
+        spacing: DeckUi.f(6)
         Text {
             text: home.greeting
             color: DeckUi.text
             font.family: DeckUi.sans
-            font.pixelSize: DeckUi.f(24)
-            font.weight: Font.Medium
+            font.pixelSize: DeckUi.f(26)
+            font.weight: Font.Normal
+            font.letterSpacing: DeckUi.f(26) * 0.004
         }
         Text {
             width: parent.width
@@ -131,7 +148,7 @@ Item {
             text: home.summary
             color: DeckUi.dim
             font.family: DeckUi.sans
-            font.pixelSize: DeckUi.f(12)
+            font.pixelSize: DeckUi.f(12.5)
         }
     }
     Button {
@@ -144,201 +161,144 @@ Item {
         onClicked: Sh.walls()
     }
 
-    // ── continue ────────────────────────────────────────────────────────
+    // ── frequent apps: one row of keys ──────────────────────────────────
     Caption {
-        id: contCap
-        anchors { left: parent.left; right: parent.right; top: header.bottom; topMargin: DeckUi.f(22) }
-        text: "Continue"
-        trailing: "your most opened folders"
+        id: appsCap
+        anchors { left: parent.left; right: parent.right; top: header.bottom; topMargin: DeckUi.f(28) }
+        text: "Frequent"
     }
     Row {
-        id: projRow
-        anchors { left: parent.left; right: parent.right; top: contCap.bottom; topMargin: DeckUi.f(12) }
-        spacing: DeckUi.f(12)
-        height: DeckUi.f(104)
-        readonly property real w: (width - spacing * 2) / 3
+        id: keys
+        anchors { left: parent.left; right: parent.right; top: appsCap.bottom; topMargin: DeckUi.f(12) }
+        spacing: DeckUi.f(10)
+        readonly property real kw: (width - spacing * 5) / 6
+        height: DeckUi.f(88)
 
         Repeater {
-            model: Projects.list
+            model: home.apps
             Rectangle {
-                id: pc
+                id: key
                 required property var modelData
                 required property int index
-                readonly property bool sel: home.kb && home.pane === "proj" && home.idx === index
-                width: projRow.w
-                height: projRow.height
-                radius: DeckUi.innerRadius
-                color: pc.sel ? DeckUi.sel : pcMa.containsMouse ? DeckUi.hover : DeckUi.well
+                readonly property bool sel: home.kb && home.pane === "apps" && home.idx === index
+                width: keys.kw
+                height: keys.height
+                radius: DeckUi.f(12)
+                color: key.sel ? DeckUi.sel : keyMa.containsMouse ? DeckUi.hover : DeckUi.well
                 border.width: 1
-                border.color: pc.sel ? DeckUi.selRim : "transparent"
+                border.color: key.sel ? DeckUi.selRim : DeckUi.line
                 Behavior on color { ColorAnimation { duration: 120 } }
 
-                Row {
-                    anchors { left: parent.left; right: parent.right; top: parent.top; margins: DeckUi.f(14) }
-                    spacing: DeckUi.f(8)
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: Sh.icFolderGit
-                        color: DeckUi.dim
-                        font.family: Sh.iconFont
-                        font.pixelSize: DeckUi.f(14)
-                    }
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: parent.width - DeckUi.f(22)
-                        elide: Text.ElideRight
-                        text: pc.modelData.name
-                        color: DeckUi.text
-                        font.family: DeckUi.sans
-                        font.pixelSize: DeckUi.f(13.5)
-                        font.weight: Font.Medium
-                    }
+                // Key highlight along the inside of the top edge.
+                Rectangle {
+                    anchors { top: parent.top; left: parent.left; right: parent.right; margins: DeckUi.f(8) }
+                    anchors.topMargin: 1
+                    height: 1
+                    color: DeckUi.sheen
+                }
+                AppIcon {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.top: parent.top
+                    anchors.topMargin: DeckUi.f(14)
+                    width: DeckUi.f(30); height: width
+                    icon: Quickshell.iconPath(key.modelData.icon, true)
+                    fallbackGlyph: Sh.icApp
                 }
                 Text {
-                    anchors { left: parent.left; right: parent.right; top: parent.top; margins: DeckUi.f(14) }
-                    anchors.topMargin: DeckUi.f(38)
-                    elide: Text.ElideMiddle
-                    text: pc.modelData.short
-                    color: DeckUi.faint
+                    anchors { left: parent.left; right: parent.right; bottom: parent.bottom; margins: DeckUi.f(8) }
+                    anchors.bottomMargin: DeckUi.f(12)
+                    horizontalAlignment: Text.AlignHCenter
+                    elide: Text.ElideRight
+                    text: key.modelData.name
+                    color: key.sel ? DeckUi.text : DeckUi.dim
                     font.family: DeckUi.sans
-                    font.pixelSize: DeckUi.f(10.5)
-                }
-                Row {
-                    anchors { left: parent.left; bottom: parent.bottom; margins: DeckUi.f(14) }
-                    spacing: DeckUi.f(6)
-                    visible: pc.modelData.branch.length > 0
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: Sh.icGitBranch
-                        color: DeckUi.dim
-                        font.family: Sh.iconFont
-                        font.pixelSize: DeckUi.f(11)
-                    }
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: pc.modelData.branch
-                        color: DeckUi.dim
-                        font.family: DeckUi.sans
-                        font.pixelSize: DeckUi.f(11)
-                    }
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: pc.modelData.dirty > 0 ? "+" + pc.modelData.dirty : "clean"
-                        color: pc.modelData.dirty > 0 ? DeckUi.text : DeckUi.faint
-                        font.family: DeckUi.sans
-                        font.pixelSize: DeckUi.f(11)
-                        font.weight: Font.Medium
-                    }
-                }
-                Text {
-                    anchors { right: parent.right; bottom: parent.bottom; margins: DeckUi.f(14) }
-                    text: home.ago(pc.modelData.last)
-                    color: DeckUi.faint
-                    font.family: DeckUi.sans
-                    font.pixelSize: DeckUi.f(10.5)
+                    font.pixelSize: DeckUi.f(11)
                 }
                 MouseArea {
-                    id: pcMa
+                    id: keyMa
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: home.openProject(pc.modelData)
+                    onClicked: home.launch(key.modelData)
                 }
             }
         }
     }
-    Text {
-        anchors.centerIn: projRow
-        visible: Projects.list.length === 0
-        text: "Open folders from the launcher and they'll show up here."
-        color: DeckUi.dim
-        font.family: DeckUi.sans
-        font.pixelSize: DeckUi.f(12)
-    }
 
-    // ── frequent apps | latest notifications ────────────────────────────
+    // ── continue | notifications ────────────────────────────────────────
     Item {
-        anchors { left: parent.left; right: parent.right; top: projRow.bottom; bottom: parent.bottom }
-        anchors.topMargin: DeckUi.f(24)
+        id: lists
+        anchors { left: parent.left; right: parent.right; top: keys.bottom; bottom: parent.bottom; topMargin: DeckUi.f(28) }
+        readonly property real colW: (width - DeckUi.f(28)) / 2
 
-        Item {
-            id: appsBox
-            anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
-            width: (parent.width - DeckUi.f(24)) * 0.46
-
-            Caption { id: appsCap; anchors { left: parent.left; right: parent.right; top: parent.top } text: "Frequent" }
-            Grid {
-                id: appGrid
-                anchors { left: parent.left; right: parent.right; top: appsCap.bottom; bottom: parent.bottom }
-                anchors.topMargin: DeckUi.f(12)
-                columns: 3
-                spacing: DeckUi.f(10)
-                readonly property real cw: (width - spacing * 2) / 3
-                readonly property real ch: Math.min(DeckUi.f(86), (height - spacing) / 2)
-
-                Repeater {
-                    model: home.apps
-                    Rectangle {
-                        id: ap
-                        required property var modelData
-                        required property int index
-                        readonly property bool sel: home.kb && home.pane === "apps" && home.idx === index
-                        width: appGrid.cw
-                        height: appGrid.ch
-                        radius: DeckUi.innerRadius
-                        color: ap.sel ? DeckUi.sel : apMa.containsMouse ? DeckUi.hover : "transparent"
-                        border.width: 1
-                        border.color: ap.sel ? DeckUi.selRim : "transparent"
-                        Behavior on color { ColorAnimation { duration: 120 } }
-
-                        AppIcon {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            anchors.top: parent.top
-                            anchors.topMargin: DeckUi.f(13)
-                            width: DeckUi.f(30); height: width
-                            icon: Quickshell.iconPath(ap.modelData.icon, true)
-                            fallbackGlyph: Sh.icApp
-                        }
-                        Text {
-                            anchors { left: parent.left; right: parent.right; bottom: parent.bottom; margins: DeckUi.f(8) }
-                            horizontalAlignment: Text.AlignHCenter
-                            elide: Text.ElideRight
-                            text: ap.modelData.name
-                            color: ap.sel ? DeckUi.text : DeckUi.dim
-                            font.family: DeckUi.sans
-                            font.pixelSize: DeckUi.f(10.5)
-                        }
-                        MouseArea {
-                            id: apMa
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: home.launch(ap.modelData)
-                        }
-                    }
+        // Continue
+        Caption {
+            id: projCap
+            anchors { left: parent.left; top: parent.top }
+            width: lists.colW
+            text: "Continue"
+            trailing: Projects.dirtyCount > 0 ? Projects.dirtyCount + " with changes" : ""
+        }
+        Column {
+            anchors { left: parent.left; top: projCap.bottom; topMargin: DeckUi.f(10) }
+            width: lists.colW
+            spacing: home.rowGap
+            Repeater {
+                model: Projects.list
+                ListRow {
+                    required property var modelData
+                    required property int index
+                    width: parent.width
+                    height: home.rowH
+                    glyph: Sh.icFolderGit
+                    title: modelData.name
+                    subtitle: modelData.branch.length ? modelData.branch + "  ·  " + modelData.short : modelData.short
+                    badge: modelData.dirty > 0 ? "+" + modelData.dirty : ""
+                    meta: home.ago(modelData.last)
+                    selected: home.kb && home.pane === "proj" && home.idx === index
+                    onClicked: home.openProject(modelData)
                 }
             }
         }
+        Text {
+            anchors { left: parent.left; top: projCap.bottom; topMargin: DeckUi.f(18) }
+            width: lists.colW
+            visible: Projects.list.length === 0
+            wrapMode: Text.WordWrap
+            text: "Folders you open from the launcher will show up here."
+            color: DeckUi.faint
+            font.family: DeckUi.sans
+            font.pixelSize: DeckUi.f(12)
+        }
 
+        // Notifications
+        Caption {
+            id: noteCap
+            anchors { right: parent.right; top: parent.top }
+            width: lists.colW
+            text: "Notifications"
+            trailing: Notifications.historyModel.count > home.notes
+                      ? "+" + (Notifications.historyModel.count - home.notes) + " on page 2" : ""
+        }
         Item {
-            anchors { left: appsBox.right; leftMargin: DeckUi.f(24); right: parent.right; top: parent.top; bottom: parent.bottom }
-
-            Caption {
-                id: notCap
-                anchors { left: parent.left; right: parent.right; top: parent.top }
-                text: "Notifications"
-                trailing: Notifications.historyModel.count > 3 ? "+" + (Notifications.historyModel.count - 3) + " more on 2" : ""
-            }
+            id: notesList
+            anchors { right: parent.right; top: noteCap.bottom; bottom: parent.bottom; topMargin: DeckUi.f(10) }
+            width: lists.colW
             Column {
-                anchors { left: parent.left; right: parent.right; top: notCap.bottom; topMargin: DeckUi.f(12) }
-                spacing: DeckUi.f(8)
+                width: parent.width
+                spacing: home.rowGap
                 Repeater {
-                    model: Math.min(3, Notifications.historyModel.count)
-                    NotifRow {
+                    model: home.notes
+                    ListRow {
                         required property int index
+                        readonly property var rec: Notifications.historyModel.get(index)
                         width: parent.width
-                        rec: Notifications.historyModel.get(index)
-                        compact: true
+                        height: home.rowH
+                        icon: rec ? home.noteIcon(rec) : ""
+                        glyph: Sh.icBell
+                        title: rec ? home.strip(rec.summary) || rec.app : ""
+                        subtitle: rec ? home.strip(rec.body) || rec.app : ""
+                        meta: rec ? home.ago(rec.time) : ""
                         selected: home.kb && home.pane === "notes" && home.idx === index
                         onClicked: home.openNote(index)
                     }
@@ -346,7 +306,6 @@ Item {
             }
             Column {
                 anchors.centerIn: parent
-                anchors.verticalCenterOffset: DeckUi.f(12)
                 visible: Notifications.historyModel.count === 0
                 spacing: DeckUi.f(6)
                 Text {

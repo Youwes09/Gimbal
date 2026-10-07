@@ -91,10 +91,20 @@ Item {
                         border.color: rb.kb ? DeckUi.selRim : "transparent"
                         Behavior on color { ColorAnimation { duration: 120 } }
 
+                        // Active page: a short accent pill on the card's edge.
+                        Rectangle {
+                            x: -DeckUi.f(12) - width / 2
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: DeckUi.f(4)
+                            height: rb.on ? DeckUi.f(18) : 0
+                            radius: width / 2
+                            color: DeckUi.accent
+                            Behavior on height { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+                        }
                         Text {
                             anchors.centerIn: parent
                             text: rb.modelData.glyph
-                            color: rb.on ? DeckUi.text : DeckUi.faint
+                            color: rb.on ? DeckUi.accent : DeckUi.faint
                             font.family: Sh.iconFont
                             font.pixelSize: DeckUi.f(17)
                         }
@@ -110,7 +120,7 @@ Item {
                                 id: badge
                                 anchors.centerIn: parent
                                 text: Math.min(99, Notifications.historyModel.count)
-                                color: DeckUi.canvas
+                                color: DeckUi.accentInk
                                 font.family: DeckUi.sans
                                 font.pixelSize: DeckUi.f(9)
                                 font.weight: Font.Bold
