@@ -111,70 +111,94 @@ PanelWindow {
                     x: card.dragX
                     opacity: 1 - Math.min(0.9, Math.abs(card.dragX) / win.cardW)
 
-                    Rectangle {
-                        id: backing
-                        anchors.fill: parent
-                        radius: Sh.fs(17)
-                        color: Qt.rgba(0.07, 0.07, 0.08, 0.88)
+                    // Same surface as the deck and launcher: near-black, hairline edge, inset
+                    // top highlight, analytic shadow (no offscreen layer per toast).
+                    RectangularShadow {
+                        anchors.fill: panel
+                        radius: panel.radius
+                        blur: Sh.fs(36)
+                        offset.y: Sh.fs(10)
+                        spread: Sh.fs(1)
+                        color: Qt.rgba(0, 0, 0, 0.55)
                     }
-
                     Rectangle {
                         id: panel
                         anchors.fill: parent
-                        radius: Sh.fs(17)
-                        gradient: Gradient {
-                            GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.05) }
-                            GradientStop { position: 0.5; color: Qt.rgba(1, 1, 1, 0.038) }
-                            GradientStop { position: 1.0; color: Qt.rgba(1, 1, 1, 0.03) }
-                        }
+                        radius: Sh.fs(16)
+                        color: DeckUi.card
                         border.width: 1
-                        border.color: Qt.alpha(Theme.accent, 0.4)
-                        layer.enabled: true
-                        layer.effect: MultiEffect {
-                            shadowEnabled: true
-                            shadowColor: Qt.rgba(0, 0, 0, 0.42)
-                            shadowBlur: 0.9
-                            shadowVerticalOffset: Sh.fs(7)
-                            blurMax: 64
+                        border.color: Qt.rgba(1, 1, 1, 0.13)
+                        Rectangle {
+                            anchors { top: parent.top; left: parent.left; right: parent.right; margins: parent.radius }
+                            anchors.topMargin: 1
+                            height: 1
+                            color: DeckUi.sheen
                         }
                     }
 
-                    Row {
+                    Item {
                         anchors.fill: parent
-                        anchors.leftMargin: Sh.fs(16)
-                        anchors.rightMargin: Sh.fs(14)
-                        anchors.bottomMargin: Sh.fs(9)
-                        spacing: Sh.fs(13)
+                        anchors.leftMargin: Sh.fs(14)
+                        anchors.rightMargin: Sh.fs(16)
+                        anchors.bottomMargin: Sh.fs(6)
 
-                        AppIcon {
-                            width: Sh.fs(27); height: Sh.fs(27)
+                        Rectangle {
+                            id: tile
+                            anchors.left: parent.left
                             anchors.verticalCenter: parent.verticalCenter
-                            icon: card.model.appIcon
-                            fallbackGlyph: Sh.icBell
+                            width: Sh.fs(38); height: width
+                            radius: Sh.fs(9)
+                            color: DeckUi.graphite
+                            border.width: 1
+                            border.color: DeckUi.line
+                            AppIcon {
+                                anchors.centerIn: parent
+                                width: Sh.fs(24); height: width
+                                icon: card.model.appIcon
+                                fallbackGlyph: Sh.icBell
+                            }
                         }
 
                         Column {
+                            anchors.left: tile.right
+                            anchors.leftMargin: Sh.fs(12)
+                            anchors.right: parent.right
                             anchors.verticalCenter: parent.verticalCenter
-                            width: parent.width - Sh.fs(27) - parent.spacing
-                            spacing: Sh.fs(2)
+                            spacing: Sh.fs(3)
 
-                            Text {
+                            Item {
                                 width: parent.width
-                                text: win._strip(card.model.summary) || String(card.model.app).toUpperCase()
-                                color: Theme.fg
-                                elide: Text.ElideRight
-                                font.family: Sh.font
-                                font.pixelSize: Sh.fs(14)
-                                font.weight: Font.Medium
+                                height: summary.implicitHeight
+                                Text {
+                                    id: summary
+                                    anchors.left: parent.left
+                                    anchors.right: appName.left
+                                    anchors.rightMargin: Sh.fs(10)
+                                    text: win._strip(card.model.summary) || String(card.model.app)
+                                    color: DeckUi.text
+                                    elide: Text.ElideRight
+                                    font.family: DeckUi.sans
+                                    font.pixelSize: Sh.fs(14)
+                                    font.weight: Font.Medium
+                                }
+                                Text {
+                                    id: appName
+                                    anchors.right: parent.right
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: String(card.model.app || "")
+                                    color: DeckUi.faint
+                                    font.family: DeckUi.mono
+                                    font.pixelSize: Sh.fs(11)
+                                }
                             }
                             Text {
                                 width: parent.width
                                 visible: text.length > 0
                                 text: win._strip(card.model.body)
-                                color: Theme.muted
+                                color: DeckUi.dim
                                 elide: Text.ElideRight
-                                font.family: Sh.font
-                                font.pixelSize: Sh.fs(13)
+                                font.family: DeckUi.sans
+                                font.pixelSize: Sh.fs(12.5)
                             }
                         }
                     }
@@ -185,12 +209,12 @@ PanelWindow {
                         anchors.left: parent.left
                         anchors.right: parent.right
                         anchors.bottom: parent.bottom
-                        anchors.leftMargin: Sh.fs(18)
-                        anchors.rightMargin: Sh.fs(18)
-                        anchors.bottomMargin: Sh.fs(11)
-                        height: Sh.fs(3)
+                        anchors.leftMargin: Sh.fs(64)
+                        anchors.rightMargin: Sh.fs(16)
+                        anchors.bottomMargin: Sh.fs(9)
+                        height: Sh.fs(2)
                         radius: height / 2
-                        color: Qt.rgba(1, 1, 1, 0.08)
+                        color: DeckUi.line
 
                         readonly property real remainFrac: Math.max(0, 1 - card.elapsed / card.timeout)
 
@@ -200,7 +224,7 @@ PanelWindow {
                             width: parent.width * track.remainFrac
                             height: parent.height
                             radius: height / 2
-                            color: Qt.alpha(Theme.accent, 0.85)
+                            color: DeckUi.accent
                         }
                     }
 

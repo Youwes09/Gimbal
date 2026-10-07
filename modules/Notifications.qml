@@ -75,13 +75,13 @@ QtObject {
 
     function dismissPopup(nid) {
         for (let i = 0; i < root.popupModel.count; i++)
-            if (root.popupModel.get(i).nid === nid) { root.popupModel.remove(i); return }
+            if (String(root.popupModel.get(i).nid) === String(nid)) { root.popupModel.remove(i); return }
     }
 
     function _live(nid) {
         const t = root.server.trackedNotifications
         const arr = t && t.values ? t.values : []
-        for (const n of arr) if (n.id === nid) return n
+        for (const n of arr) if (String(n.id) === String(nid)) return n
         return null
     }
 
@@ -89,9 +89,9 @@ QtObject {
         dismissPopup(nid)
         const n = _live(nid)
         if (n) n.dismiss()
-        root.history = root.history.filter(r => r.nid !== nid)
+        root.history = root.history.filter(r => String(r.nid) !== String(nid))
         for (let i = 0; i < root.historyModel.count; i++)
-            if (root.historyModel.get(i).nid === nid) { root.historyModel.remove(i); break }
+            if (String(root.historyModel.get(i).nid) === String(nid)) { root.historyModel.remove(i); break }
         _saveTimer.restart()
     }
 
@@ -152,11 +152,18 @@ QtObject {
         onLoadFailed: { root.dnd = false; root.history = []; root._syncModel() }
     }
 
-    property Timer _saveTimer: Timer {
-        interval: 500
-        onTriggered: Quickshell.execDetached(["sh", "-c",
+    // Written to a temp file and renamed, so a reload never reads a half-written history; a
+    // save still pending when the shell goes down (reload, logout) is flushed rather than lost.
+    function _save() {
+        Quickshell.execDetached(["sh", "-c",
             "mkdir -p " + root._q(root._dir) + " && printf '%s' "
             + root._q(JSON.stringify({ dnd: root.dnd, items: root.history }))
-            + " > " + root._q(root._path)])
+            + " > " + root._q(root._path + ".tmp") + " && mv " + root._q(root._path + ".tmp")
+            + " " + root._q(root._path)])
     }
+    property Timer _saveTimer: Timer {
+        interval: 500
+        onTriggered: root._save()
+    }
+    Component.onDestruction: if (_saveTimer.running) root._save()
 }

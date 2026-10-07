@@ -17,20 +17,22 @@ Item {
     readonly property int sp4: f(16)
     readonly property int sp5: f(20)
 
-    readonly property int rSm: f(9)
+    readonly property int rSm: f(8)
     readonly property int rMd: f(12)
     readonly property int rLg: f(16)
 
-    // A brighter rim, top sheen and deep shadow lift the panel off whatever is behind it.
-    readonly property color cPanel:  Qt.tint(Theme.surface, Qt.rgba(1, 1, 1, 0.035))
-    readonly property color cRim:    Qt.alpha(Theme.fg, 0.17)
-    readonly property color cSheen:  Qt.alpha(Theme.fg, 0.08)
+    // Same language as the deck (DeckUi): near-black panel, a hairline edge a touch brighter
+    // than the deck's so it still pops over windows, the inset top highlight, neutral
+    // selection with an accent ring.
+    readonly property color cPanel:  DeckUi.card
+    readonly property color cRim:    Qt.rgba(1, 1, 1, 0.13)
+    readonly property color cSheen:  DeckUi.sheen
     readonly property color cShadow: Qt.rgba(0, 0, 0, 0.8)
     readonly property real  wRim:    1
-    readonly property color cSel:    Qt.alpha(Theme.accent, 0.14)
-    readonly property color cSelRim: Qt.alpha(Theme.accent, 0.5)
-    readonly property color cHover:  Qt.alpha(Theme.fg, 0.05)
-    readonly property color cLine:   Theme.rim
+    readonly property color cSel:    DeckUi.sel
+    readonly property color cSelRim: DeckUi.selRim
+    readonly property color cHover:  DeckUi.hover
+    readonly property color cLine:   DeckUi.line
 
     readonly property int tInput:   18
     readonly property int tRow:     16
@@ -496,15 +498,17 @@ Item {
 
         opacity: root.inspectActive ? 1 - 0.72 * root.iT : 1
         scale:   root.inspectActive ? 1 - 0.02 * root.iT : 1
+        // Flattened only while it fades behind the inspect card, so the fade stays clean.
+        layer.enabled: root.inspectActive
 
-        layer.enabled: true
-        layer.effect: MultiEffect {
-            shadowEnabled: true
-            shadowColor: root.cShadow
-            shadowBlur: 1.0
-            shadowVerticalOffset: root.f(14)
-            shadowScale: 1.03
-            blurMax: 64
+        // Analytic shadow: follows the height animation without re-rendering anything.
+        RectangularShadow {
+            anchors.fill: panel
+            radius: root.rLg
+            blur: root.f(48)
+            offset.y: root.f(14)
+            spread: root.f(2)
+            color: root.cShadow
         }
 
         Rectangle {
@@ -544,7 +548,7 @@ Item {
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         text: Sh.icSearch
-                        color: Theme.muted
+                        color: DeckUi.dim
                         font.family: Sh.iconFont
                         font.pixelSize: root.f(19)
                     }
@@ -560,12 +564,12 @@ Item {
                             anchors.fill: parent
                             verticalAlignment: TextInput.AlignVCenter
                             onTextChanged: root._onText(text)
-                            color: Theme.fg
-                            font.family: Sh.font
+                            color: DeckUi.text
+                            font.family: DeckUi.sans
                             font.pixelSize: root.f(root.tInput)
                             selectByMouse: true
                             clip: true
-                            cursorDelegate: Rectangle { width: 2; color: Theme.accent; visible: input.cursorVisible }
+                            cursorDelegate: Rectangle { width: 2; color: DeckUi.accent; visible: input.cursorVisible }
                             Keys.onEscapePressed: {
                                 if (root.inspectOpen) { root.inspectOpen = false; return }
                                 if (root.query.length > 0) input.clear()
@@ -599,8 +603,8 @@ Item {
                             show: root.query.length === 0 && Sh.launcherShown
                             span: 460
                             content: "Search"
-                            color: Theme.muted
-                            font.family: Sh.font
+                            color: DeckUi.dim
+                            font.family: DeckUi.sans
                             font.pixelSize: root.f(root.tInput)
                             elide: Text.ElideRight
                         }
@@ -612,8 +616,10 @@ Item {
                         visible: root.mode !== "apps"
                         width: tagText.implicitWidth + root.sp3
                         height: root.f(22)
-                        radius: root.rSm
-                        color: Qt.alpha(Theme.accent, 0.16)
+                        radius: DeckUi.badgeRadius
+                        color: DeckUi.graphite
+                        border.width: 1
+                        border.color: DeckUi.line
                         ScrambleText {
                             id: tagText
                             anchors.centerIn: parent
@@ -623,8 +629,8 @@ Item {
                             hold: 32
                             content: ({ run: "Command", calc: "Calc", files: "Files",
                                         clipboard: "Clipboard" })[root.mode] || ""
-                            color: Theme.accent
-                            font.family: Sh.font
+                            color: DeckUi.text
+                            font.family: DeckUi.mono
                             font.pixelSize: root.f(root.tCaption)
                         }
                         Behavior on width { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
@@ -714,13 +720,24 @@ Item {
                             Item {
                                 anchors.verticalCenter: parent.verticalCenter
                                 width: root.f(34); height: root.f(34)
-                                scale: rowItem.sel ? 1.07 : 1
+                                scale: rowItem.sel ? 1.04 : 1
                                 Behavior on scale {
                                     NumberAnimation { duration: 170; easing.type: Easing.OutBack; easing.overshoot: 2.4 }
                                 }
 
-                                AppIcon {
+                                // Every icon and glyph sits on the same tile (as in the deck's lists);
+                                // images and colour swatches fill it instead.
+                                Rectangle {
                                     anchors.fill: parent
+                                    visible: !rowItem.isImg && modelData.kind !== "color"
+                                    radius: root.rSm
+                                    color: DeckUi.graphite
+                                    border.width: 1
+                                    border.color: DeckUi.line
+                                }
+                                AppIcon {
+                                    anchors.centerIn: parent
+                                    width: root.f(22); height: width
                                     visible: modelData.iconPath && modelData.iconPath.length > 0
                                     icon: modelData.iconPath || ""
                                 }
@@ -754,9 +771,9 @@ Item {
                                     visible: !(modelData.iconPath && modelData.iconPath.length > 0)
                                              && !rowItem.isImg && modelData.kind !== "color"
                                     text: modelData.iconGlyph || root._glyph(modelData.kind)
-                                    color: rowItem.sel ? Theme.accent : Theme.muted
+                                    color: rowItem.sel ? DeckUi.text : DeckUi.dim
                                     font.family: Sh.iconFont
-                                    font.pixelSize: root.f(20)
+                                    font.pixelSize: root.f(16)
                                 }
                             }
 
@@ -766,18 +783,18 @@ Item {
                                 spacing: 2
                                 Text {
                                     text: modelData.title
-                                    color: rowItem.sel ? Theme.fg : Theme.fg
-                                    font.family: Sh.font
+                                    color: DeckUi.text
+                                    font.family: DeckUi.sans
                                     font.pixelSize: root.f(root.tRow)
-                                    font.weight: rowItem.sel ? Font.DemiBold : Font.Medium
+                                    font.weight: Font.Medium
                                     elide: Text.ElideRight
                                     width: parent.width
                                 }
                                 Text {
                                     visible: modelData.path.length > 0
                                     text: modelData.path
-                                    color: rowItem.sel ? Qt.alpha(Theme.accent, 0.9) : Theme.muted
-                                    font.family: Sh.font
+                                    color: DeckUi.dim
+                                    font.family: DeckUi.sans
                                     font.pixelSize: root.f(root.tMeta)
                                     elide: Text.ElideRight
                                     width: parent.width
@@ -799,8 +816,8 @@ Item {
                                      : modelData.kind === "calc" ? "⏎ copy"
                                      : modelData.kind === "run"  ? "⏎ run"
                                      : "Tab"
-                                color: Theme.muted
-                                font.family: Sh.font
+                                color: DeckUi.faint
+                                font.family: DeckUi.mono
                                 font.pixelSize: root.f(root.tCaption)
                             }
                         }
@@ -821,8 +838,8 @@ Item {
                     anchors.centerIn: parent
                     visible: root.results.length === 0
                     text: root.mode === "clipboard" ? "Clipboard is empty" : "No results"
-                    color: Theme.muted
-                    font.family: Sh.font
+                    color: DeckUi.dim
+                    font.family: DeckUi.sans
                     font.pixelSize: root.f(root.tBody)
                 }
             }
@@ -839,7 +856,7 @@ Item {
         radius: root.rSm
         color: root.cPanel
         border.width: 1
-        border.color: Qt.alpha(Theme.fg, 0.1)
+        border.color: root.cRim
         opacity: (!root.expanded && !root.inspectActive) ? 1 : 0
         visible: opacity > 0.01
         Behavior on opacity { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
@@ -851,8 +868,8 @@ Item {
             show: legend.opacity > 0.5 && Sh.launcherShown
             span: 560
             content: "›  run      =  calc      /  files      ;  clipboard"
-            color: Qt.alpha(Theme.fg, 0.6)
-            font.family: Sh.font
+            color: DeckUi.faint
+            font.family: DeckUi.mono
             font.pixelSize: root.f(root.tCaption)
             font.letterSpacing: 0.5
         }
@@ -866,7 +883,7 @@ Item {
 
         Rectangle {
             anchors.fill: parent
-            color: Qt.alpha(Theme.bg, 0.55 * root.iT)
+            color: Qt.alpha(DeckUi.canvas, 0.55 * root.iT)
             MouseArea {
                 anchors.fill: parent
                 hoverEnabled: true
@@ -920,19 +937,25 @@ Item {
 
             MouseArea { anchors.fill: parent; hoverEnabled: true }
 
+            RectangularShadow {
+                anchors.fill: parent
+                radius: root.rLg
+                blur: root.f(48)
+                offset.y: root.f(16)
+                spread: root.f(2)
+                color: root.cShadow
+            }
             Rectangle {
                 anchors.fill: parent
                 radius: root.rLg
                 color: root.cPanel
                 border.width: root.wRim
                 border.color: root.cRim
-                layer.enabled: true
-                layer.effect: MultiEffect {
-                    shadowEnabled: true
-                    shadowColor: root.cShadow
-                    shadowBlur: 1.0
-                    shadowVerticalOffset: root.f(16)
-                    blurMax: 64
+                Rectangle {
+                    anchors { top: parent.top; left: parent.left; right: parent.right; margins: root.rLg }
+                    anchors.topMargin: 1
+                    height: 1
+                    color: root.cSheen
                 }
             }
 
@@ -1025,10 +1048,10 @@ Item {
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: inspectLayer._c ? inspectLayer._c.title : ""
-                            color: Theme.fg
-                            font.family: Sh.font
+                            color: DeckUi.text
+                            font.family: DeckUi.sans
                             font.pixelSize: root.f(root.tHead)
-                            font.weight: Font.DemiBold
+                            font.weight: Font.Medium
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
@@ -1036,8 +1059,8 @@ Item {
                             width: parent.width * 0.8
                             horizontalAlignment: Text.AlignHCenter
                             text: inspectLayer._c ? inspectLayer._c.body : ""
-                            color: Theme.muted
-                            font.family: Sh.font
+                            color: DeckUi.dim
+                            font.family: DeckUi.sans
                             font.pixelSize: root.f(root.tMeta)
                             wrapMode: Text.Wrap
                             maximumLineCount: 2
@@ -1069,8 +1092,8 @@ Item {
                             width: parent.width
                             text: root.inspectText.length > 0 ? root.inspectText : "No content"
                             textFormat: Text.PlainText
-                            color: Theme.fg
-                            font.family: Sh.font
+                            color: DeckUi.text
+                            font.family: DeckUi.sans
                             font.pixelSize: root.f(root.tBody)
                             wrapMode: Text.Wrap
                         }
@@ -1092,8 +1115,8 @@ Item {
                                 anchors.left: parent.left
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: modelData[0]
-                                color: Theme.muted
-                                font.family: Sh.font
+                                color: DeckUi.dim
+                                font.family: DeckUi.sans
                                 font.pixelSize: root.f(root.tMeta)
                             }
                             Text {
@@ -1102,8 +1125,8 @@ Item {
                                 width: parent.width * 0.64
                                 horizontalAlignment: Text.AlignRight
                                 text: modelData[1]
-                                color: Theme.fg
-                                font.family: Sh.font
+                                color: DeckUi.text
+                                font.family: DeckUi.sans
                                 font.pixelSize: root.f(root.tMeta)
                                 elide: Text.ElideMiddle
                             }

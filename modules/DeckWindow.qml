@@ -60,7 +60,7 @@ PanelWindow {
                     blur: 1.0
                     blurMax: 64
                     blurMultiplier: 1.6
-                    saturation: -0.6
+                    saturation: -0.2
                 }
             }
         }
@@ -68,7 +68,7 @@ PanelWindow {
     Rectangle {
         anchors.fill: parent
         visible: root.active
-        color: Qt.alpha(DeckUi.canvas, 0.88 * root.t)
+        color: Qt.alpha(DeckUi.canvas, 0.62 * root.t)
         MouseArea { anchors.fill: parent; onClicked: Sh.closeDeck() }
     }
 

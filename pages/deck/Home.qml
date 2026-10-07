@@ -101,6 +101,9 @@ Item {
             }
             if (p === "notes" && (key === Qt.Key_Delete || key === Qt.Key_Backspace || key === Qt.Key_X)) {
                 Notifications.dismiss(Notifications.historyModel.get(i).nid)
+                // The next one slides up into this slot; keep the selection here, or step back
+                // to the projects once the list is empty.
+                Qt.callLater(() => { if (!home._to("notes", i)) home._to("proj", 0) || home._to("apps", 0) })
                 return
             }
             if (p === "head") {
@@ -172,7 +175,7 @@ Item {
         anchors { left: parent.left; right: parent.right; top: appsCap.bottom; topMargin: DeckUi.f(12) }
         spacing: DeckUi.f(10)
         readonly property real kw: (width - spacing * 5) / 6
-        height: DeckUi.f(88)
+        height: DeckUi.f(68)
 
         Repeater {
             model: home.apps
@@ -197,22 +200,10 @@ Item {
                     color: DeckUi.sheen
                 }
                 AppIcon {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.top: parent.top
-                    anchors.topMargin: DeckUi.f(14)
-                    width: DeckUi.f(30); height: width
+                    anchors.centerIn: parent
+                    width: DeckUi.f(32); height: width
                     icon: Quickshell.iconPath(key.modelData.icon, true)
                     fallbackGlyph: Sh.icApp
-                }
-                Text {
-                    anchors { left: parent.left; right: parent.right; bottom: parent.bottom; margins: DeckUi.f(8) }
-                    anchors.bottomMargin: DeckUi.f(12)
-                    horizontalAlignment: Text.AlignHCenter
-                    elide: Text.ElideRight
-                    text: key.modelData.name
-                    color: key.sel ? DeckUi.text : DeckUi.dim
-                    font.family: DeckUi.sans
-                    font.pixelSize: DeckUi.f(11)
                 }
                 MouseArea {
                     id: keyMa
@@ -291,7 +282,8 @@ Item {
                     model: home.notes
                     ListRow {
                         required property int index
-                        readonly property var rec: Notifications.historyModel.get(index)
+                        // get() isn't reactive; reading count re-fetches on every insert/removal.
+                        readonly property var rec: { Notifications.historyModel.count; return Notifications.historyModel.get(index) }
                         width: parent.width
                         height: home.rowH
                         icon: rec ? home.noteIcon(rec) : ""

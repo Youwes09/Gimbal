@@ -2,7 +2,8 @@ import QtQuick
 import Quickshell
 import "root:/modules"
 
-// One notification: app icon, app · age, summary, body.
+// One notification, in the deck's list-row style: app icon on the shared tile, summary over
+// body, app · age in mono on the right. Nothing drawn at rest.
 Rectangle {
     id: nr
     property var rec: null
@@ -12,7 +13,7 @@ Rectangle {
 
     implicitHeight: nr.compact ? DeckUi.f(56) : DeckUi.f(74)
     radius: DeckUi.innerRadius
-    color: nr.selected ? DeckUi.sel : ma.containsMouse ? DeckUi.hover : DeckUi.well
+    color: nr.selected ? DeckUi.sel : ma.containsMouse ? DeckUi.hover : "transparent"
     border.width: 1
     border.color: nr.selected ? DeckUi.selRim : "transparent"
     Behavior on color { ColorAnimation { duration: 120 } }
@@ -44,16 +45,24 @@ Rectangle {
         color: DeckUi.danger
     }
 
-    AppIcon {
+    Rectangle {
         id: ic
         anchors.left: parent.left
-        anchors.leftMargin: DeckUi.f(14)
+        anchors.leftMargin: DeckUi.f(12)
         anchors.verticalCenter: parent.verticalCenter
-        width: nr.compact ? DeckUi.f(24) : DeckUi.f(30); height: width
-        // Live notification images (image://qsimage) die with the notification; use the app icon then.
-        icon: nr.rec ? nr._icon((/^image:\/\/qsimage/.test(nr.rec.image) ? "" : nr.rec.image)
-                                || nr.rec.appIcon || nr.rec.desktopEntry) : ""
-        fallbackGlyph: Sh.icBell
+        width: nr.compact ? DeckUi.f(32) : DeckUi.f(38); height: width
+        radius: DeckUi.f(8)
+        color: DeckUi.graphite
+        border.width: 1
+        border.color: DeckUi.line
+        AppIcon {
+            anchors.centerIn: parent
+            width: parent.width * 0.62; height: width
+            // Live notification images (image://qsimage) die with the notification; use the app icon then.
+            icon: nr.rec ? nr._icon((/^image:\/\/qsimage/.test(nr.rec.image) ? "" : nr.rec.image)
+                                    || nr.rec.appIcon || nr.rec.desktopEntry) : ""
+            fallbackGlyph: Sh.icBell
+        }
     }
 
     Column {
@@ -85,8 +94,8 @@ Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
                 text: nr.rec ? nr.rec.app + "  ·  " + nr._ago(nr.rec.time) : ""
                 color: DeckUi.faint
-                font.family: DeckUi.sans
-                font.pixelSize: DeckUi.f(10)
+                font.family: DeckUi.mono
+                font.pixelSize: DeckUi.f(10.5)
             }
         }
         Text {
