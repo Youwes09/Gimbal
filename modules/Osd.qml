@@ -1,6 +1,7 @@
 pragma Singleton
 
 import QtQuick
+import "root:/modules"
 
 QtObject {
     id: root
@@ -8,6 +9,8 @@ QtObject {
     property string kind: ""
 
     function pulse(k) {
+        // The dashboard has its own sliders; no popup on top of them.
+        if (Sh.launcherShown && Sh.dash) return
         root.kind = k
         hide.restart()
     }

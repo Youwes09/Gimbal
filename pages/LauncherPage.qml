@@ -60,6 +60,9 @@ Item {
     readonly property string q:    root._parsed.q
 
     readonly property bool expanded: root.query.length > 0 || root.results.length > 0
+    // For the dashboard: it lays out around the search panel and steps back while you search.
+    property alias panel: panelWrap
+    readonly property bool searching: root.expanded || root.inspectActive
 
     readonly property var _apps: [...DesktopEntries.applications.values]
         .sort((a, b) => (a.name || "").localeCompare(b.name || ""))
@@ -480,7 +483,9 @@ Item {
     Item {
         id: panelWrap
         anchors.horizontalCenter: parent.horizontalCenter
-        y: Math.round(parent.height * 0.26)
+        // Lower in dashboard mode so the whole card layout sits centred.
+        y: Math.round(parent.height * (Sh.dash ? 0.41 : 0.26))
+        Behavior on y { enabled: Sh.launcherShown; NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
 
         readonly property real barH: root.f(58)
         readonly property real resultsMax: Math.min(root.f(460), root.height * 0.5)
@@ -570,6 +575,13 @@ Item {
                                 else Sh.closeLauncher()
                             }
                             Keys.onPressed: (ev) => {
+                                if (Sh.dash && root.query.length === 0) {
+                                    if (ev.key === Qt.Key_Left)  { Sh.dashStep(-1); ev.accepted = true; return }
+                                    if (ev.key === Qt.Key_Right) { Sh.dashStep(1);  ev.accepted = true; return }
+                                    if (ev.key === Qt.Key_Return || ev.key === Qt.Key_Enter) {
+                                        Sh.dashApply(); ev.accepted = true; return
+                                    }
+                                }
                                 if (ev.key === Qt.Key_Tab || ev.key === Qt.Key_Backtab) {
                                     root.toggleInspect()
                                     ev.accepted = true
@@ -889,7 +901,7 @@ Item {
 
             Row {
                 anchors.right: parent.right
-                visible: Status.track.length > 0
+                visible: Status.track.length > 0 && !Sh.dash   // the dashboard has a media card
                 spacing: root.sp2
                 opacity: Status.playing ? 1 : 0.55
                 Text {
@@ -950,7 +962,7 @@ Item {
         width: legendText.implicitWidth + root.sp4
         height: root.f(30)
         color: "transparent"
-        opacity: (!root.expanded && !root.inspectActive) ? 1 : 0
+        opacity: (!root.expanded && !root.inspectActive && !Sh.dash) ? 1 : 0
         visible: opacity > 0.01
         Behavior on opacity { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
 

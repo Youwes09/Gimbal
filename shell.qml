@@ -22,8 +22,8 @@ ShellRoot {
     IpcHandler {
         target: "overlay"
 
-        function toggle(): void { Sh.toggle() }
-        function open():   void { Sh.open() }
+        function toggle(): void { Sh.toggleDash() }
+        function open():   void { Sh.openDash() }
         function close():  void { Sh.close() }
         function rest():   void { Sh.rest() }
     }

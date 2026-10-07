@@ -64,11 +64,24 @@ PanelWindow {
     Rectangle {
         anchors.fill: parent
         visible: root.active
-        color: Qt.alpha(Theme.bg, 0.6 * root.t)
+        color: Qt.alpha(Theme.bg, (Sh.dash ? 0.74 : 0.6) * root.t)
         MouseArea { anchors.fill: parent; onClicked: Sh.closeLauncher() }
     }
 
+    // Below the launcher so its results drop over the cards; steps back while searching.
+    Dashboard {
+        anchors.fill: parent
+        visible: root.active && Sh.dash && opacity > 0.01
+        panel: launcher.panel
+        t: root.t
+        property real fade: launcher.searching ? 0 : 1
+        Behavior on fade { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
+        opacity: root.t * fade
+        enabled: !launcher.searching
+    }
+
     LauncherPage {
+        id: launcher
         anchors.fill: parent
         visible: root.active
         opacity: root.t

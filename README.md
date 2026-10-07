@@ -8,8 +8,8 @@
 
 Gimbal has no persistent chrome. You bind two keys:
 
-- **the launcher** — a Spotlight-style bar: apps, files, clipboard history, a calculator, and run-a-command, all behind single-character prefixes, ranked by frecency, with an inspect card for previews
-- **the wallpaper picker** — a circular reveal onto an infinite parallax carousel of your wallpapers
+- **the dashboard** — a game-bar style overlay around the search bar: now playing (art, seek, controls), volume / brightness sliders, screenshot / record / DND, live CPU / RAM / GPU, power (rest, suspend, reboot and shut down with a confirm click), and a wallpaper strip
+- **the launcher** — the search bar on its own: a Spotlight-style bar: apps, files, clipboard history, a calculator, and run-a-command, all behind single-character prefixes, ranked by frecency, with an inspect card for previews
 
 It also owns your wallpaper (static / GIF / video, cross-faded on switch), repaints itself from the wallpaper's colours, and quietly handles notifications, volume/brightness popups and screenshots.
 
@@ -31,9 +31,9 @@ It also owns your wallpaper (static / GIF / video, cross-faded on switch), repai
 - Drifts a few pixels each minute so an OLED never holds the same image
 
 **Wallpaper**
-- Picker — circular reveal, infinite parallax carousel, live video previews, cross-fade apply; built on open and torn down on close
+- Picked from the dashboard strip (`←`/`→` + `enter` while the search box is empty, or click); thumbnails cached under `~/.cache/gimbal/thumbs`
 - Quickshell draws the wallpaper directly (kills `wbg` on start)
-- `~/Pictures/Wallpapers` scanned on every picker open
+- `~/Pictures/Wallpapers` scanned on every dashboard open
 - Video via QtMultimedia (ffmpeg backend); first-frame posters via ffmpeg
 - `gimbal wallpaper next|prev|random|set <name>|list`
 
@@ -98,14 +98,14 @@ Fonts (AdwaitaMono, Lucide) are bundled in `assets/fonts/`. The Nix flake pulls 
 ```
 gimbal start            run the daemon (compositor autostart)
 gimbal launch           the launcher
-gimbal toggle           summon / dismiss the wallpaper picker
+gimbal toggle           summon / dismiss the dashboard
 gimbal rest             show the rest screen
 gimbal wallpaper …      next | prev | random | rescan | list | <name>
 gimbal screenshot …     region | full
 gimbal record …         full | region | toggle | stop
 ```
 
-**In the wallpaper picker:** `←`/`→` cycle · `enter` apply · `esc` close
+**In the dashboard:** type to search (the cards step back) · with an empty search, `←`/`→` browse wallpapers · `enter` apply · `esc` close
 
 **In the launcher:** type a prefix, `↑`/`↓` to move, `tab` to inspect, `enter` to run.
 

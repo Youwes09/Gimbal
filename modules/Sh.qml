@@ -80,19 +80,24 @@ QtObject {
     property real fontScale: 1.06
     function fs(px) { return Math.round(px * root.fontScale) }
 
-    // The overlay: "wallpaper" picker, or the "rest" screen (idle / Super+L).
-    property bool   shown: false
-    property string page:  "wallpaper"
+    // The overlay window now only hosts the rest screen (idle / Super+L).
+    property bool shown: false
+    function rest()  { root.closeLauncher(); root.shown = true }
+    function close() { root.shown = false }
 
-    function toggle() { if (root.shown) root.close(); else root.open() }
-    function open()   { root.page = "wallpaper"; root.shown = true }
-    function rest()   { root.closeLauncher(); root.page = "rest"; root.shown = true }
-    function close()  { root.shown = false }
-
+    // The launcher window: search alone, or the full dashboard around it.
     property bool launcherShown: false
-    function toggleLauncher() { root.launcherShown = !root.launcherShown }
-    function openLauncher()   { root.launcherShown = true }
+    property bool dash: false
+    function toggleLauncher() { if (root.launcherShown) root.closeLauncher(); else root.openLauncher() }
+    function openLauncher()   { root.dash = false; root.launcherShown = true }
     function closeLauncher()  { root.launcherShown = false }
+    // From search-only, Super+Tab expands into the dashboard instead of closing.
+    function toggleDash() { if (root.launcherShown && root.dash) root.closeLauncher(); else root.openDash() }
+    function openDash()   { root.dash = true; root.launcherShown = true }
+
+    // Keyboard on the dashboard while the search box is empty.
+    signal dashStep(int dir)
+    signal dashApply()
 
     property real reveal: 0
 

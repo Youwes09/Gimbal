@@ -168,31 +168,22 @@ PanelWindow {
             maskSpreadAtMin: 0.05
         }
 
-        // Pages are built on open and torn down on close, so they hold no memory while hidden.
-        Loader {
-            id: wallLoader
-            anchors.fill: parent
-            active: root.active && Sh.page === "wallpaper"
-            sourceComponent: WallpaperCarousel {}
-        }
+        // Built on open and torn down on close, so it holds no memory while hidden.
         Loader {
             anchors.fill: parent
-            active: root.active && Sh.page === "rest"
+            active: root.active
             sourceComponent: RestPage {}
         }
 
-        TapHandler {
-            enabled: Sh.page === "rest"
-            onTapped: Sh.close()
-        }
+        TapHandler { onTapped: Sh.close() }
     }
 
-    // Long idle on the rest screen: fade to true black (OLED pixels off). Any input brings it back.
+    // Long idle: fade to true black (OLED pixels off). Any input brings it back.
     Rectangle {
         anchors.fill: parent
         color: "black"
         visible: opacity > 0
-        opacity: root.active && Sh.page === "rest" && Idle.dark ? 1 : 0
+        opacity: root.active && Idle.dark ? 1 : 0
         Behavior on opacity { NumberAnimation { duration: 1800; easing.type: Easing.InOutSine } }
     }
 
@@ -200,16 +191,6 @@ PanelWindow {
         id: keyCatch
         anchors.fill: parent
         focus: true
-
-        readonly property bool rest: Sh.page === "rest"
-
-        Keys.onPressed: (e) => {
-            if (keyCatch.rest) { Sh.close(); e.accepted = true }
-        }
-        Keys.onEscapePressed: Sh.close()
-        Keys.onLeftPressed:   if (wallLoader.item) wallLoader.item.step(-1)
-        Keys.onRightPressed:  if (wallLoader.item) wallLoader.item.step(1)
-        Keys.onReturnPressed: if (wallLoader.item) wallLoader.item.apply()
-        Keys.onEnterPressed:  if (wallLoader.item) wallLoader.item.apply()
+        Keys.onPressed: (e) => { Sh.close(); e.accepted = true }
     }
 }

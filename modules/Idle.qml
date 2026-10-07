@@ -15,7 +15,7 @@ QtObject {
         enabled: Config.idleRest > 0
         timeout: Config.idleRest
         respectInhibitors: true
-        onIsIdleChanged: if (isIdle && !(Sh.shown && Sh.page === "rest")) Sh.rest()
+        onIsIdleChanged: if (isIdle && !Sh.shown) Sh.rest()
     }
 
     property IdleMonitor _darkMon: IdleMonitor {

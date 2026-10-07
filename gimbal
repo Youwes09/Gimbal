@@ -66,7 +66,7 @@ gimbal — summoned-overlay shell daemon control
   gimbal start            start the persistent daemon (spawn-at-startup)
   gimbal stop             stop the daemon
   gimbal restart          stop, then start
-  gimbal toggle           show/hide the wallpaper picker
+  gimbal toggle           show/hide the dashboard
   gimbal rest             show the rest screen (any key returns)
   gimbal launch           show/hide the launcher
   gimbal wallpaper [name|next|prev|random|rescan|list]
