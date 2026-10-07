@@ -101,7 +101,7 @@ The script checks dependencies, installs the missing ones (`pacman` + `paru`/`ya
 | | `upower` | low-battery warnings |
 | | `file` | richer file-type detection in the inspect card |
 
-Fonts (AdwaitaMono, Lucide) are bundled in `assets/fonts/`. The Nix flake pulls in every row above automatically.
+Fonts (Adwaita Mono, Inter, Geist Mono, Lucide; all OFL or ISC, licences alongside) are bundled in `assets/fonts/`. The Nix flake pulls in every row above automatically.
 
 ## Usage
 
