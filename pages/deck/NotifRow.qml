@@ -50,7 +50,9 @@ Rectangle {
         anchors.leftMargin: DeckUi.f(14)
         anchors.verticalCenter: parent.verticalCenter
         width: nr.compact ? DeckUi.f(24) : DeckUi.f(30); height: width
-        icon: nr.rec ? nr._icon(nr.rec.image || nr.rec.appIcon || nr.rec.desktopEntry) : ""
+        // Live notification images (image://qsimage) die with the notification; use the app icon then.
+        icon: nr.rec ? nr._icon((/^image:\/\/qsimage/.test(nr.rec.image) ? "" : nr.rec.image)
+                                || nr.rec.appIcon || nr.rec.desktopEntry) : ""
         fallbackGlyph: Sh.icBell
     }
 
