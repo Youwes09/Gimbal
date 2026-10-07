@@ -1,7 +1,7 @@
 import QtQuick
 import "root:/modules"
 
-// Section label: small caps, then an accent hairline running to the right edge.
+// Section label: small caps, then a hairline fading out toward the right edge.
 Item {
     id: cap
     property string text: ""
@@ -43,8 +43,8 @@ Item {
         height: 1
         gradient: Gradient {
             orientation: Gradient.Horizontal
-            GradientStop { position: 0; color: Qt.alpha(Theme.accent, 0.45) }
-            GradientStop { position: 1; color: Qt.alpha(Theme.accent, 0.04) }
+            GradientStop { position: 0; color: Qt.alpha(Theme.fg, 0.12) }
+            GradientStop { position: 1; color: Qt.alpha(Theme.fg, 0) }
         }
     }
 }

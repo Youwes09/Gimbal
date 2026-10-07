@@ -7,6 +7,11 @@ Item {
     id: deck
 
     property real t: 1   // reveal 0..1, drives the slide-in
+    // Columns arrive left to right, a beat apart, each finishing its own curve.
+    function _stage(d) { return Math.max(0, Math.min(1, (deck.t - d) / 0.8)) }
+    readonly property real inL: _stage(0)
+    readonly property real inC: _stage(0.1)
+    readonly property real inR: _stage(0.2)
 
     readonly property real gap:     DeckUi.f(14)
     readonly property real sideW:   DeckUi.f(290)
@@ -28,21 +33,12 @@ Item {
         anchors.centerIn: parent
         anchors.verticalCenterOffset: -DeckUi.f(10)
 
-        // One soft shadow under all three columns.
-        layer.enabled: true
-        layer.effect: MultiEffect {
-            shadowEnabled: true
-            shadowColor: Qt.rgba(0, 0, 0, 0.6)
-            shadowBlur: 1.0
-            shadowVerticalOffset: DeckUi.f(10)
-            blurMax: 48
-        }
 
         LeftColumn {
-            x: (1 - deck.t) * -DeckUi.f(28)
+            x: (1 - deck.inL) * -DeckUi.f(24)
             width: deck.sideW
             height: frame.height
-            opacity: deck.t
+            opacity: deck.inL
         }
 
         // ── centre ──────────────────────────────────────────────────────
@@ -52,8 +48,8 @@ Item {
             width: deck.centerW
             height: frame.height
             focused: DeckUi.zone === "center" || DeckUi.zone === "rail"
-            scale: 0.985 + 0.015 * deck.t
-            opacity: deck.t
+            transform: Translate { y: (1 - deck.inC) * DeckUi.f(14) }
+            opacity: deck.inC
 
             // Rail: ↑↓ flip pages live, → or Enter steps into the page.
             Connections {
@@ -159,10 +155,10 @@ Item {
         }
 
         RightColumn {
-            x: deck.sideW + deck.gap + deck.centerW + deck.gap + (1 - deck.t) * DeckUi.f(28)
+            x: deck.sideW + deck.gap + deck.centerW + deck.gap + (1 - deck.inR) * DeckUi.f(24)
             width: deck.sideW
             height: frame.height
-            opacity: deck.t
+            opacity: deck.inR
         }
     }
 

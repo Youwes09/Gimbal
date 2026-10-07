@@ -60,14 +60,14 @@ Item {
         anchors.right: parent.right
         anchors.leftMargin: DeckUi.f(8)
         anchors.verticalCenter: icon.verticalCenter
-        height: DeckUi.f(5)
+        height: DeckUi.f(4)
 
         Rectangle { anchors.fill: parent; radius: height / 2; color: DeckUi.line }
         Rectangle {
             width: Math.max(height, track.width * Math.max(0, Math.min(1, sl.value)))
             height: parent.height
             radius: height / 2
-            color: sl.muted ? DeckUi.faint : Theme.accent
+            color: sl.muted ? DeckUi.faint : Qt.alpha(Theme.fg, 0.86)
             Behavior on width { enabled: !ma.pressed; NumberAnimation { duration: 120 } }
         }
         Rectangle {

@@ -11,16 +11,20 @@ QtObject {
     function f(px) { return Sh.fs(px * root.scale) }
 
     // Same surface language as the launcher, so the two read as one shell.
-    readonly property color card:    Qt.tint(Theme.surface, Qt.rgba(1, 1, 1, 0.035))
-    readonly property color rim:     Qt.alpha(Theme.fg, 0.11)
-    readonly property color sheen:   Qt.alpha(Theme.fg, 0.07)
-    readonly property color well:    Qt.alpha(Theme.fg, 0.045)   // inset blocks inside cards
-    readonly property color line:    Qt.alpha(Theme.fg, 0.08)
-    readonly property color dim:     Qt.alpha(Theme.fg, 0.56)
-    readonly property color faint:   Qt.alpha(Theme.fg, 0.3)
-    readonly property color sel:     Qt.alpha(Theme.accent, 0.14)
-    readonly property color selRim:  Qt.alpha(Theme.accent, 0.55)
-    readonly property color hover:   Qt.alpha(Theme.fg, 0.06)
+    // Cards are lit from above: a slightly lifted top fading into the base, a hairline rim,
+    // and a brighter lip along the top edge. Inside them colour is kept for state only.
+    readonly property color card:    Qt.tint(Theme.surface, Qt.rgba(1, 1, 1, 0.03))
+    readonly property color cardTop: Qt.tint(Theme.surface, Qt.rgba(1, 1, 1, 0.065))
+    readonly property color rim:     Qt.alpha(Theme.fg, 0.08)
+    readonly property color sheen:   Qt.alpha(Theme.fg, 0.14)
+    readonly property color well:    Qt.alpha(Theme.fg, 0.035)   // inset blocks inside cards
+    readonly property color line:    Qt.alpha(Theme.fg, 0.06)
+    readonly property color dim:     Qt.alpha(Theme.fg, 0.58)
+    readonly property color faint:   Qt.alpha(Theme.fg, 0.32)
+    readonly property color sel:     Qt.alpha(Theme.fg, 0.075)
+    readonly property color selRim:  Qt.alpha(Theme.accent, 0.5)
+    readonly property color focusRim: Qt.alpha(Theme.accent, 0.28)  // whole card with keyboard focus
+    readonly property color hover:   Qt.alpha(Theme.fg, 0.045)
 
     readonly property int radius:      f(14)
     readonly property int innerRadius: f(10)

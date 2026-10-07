@@ -290,7 +290,8 @@ Column {
             property string label: ""
             property string value: ""
             property real level: 0
-            property color tint: Theme.accent
+            property real hot: 0.9      // level at which the ring turns red
+            readonly property color tint: tile.level >= tile.hot ? Theme.error : Qt.alpha(Theme.fg, 0.82)
             width: tiles.tw
             height: tiles.th
             border.width: 0   // the ring is the edge
@@ -356,7 +357,7 @@ Column {
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: tile.glyph
-                    color: tile.tint
+                    color: tile.level >= tile.hot ? Theme.error : DeckUi.dim
                     font.family: Sh.iconFont
                     font.pixelSize: DeckUi.f(18)
                     bottomPadding: DeckUi.f(3)
@@ -387,28 +388,25 @@ Column {
             label: "CPU"
             value: Math.round(SysStats.cpu * 100) + "%"
             level: SysStats.cpu
-            tint: Theme.accent
         }
         Tile {
             glyph: Sh.icRam
             label: "RAM · " + SysStats.memUsed.toFixed(1) + "G"
             value: SysStats.memTotal > 0 ? Math.round(SysStats.memUsed / SysStats.memTotal * 100) + "%" : "–"
             level: SysStats.memTotal > 0 ? SysStats.memUsed / SysStats.memTotal : 0
-            tint: Theme.second
         }
         Tile {
             glyph: Sh.icGauge
             label: "GPU"
             value: SysStats.gpu >= 0 ? Math.round(SysStats.gpu * 100) + "%" : "–"
             level: Math.max(0, SysStats.gpu)
-            tint: Theme.third
         }
         Tile {
             glyph: Sh.icThermo
             label: "Temp"
             value: SysStats.temp >= 0 ? Math.round(SysStats.temp) + "°" : "–"
             level: SysStats.temp >= 0 ? (SysStats.temp - 30) / 65 : 0
-            tint: SysStats.temp >= 85 ? Theme.error : Theme.contrast
+            hot: (85 - 30) / 65   // 85°C
         }
     }
 }

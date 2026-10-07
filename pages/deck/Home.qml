@@ -286,7 +286,7 @@ Item {
                         width: appGrid.cw
                         height: appGrid.ch
                         radius: DeckUi.innerRadius
-                        color: ap.sel ? DeckUi.sel : apMa.containsMouse ? DeckUi.hover : DeckUi.well
+                        color: ap.sel ? DeckUi.sel : apMa.containsMouse ? DeckUi.hover : "transparent"
                         border.width: 1
                         border.color: ap.sel ? DeckUi.selRim : "transparent"
                         Behavior on color { ColorAnimation { duration: 120 } }
