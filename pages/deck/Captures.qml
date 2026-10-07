@@ -92,7 +92,7 @@ Item {
             color: DeckUi.text
             font.family: DeckUi.sans
             font.pixelSize: DeckUi.f(24)
-            font.weight: Font.Medium
+            font.weight: Font.DemiBold
         }
         Text {
             text: Capture.recording ? "Recording…" : "Screenshots and recordings, newest first"

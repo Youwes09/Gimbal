@@ -23,7 +23,15 @@ QtObject {
         Qt.callLater(() => _scan.running = true)
     }
 
-    function openEditor(path) {
+    // A folder that's already open in an editor goes to that window (and its workspace)
+    // instead of a second one.
+    function _raiseEditor(path) {
+        const tl = Compositor.findEditorFor(path)
+        if (tl) tl.activate()
+        return !!tl
+    }
+    function openEditor(path, isDir) {
+        if (isDir && root._raiseEditor(path)) return
         Quickshell.execDetached(["sh", "-c", Config.editor + ' "$1"', "_", path])
     }
     function openManager(path) {
@@ -36,6 +44,7 @@ QtObject {
     }
 
     function openSmart(path) {
+        if (root._raiseEditor(path)) return
         Quickshell.execDetached(["sh", "-c",
             'd="$1"; for m in .git flake.nix Cargo.toml package.json pyproject.toml '
             + 'Makefile go.mod deno.json .project; do '

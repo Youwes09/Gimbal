@@ -68,7 +68,7 @@ Rectangle {
             color: DeckUi.text
             font.family: DeckUi.sans
             font.pixelSize: DeckUi.f(13)
-            font.weight: Font.Medium
+            font.weight: Font.DemiBold
         }
         Text {
             width: parent.width

@@ -1,18 +1,22 @@
 import QtQuick
 import "root:/modules"
 
-// Labelled level control. Drag or click; with keyboard focus ←/→ nudge it (handled by the owner).
+// One level control: an icon tile (click to mute), the label with its value on one line,
+// the bar underneath. Drag or click the bar; with keyboard focus ←/→ nudge it (the owner
+// handles keys).
 Item {
     id: sl
     property string label: ""
     property string glyph: ""
+    property string icon: ""            // app icon path; shown instead of `glyph` when set
     property real value: 0
     property bool muted: false
     property bool selected: false
+    property bool mutable: true
     signal moved(real v)
     signal glyphClicked()
 
-    implicitHeight: DeckUi.f(46)
+    implicitHeight: DeckUi.f(48)
 
     Rectangle {
         anchors.fill: parent
@@ -23,43 +27,73 @@ Item {
         border.color: sl.selected ? DeckUi.selRim : "transparent"
     }
 
-    Text {
-        id: icon
+    Rectangle {
+        id: tile
         anchors.left: parent.left
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: -DeckUi.f(3)
-        width: DeckUi.f(20)
-        text: sl.glyph
-        color: sl.muted ? DeckUi.danger : DeckUi.text
-        font.family: Sh.iconFont
-        font.pixelSize: DeckUi.f(15)
-        MouseArea { anchors.fill: parent; anchors.margins: -DeckUi.f(6); onClicked: sl.glyphClicked() }
+        anchors.verticalCenter: parent.verticalCenter
+        width: DeckUi.f(34); height: width
+        radius: DeckUi.f(8)
+        color: sl.muted ? Qt.alpha(DeckUi.danger, 0.14) : tileMa.containsMouse ? DeckUi.recessed : DeckUi.graphite
+        border.width: 1
+        border.color: sl.muted ? Qt.alpha(DeckUi.danger, 0.35) : DeckUi.line
+        Behavior on color { ColorAnimation { duration: 120 } }
+
+        AppIcon {
+            anchors.centerIn: parent
+            visible: sl.icon.length > 0
+            width: DeckUi.f(20); height: width
+            icon: sl.icon
+            fallbackGlyph: sl.glyph
+            opacity: sl.muted ? 0.45 : 1
+        }
+        Text {
+            anchors.centerIn: parent
+            visible: sl.icon.length === 0
+            text: sl.glyph
+            color: sl.muted ? DeckUi.danger : DeckUi.text
+            font.family: Sh.iconFont
+            font.pixelSize: DeckUi.f(15)
+        }
+        MouseArea {
+            id: tileMa
+            anchors.fill: parent
+            enabled: sl.mutable
+            hoverEnabled: true
+            cursorShape: sl.mutable ? Qt.PointingHandCursor : Qt.ArrowCursor
+            onClicked: sl.glyphClicked()
+        }
     }
+
     Text {
-        anchors.left: track.left
-        anchors.top: parent.top
-        width: track.width - pct.width
+        id: name
+        anchors.left: tile.right
+        anchors.leftMargin: DeckUi.f(12)
+        anchors.right: pct.left
+        anchors.rightMargin: DeckUi.f(8)
+        anchors.bottom: parent.verticalCenter
+        anchors.bottomMargin: DeckUi.f(2)
         text: sl.label
         elide: Text.ElideRight
-        color: DeckUi.dim
+        color: DeckUi.text
         font.family: DeckUi.sans
-        font.pixelSize: DeckUi.f(11.5)
+        font.pixelSize: DeckUi.f(12)
     }
     Text {
         id: pct
         anchors.right: parent.right
-        anchors.top: parent.top
-        text: sl.muted ? "muted" : Math.round(sl.value * 100) + "%"
+        anchors.baseline: name.baseline
+        text: sl.muted ? "Muted" : Math.round(sl.value * 100) + "%"
         color: sl.muted ? DeckUi.danger : DeckUi.faint
-        font.family: DeckUi.sans
+        font.family: DeckUi.mono
         font.pixelSize: DeckUi.f(11)
     }
+
     Item {
         id: track
-        anchors.left: icon.right
+        anchors.left: name.left
         anchors.right: parent.right
-        anchors.leftMargin: DeckUi.f(8)
-        anchors.verticalCenter: icon.verticalCenter
+        anchors.top: parent.verticalCenter
+        anchors.topMargin: DeckUi.f(7)
         height: DeckUi.f(4)
 
         Rectangle { anchors.fill: parent; radius: height / 2; color: DeckUi.line }
@@ -71,7 +105,7 @@ Item {
             Behavior on width { enabled: !ma.pressed; NumberAnimation { duration: 120 } }
         }
         Rectangle {
-            width: DeckUi.f(13); height: width; radius: width / 2
+            width: DeckUi.f(12); height: width; radius: width / 2
             x: track.width * Math.max(0, Math.min(1, sl.value)) - width / 2
             anchors.verticalCenter: parent.verticalCenter
             color: DeckUi.text

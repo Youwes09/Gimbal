@@ -28,7 +28,7 @@ Column {
                     color: DeckUi.text
                     font.family: DeckUi.sans
                     font.pixelSize: DeckUi.f(50)
-                    font.weight: Font.Medium
+                    font.weight: Font.DemiBold
                 }
                 Text {
                     anchors.baseline: clockText.baseline
@@ -70,7 +70,7 @@ Column {
                 color: Status.low ? DeckUi.danger : DeckUi.text
                 font.family: DeckUi.sans
                 font.pixelSize: DeckUi.f(12.5)
-                font.weight: Font.Medium
+                font.weight: Font.DemiBold
             }
             Text {
                 anchors.verticalCenter: parent.verticalCenter
@@ -208,7 +208,7 @@ Column {
                     color: DeckUi.text
                     font.family: DeckUi.sans
                     font.pixelSize: DeckUi.f(14)
-                    font.weight: Font.Medium
+                    font.weight: Font.DemiBold
                 }
                 Text {
                     width: parent.width
@@ -368,7 +368,7 @@ Column {
                     color: DeckUi.text
                     font.family: DeckUi.sans
                     font.pixelSize: DeckUi.f(20)
-                    font.weight: Font.Medium
+                    font.weight: Font.DemiBold
                 }
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
@@ -376,7 +376,7 @@ Column {
                     color: DeckUi.faint
                     font.family: DeckUi.sans
                     font.pixelSize: DeckUi.f(9.5)
-                    font.weight: Font.Medium
+                    font.weight: Font.DemiBold
                     font.letterSpacing: 1.8
                     font.capitalization: Font.AllUppercase
                 }

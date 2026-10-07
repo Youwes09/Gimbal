@@ -141,9 +141,8 @@ Item {
             text: home.greeting
             color: DeckUi.text
             font.family: DeckUi.sans
-            font.pixelSize: DeckUi.f(26)
-            font.weight: Font.Normal
-            font.letterSpacing: DeckUi.f(26) * 0.004
+            font.pixelSize: DeckUi.f(24)
+            font.weight: Font.DemiBold
         }
         Text {
             width: parent.width

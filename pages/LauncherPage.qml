@@ -135,7 +135,7 @@ Item {
         const key = (x.isDir ? "dir:" : "file:") + x.path
         const p = x.path
         const learn = act => { if (x.isDir) Frecency.bump("diropen|" + act + "|" + p) }
-        const asEditor  = () => { Frecency.bump(key); learn("editor");   Places.openEditor(p) }
+        const asEditor  = () => { Frecency.bump(key); learn("editor");   Places.openEditor(p, x.isDir) }
         const asManager = () => { Frecency.bump(key); learn("files");    Places.openManager(x.isDir ? p : Places._parent(p)) }
         const asTerm    = () => { Frecency.bump(key); learn("terminal"); Places.openTerminal(p, x.isDir) }
         const asSmart   = () => { Frecency.bump(key); Places.openSmart(p) }
@@ -786,7 +786,7 @@ Item {
                                     color: DeckUi.text
                                     font.family: DeckUi.sans
                                     font.pixelSize: root.f(root.tRow)
-                                    font.weight: Font.Medium
+                                    font.weight: rowItem.sel ? Font.DemiBold : Font.Medium
                                     elide: Text.ElideRight
                                     width: parent.width
                                 }
@@ -1051,7 +1051,7 @@ Item {
                             color: DeckUi.text
                             font.family: DeckUi.sans
                             font.pixelSize: root.f(root.tHead)
-                            font.weight: Font.Medium
+                            font.weight: Font.DemiBold
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter

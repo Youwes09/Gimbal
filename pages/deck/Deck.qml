@@ -230,7 +230,7 @@ Item {
                             color: DeckUi.text
                             font.family: DeckUi.mono
                             font.pixelSize: DeckUi.f(10)
-                            font.weight: Font.Medium
+                            font.weight: Font.DemiBold
                         }
                     }
                     Text {

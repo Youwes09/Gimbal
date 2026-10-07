@@ -138,23 +138,34 @@ QtObject {
         onNotification: (n) => { n.tracked = true; root._ingest(n) }
     }
 
+    // Nothing is saved until the file has been read: a notification that lands while the
+    // shell is still starting is merged in front of the saved history, never written over it.
+    property bool _loaded: false
     property FileView _file: FileView {
         path: root._path
         onLoaded: {
-            try {
-                const j = JSON.parse(text() || "{}")
-                root.dnd = !!j.dnd
-                root.history = (Array.isArray(j.items) ? j.items : [])
-                    .map(r => Object.assign({}, r, { nid: String(r.nid) }))
-            } catch (e) { root.dnd = false; root.history = [] }
+            let j = {}
+            try { j = JSON.parse(text() || "{}") }
+            catch (e) {
+                // Unreadable: set it aside before the next save replaces it.
+                Quickshell.execDetached(["cp", "-f", root._path, root._path + ".bad"])
+            }
+            const saved = (Array.isArray(j.items) ? j.items : [])
+                .map(r => Object.assign({}, r, { nid: String(r.nid) }))
+            const early = root.history
+            const seen = new Set(early.map(r => String(r.nid)))
+            root.dnd = !!j.dnd
+            root.history = early.concat(saved.filter(r => !seen.has(r.nid))).slice(0, 100)
+            root._loaded = true
             root._syncModel()
+            if (early.length) _saveTimer.restart()
         }
-        onLoadFailed: { root.dnd = false; root.history = []; root._syncModel() }
+        onLoadFailed: { root._loaded = true; root._syncModel() }   // no file yet
     }
 
-    // Written to a temp file and renamed, so a reload never reads a half-written history; a
-    // save still pending when the shell goes down (reload, logout) is flushed rather than lost.
+    // Written to a temp file and renamed, so a reload never reads a half-written history.
     function _save() {
+        if (!root._loaded) return
         Quickshell.execDetached(["sh", "-c",
             "mkdir -p " + root._q(root._dir) + " && printf '%s' "
             + root._q(JSON.stringify({ dnd: root.dnd, items: root.history }))
@@ -165,5 +176,4 @@ QtObject {
         interval: 500
         onTriggered: root._save()
     }
-    Component.onDestruction: if (_saveTimer.running) root._save()
 }

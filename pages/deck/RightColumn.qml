@@ -1,8 +1,9 @@
 import QtQuick
+import Quickshell
 import Quickshell.Services.Pipewire
 import "root:/modules"
 
-// Controls: quick toggles, then a mixer (output, mic, brightness, each app playing).
+// Controls: quick toggles, then sound (output, mic, each app playing) and display brightness.
 Column {
     id: col
     spacing: DeckUi.f(12)
@@ -23,11 +24,16 @@ Column {
             { glyph: Sh.icEye, label: "Stay awake",
               state: DeckUi.stayAwake ? "On" : "Off", on: DeckUi.stayAwake,
               act: () => DeckUi.stayAwake = !DeckUi.stayAwake },
-            { glyph: Sh.icCamera, label: "Screenshot", state: "Region", on: false,
-              act: () => Capture.shot("region") },
-            { glyph: Sh.icRecord, label: "Record",
-              state: Capture.recording ? "Recording" : "Screen", on: Capture.recording, tint: DeckUi.danger,
-              act: () => { if (!Capture.recording) Sh.closeDeck(); Capture.recToggle() } }
+            // Enter cycles Quiet → Balanced → Performance; lit whenever it's off the default.
+            { glyph: Machine.profile === "Performance" ? Sh.icBolt
+                   : Machine.profile === "Quiet" ? Sh.icChevronsDown : Sh.icGauge,
+              label: "Power", state: Machine.hasProfile ? Machine.profile : "Unavailable",
+              on: Machine.hasProfile && Machine.profile !== "Balanced",
+              act: () => Machine.nextProfile() },
+            { glyph: Sh.icMoon, label: "Warm light",
+              state: !Machine.hasWarmth ? "Unavailable"
+                   : Machine.warmth ? (Machine.kelvin > 0 ? Machine.kelvin + "K" : "On") : "Off",
+              on: Machine.warmth, act: () => Machine.toggleWarmth() }
         ]
         property int cur: 0
 
@@ -101,7 +107,7 @@ Column {
                             color: DeckUi.text
                             font.family: DeckUi.sans
                             font.pixelSize: DeckUi.f(12)
-                            font.weight: Font.Medium
+                            font.weight: Font.DemiBold
                         }
                         Text {
                             width: parent.width
@@ -124,7 +130,9 @@ Column {
         }
     }
 
-    // ── mixer ───────────────────────────────────────────────────────────
+    // ── sound + display ─────────────────────────────────────────────────
+    // Sound: the output, the microphone, then one row per app playing (with its own icon).
+    // Display: brightness, pinned to the bottom. One keyboard list runs through both.
     Card {
         id: sound
         width: col.width
@@ -134,41 +142,58 @@ Column {
         readonly property var sink: Pipewire.defaultAudioSink
         readonly property var source: Pipewire.defaultAudioSource
         // App playback streams (Quickshell counts them as sinks); audio binds once tracked.
-        readonly property var streams: Pipewire.nodes.values.filter(n => n.isStream && n.isSink)
-        PwObjectTracker { objects: [sound.source].concat(sound.streams).filter(o => o) }
+        readonly property var streams: Pipewire.nodes.values.filter(n => n.isStream && n.isSink && n.audio)
+        PwObjectTracker { objects: [sound.sink, sound.source].concat(sound.streams).filter(o => o) }
 
-        function _name(n) {
+        function _appName(n) {
             const p = n.properties || {}
             const s = p["application.name"] || n.nickname || n.description || n.name || "App"
             return s.charAt(0).toUpperCase() + s.slice(1)
         }
+        function _appIcon(n) {
+            const p = n.properties || {}
+            for (const k of [p["application.icon_name"], p["application.process.binary"],
+                             String(p["application.name"] || "").toLowerCase()]) {
+                const i = k ? Quickshell.iconPath(k, true) : ""
+                if (i) return i
+            }
+            return ""
+        }
+        // Built-in devices have unhelpful names ("ALC285 Analog"); anything plugged in or
+        // paired (headphones, a USB interface) keeps its own.
+        function _device(n, builtin) {
+            if (!n) return builtin
+            const name = String(n.name || "")
+            return name.indexOf(".pci-") >= 0 ? builtin : (n.description || n.nickname || builtin)
+        }
 
         // Rows in keyboard order; each knows how to read, set and mute itself.
-        readonly property var rows: {
+        readonly property var soundRows: {
             const r = [{
-                key: "out", label: "Output",
+                key: "out", label: sound._device(sound.sink, "Speakers"),
                 glyph: Audio.muted || Audio.volume === 0 ? Sh.icVolumeMute : Audio.volume < 0.5 ? Sh.icVolumeLow : Sh.icVolumeHigh,
                 value: Audio.volume, muted: Audio.muted,
                 set: v => Audio.setVolume(v), mute: () => Audio.toggleMute()
             }]
             if (sound.source && sound.source.audio) r.push({
-                key: "mic", label: "Microphone",
+                key: "mic", label: sound._device(sound.source, "Microphone"),
                 glyph: sound.source.audio.muted ? Sh.icMicOff : Sh.icMic,
                 value: sound.source.audio.volume, muted: sound.source.audio.muted,
                 set: v => sound.source.audio.volume = v, mute: () => sound.source.audio.muted = !sound.source.audio.muted
             })
-            if (Brightness.available) r.push({
-                key: "bri", label: "Brightness", glyph: Sh.icSun,
-                value: sound._briWant >= 0 ? sound._briWant : Brightness.pct, muted: false,
-                set: v => { sound._briWant = v; if (!briThrottle.running) briThrottle.start() }, mute: () => {}
-            })
-            for (const n of sound.streams.filter(s => s.audio)) r.push({
-                key: "app:" + n.id, label: sound._name(n), glyph: Sh.icMusic,
+            for (const n of sound.streams) r.push({
+                key: "app:" + n.id, label: sound._appName(n), glyph: Sh.icMusic, icon: sound._appIcon(n),
                 value: n.audio.volume, muted: n.audio.muted,
                 set: v => n.audio.volume = v, mute: () => n.audio.muted = !n.audio.muted
             })
             return r
         }
+        readonly property var briRow: Brightness.available ? {
+            key: "bri", label: "Brightness", glyph: Sh.icSun, mutable: false,
+            value: sound._briWant >= 0 ? sound._briWant : Brightness.pct, muted: false,
+            set: v => { sound._briWant = v; if (!briThrottle.running) briThrottle.start() }, mute: () => {}
+        } : null
+        readonly property var rows: sound.briRow ? sound.soundRows.concat([sound.briRow]) : sound.soundRows
         property int cur: 0
         onRowsChanged: cur = Math.min(cur, rows.length - 1)
 
@@ -193,19 +218,33 @@ Column {
             }
         }
 
+        component Row_: Slider {
+            required property var modelData
+            required property int index
+            label: modelData.label
+            glyph: modelData.glyph
+            icon: modelData.icon || ""
+            mutable: modelData.mutable !== false
+            value: modelData.value
+            muted: modelData.muted
+            selected: sound.focused && sound.cur === index
+            onMoved: (v) => modelData.set(v)
+            onGlyphClicked: modelData.mute()
+        }
+
         Caption {
             id: soundCap
             anchors { left: parent.left; right: parent.right; top: parent.top; margins: DeckUi.f(16) }
-            text: "Mixer"
-            readonly property int apps: sound.streams.filter(s => s.audio).length
-            trailing: apps + (apps === 1 ? " app" : " apps")
+            text: "Sound"
         }
 
         Flickable {
-            anchors { left: parent.left; right: parent.right; top: soundCap.bottom; bottom: parent.bottom }
+            anchors { left: parent.left; right: parent.right; top: soundCap.bottom; bottom: displayCap.top }
             // Inset by the row highlight's overhang so clipping doesn't cut it.
-            anchors.margins: DeckUi.f(10)
-            anchors.topMargin: DeckUi.f(10)
+            anchors.leftMargin: DeckUi.f(10)
+            anchors.rightMargin: DeckUi.f(10)
+            anchors.topMargin: DeckUi.f(6)
+            anchors.bottomMargin: DeckUi.f(10)
             contentHeight: mix.height + DeckUi.f(12)
             clip: true
             boundsBehavior: Flickable.StopAtBounds
@@ -215,25 +254,44 @@ Column {
                 x: DeckUi.f(6)
                 y: DeckUi.f(6)
                 width: parent.width - DeckUi.f(12)
-                spacing: DeckUi.f(14)
+                spacing: DeckUi.f(10)
 
                 Repeater {
-                    model: sound.rows
-                    Slider {
-                        required property var modelData
-                        required property int index
-                        width: mix.width
-                        label: modelData.label
-                        glyph: modelData.glyph
-                        value: modelData.value
-                        muted: modelData.muted
-                        selected: sound.focused && sound.cur === index
-                        onMoved: (v) => modelData.set(v)
-                        onGlyphClicked: modelData.mute()
-                    }
+                    model: sound.soundRows
+                    Row_ { width: mix.width }
+                }
+                Text {
+                    visible: sound.streams.length === 0
+                    width: mix.width
+                    topPadding: DeckUi.f(4)
+                    leftPadding: DeckUi.f(46)
+                    text: "Apps playing sound show up here"
+                    color: DeckUi.faint
+                    font.family: DeckUi.sans
+                    font.pixelSize: DeckUi.f(11)
+                }
+            }
+        }
+
+        Caption {
+            id: displayCap
+            visible: sound.briRow !== null
+            anchors { left: parent.left; right: parent.right; bottom: briSlot.top; margins: DeckUi.f(16) }
+            anchors.bottomMargin: DeckUi.f(10)
+            text: "Display"
+        }
+        Item {
+            id: briSlot
+            anchors { left: parent.left; right: parent.right; bottom: parent.bottom; margins: DeckUi.f(16) }
+            height: sound.briRow ? DeckUi.f(48) : 0
+            Loader {
+                anchors.fill: parent
+                active: sound.briRow !== null
+                sourceComponent: Row_ {
+                    modelData: sound.briRow
+                    index: sound.rows.length - 1
                 }
             }
         }
     }
-
 }

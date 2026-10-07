@@ -59,7 +59,7 @@ QtObject {
         Frecency.bump("diropen|" + how + "|" + path)
         if (how === "files") Places.openManager(path)
         else if (how === "terminal") Places.openTerminal(path, true)
-        else if (how === "editor") Places.openEditor(path)
+        else if (how === "editor") Places.openEditor(path, true)
         else Places.openSmart(path)
     }
 }

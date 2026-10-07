@@ -86,7 +86,7 @@ Rectangle {
                 color: DeckUi.text
                 font.family: DeckUi.sans
                 font.pixelSize: DeckUi.f(12.5)
-                font.weight: Font.Medium
+                font.weight: Font.DemiBold
             }
             Text {
                 id: age

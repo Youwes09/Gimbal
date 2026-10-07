@@ -42,11 +42,10 @@ QtObject {
     readonly property int innerRadius: f(8)
     readonly property int badgeRadius: f(6)
 
-    // Inter for the interface; Geist Mono only for eyebrows, key hints and metadata.
-    property FontLoader _sans: FontLoader { source: "root:/assets/fonts/InterVariable.ttf" }
-    property FontLoader _mono: FontLoader { source: "root:/assets/fonts/GeistMonoVariable.ttf" }
-    readonly property string sans: _sans.status === FontLoader.Ready ? _sans.name : Sh.font
-    readonly property string mono: _mono.status === FontLoader.Ready ? _mono.name : Sh.font
+    // One face everywhere: the shell's own Adwaita Mono. `sans`/`mono` stay as names so a
+    // surface can still mark what is body text and what is metadata.
+    readonly property string sans: Sh.font
+    readonly property string mono: Sh.font
 
     // Keyboard focus. Arrows move spatially; when a zone runs out of room in a direction it
     // hands focus on with go(). Left to right: media | rail | center | quick, mixer under quick.

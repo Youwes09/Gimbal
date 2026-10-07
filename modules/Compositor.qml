@@ -41,6 +41,24 @@ QtObject {
         return best
     }
 
+    // An editor window that already has this folder open. VS Code-family titles carry the
+    // workspace name as its own " - " segment ("file - Provisional - VSCodium"); Zed and
+    // others put it first. Matches on the folder's name, within editor windows only.
+    readonly property var _editors: ["codium", "vscodium", "code", "code-oss", "cursor", "zed", "dev.zed.zed"]
+    function findEditorFor(path) {
+        const name = String(path || "").replace(/\/+$/, "").split("/").pop()
+        if (!name) return null
+        const ed = root._norm(String(Config.editor).split(/\s+/)[0].split("/").pop())
+        const tls = (ToplevelManager.toplevels && ToplevelManager.toplevels.values) || []
+        for (const tl of tls) {
+            const a = root._norm(tl.appId)
+            if (a !== ed && root._editors.indexOf(a) < 0) continue
+            const parts = String(tl.title || "").split(/\s+[-—]\s+/)
+            if (parts.indexOf(name) >= 0) return tl
+        }
+        return null
+    }
+
     function findTray(names) {
         const pats = (names || []).filter(s => s && String(s).length).map(root._norm)
         if (!pats.length) return null

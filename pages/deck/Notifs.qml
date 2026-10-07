@@ -59,7 +59,7 @@ Item {
             color: DeckUi.text
             font.family: DeckUi.sans
             font.pixelSize: DeckUi.f(24)
-            font.weight: Font.Medium
+            font.weight: Font.DemiBold
         }
         Text {
             text: nt.count === 0 ? "Nothing new" : nt.count + (nt.count === 1 ? " notification" : " notifications")
