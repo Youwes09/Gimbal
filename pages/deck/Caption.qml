@@ -6,7 +6,6 @@ Item {
     id: cap
     property string text: ""
     property string trailing: ""
-    property color tint: DeckUi.faint
 
     implicitHeight: label.implicitHeight
     height: implicitHeight
@@ -16,7 +15,7 @@ Item {
         anchors.left: parent.left
         anchors.verticalCenter: parent.verticalCenter
         text: cap.text
-        color: cap.tint
+        color: DeckUi.faint
         font.family: DeckUi.sans
         font.pixelSize: DeckUi.f(11.5)
         font.weight: Font.Medium

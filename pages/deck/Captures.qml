@@ -175,23 +175,12 @@ Item {
         }
     }
 
-    Column {
+    Text {
         anchors.centerIn: grid
         visible: cap.files.length === 0
-        spacing: DeckUi.f(8)
-        Text {
-            anchors.horizontalCenter: parent.horizontalCenter
-            text: Sh.icImages
-            color: DeckUi.faint
-            font.family: Sh.iconFont
-            font.pixelSize: DeckUi.f(28)
-        }
-        Text {
-            anchors.horizontalCenter: parent.horizontalCenter
-            text: "No captures yet"
-            color: DeckUi.dim
-            font.family: DeckUi.sans
-            font.pixelSize: DeckUi.f(13)
-        }
+        text: "No captures"
+        color: DeckUi.faint
+        font.family: DeckUi.sans
+        font.pixelSize: DeckUi.f(12)
     }
 }

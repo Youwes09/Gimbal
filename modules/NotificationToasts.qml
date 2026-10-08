@@ -32,18 +32,6 @@ PanelWindow {
     Region { id: toastRegion; item: clipArea }
     Region { id: emptyRegion }
 
-    function _strip(s) {
-        return String(s || "")
-            .replace(/<[^>]+>/g, "")
-            .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
-            .replace(/&#39;|&apos;/g, "'").replace(/&quot;/g, '"')
-            .replace(/\s+/g, " ").trim()
-    }
-    function _iconSource(s) {
-        if (!s || s.length === 0) return ""
-        return (s.indexOf("/") === 0 || s.indexOf("://") >= 0) ? s : Quickshell.iconPath(s, true)
-    }
-
     Item {
         id: clipArea
         x: (win.width - win.cardW) / 2
@@ -174,7 +162,7 @@ PanelWindow {
                                     anchors.left: parent.left
                                     anchors.right: appName.left
                                     anchors.rightMargin: Sh.fs(10)
-                                    text: win._strip(card.model.summary) || String(card.model.app)
+                                    text: Notifications.plain(card.model.summary) || String(card.model.app)
                                     color: DeckUi.text
                                     elide: Text.ElideRight
                                     font.family: DeckUi.sans
@@ -194,7 +182,7 @@ PanelWindow {
                             Text {
                                 width: parent.width
                                 visible: text.length > 0
-                                text: win._strip(card.model.body)
+                                text: Notifications.plain(card.model.body)
                                 color: DeckUi.dim
                                 elide: Text.ElideRight
                                 font.family: DeckUi.sans

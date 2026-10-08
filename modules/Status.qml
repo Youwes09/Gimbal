@@ -38,6 +38,16 @@ QtObject {
     readonly property string day:  root._days[root.now.getDay()]
     readonly property string date: root._months[root.now.getMonth()] + " " + root.now.getDate()
 
+    // Compact age of a timestamp (ms): now, 5m, 3h, 2d.
+    function ago(ms) {
+        if (!ms) return ""
+        const s = Math.max(0, Math.floor((Date.now() - ms) / 1000))
+        if (s < 45) return "now"
+        if (s < 3600) return Math.max(1, Math.round(s / 60)) + "m"
+        if (s < 86400) return Math.round(s / 3600) + "h"
+        return Math.round(s / 86400) + "d"
+    }
+
     readonly property var _bat: UPower.displayDevice
     readonly property bool hasBattery: root._bat && root._bat.isLaptopBattery
     readonly property int  pct: root.hasBattery ? Math.round(root._bat.percentage * 100) : 0

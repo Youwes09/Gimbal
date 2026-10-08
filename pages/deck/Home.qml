@@ -33,23 +33,6 @@ Item {
         Notifications.dismiss(r.nid)
     }
 
-    function ago(ms) {
-        if (!ms) return ""
-        const s = Math.max(0, (Date.now() - ms) / 1000)
-        if (s < 3600) return Math.max(1, Math.round(s / 60)) + "m"
-        if (s < 86400) return Math.round(s / 3600) + "h"
-        return Math.round(s / 86400) + "d"
-    }
-    function strip(s) {
-        return String(s || "").replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&lt;/g, "<")
-            .replace(/&gt;/g, ">").replace(/&#39;|&apos;/g, "'").replace(/&quot;/g, '"').replace(/\s+/g, " ").trim()
-    }
-    function noteIcon(r) {
-        const s = (/^image:\/\/qsimage/.test(r.image) ? "" : r.image) || r.appIcon || r.desktopEntry
-        if (!s) return ""
-        return (s.indexOf("/") === 0 || s.indexOf("://") >= 0) ? s : Quickshell.iconPath(s, true)
-    }
-
     readonly property real rowH: DeckUi.f(40)
     readonly property real rowGap: DeckUi.f(2)
     // As many notifications as the right list has room for.
@@ -209,21 +192,11 @@ Item {
                     title: modelData.name
                     subtitle: modelData.branch.length ? modelData.branch : modelData.short
                     badge: modelData.dirty > 0 ? "+" + modelData.dirty : ""
-                    meta: home.ago(modelData.last)
+                    meta: Status.ago(modelData.last)
                     selected: home.kb && home.pane === "proj" && home.idx === index
                     onClicked: home.openProject(modelData)
                 }
             }
-        }
-        Text {
-            anchors { left: parent.left; top: projCap.bottom; topMargin: DeckUi.f(18) }
-            width: lists.colW
-            visible: Projects.list.length === 0
-            wrapMode: Text.WordWrap
-            text: "Folders you open from the launcher will show up here."
-            color: DeckUi.faint
-            font.family: DeckUi.sans
-            font.pixelSize: DeckUi.f(12)
         }
 
         // Notifications
@@ -249,33 +222,14 @@ Item {
                         readonly property var rec: { Notifications.historyModel.count; return Notifications.historyModel.get(index) }
                         width: parent.width
                         height: home.rowH
-                        icon: rec ? home.noteIcon(rec) : ""
+                        icon: rec ? Notifications.iconFor(rec) : ""
                         glyph: Sh.icBell
-                        title: rec ? home.strip(rec.summary) || rec.app : ""
-                        subtitle: rec ? home.strip(rec.body) || rec.app : ""
-                        meta: rec ? home.ago(rec.time) : ""
+                        title: rec ? Notifications.plain(rec.summary) || rec.app : ""
+                        subtitle: rec ? Notifications.plain(rec.body) || rec.app : ""
+                        meta: rec ? Status.ago(rec.time) : ""
                         selected: home.kb && home.pane === "notes" && home.idx === index
                         onClicked: home.openNote(index)
                     }
-                }
-            }
-            Column {
-                anchors.centerIn: parent
-                visible: Notifications.historyModel.count === 0
-                spacing: DeckUi.f(6)
-                Text {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    text: Sh.icSparkles
-                    color: DeckUi.faint
-                    font.family: Sh.iconFont
-                    font.pixelSize: DeckUi.f(20)
-                }
-                Text {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    text: "All caught up"
-                    color: DeckUi.dim
-                    font.family: DeckUi.sans
-                    font.pixelSize: DeckUi.f(12)
                 }
             }
         }

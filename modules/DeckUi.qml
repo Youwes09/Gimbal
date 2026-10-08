@@ -21,8 +21,6 @@ QtObject {
     readonly property color text:     "#ffffff"
     readonly property color dim:      "#9c9c9d"   // ash: secondary text
     readonly property color faint:    "#6a6b6c"   // smoke: muted labels
-    readonly property color mist:     "#e6e6e6"   // the one filled surface: on / primary
-    readonly property color iron:     "#454647"   // text and glyphs sitting on mist
     readonly property color accent:   Theme.accent
     readonly property color danger:   "#ff6363"
     // Glyphs sitting on an accent fill: dark on a light accent, white on a deep one.

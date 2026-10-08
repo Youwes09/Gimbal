@@ -73,10 +73,6 @@ QtObject {
         return bs >= 3 ? best : null
     }
 
-    function isRunning(names) {
-        return root.find(names) !== null || root.findTray(names) !== null
-    }
-
     function spawn(argv) {
         if (!argv || !argv.length) return
         Quickshell.execDetached(

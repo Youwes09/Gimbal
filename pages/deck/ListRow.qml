@@ -13,7 +13,6 @@ Rectangle {
     property string meta: ""
     property string badge: ""         // short accent tag, e.g. "+19"
     property bool selected: false
-    property bool dimmed: false
     signal clicked()
 
     implicitHeight: DeckUi.f(40)
@@ -55,7 +54,6 @@ Rectangle {
         anchors.rightMargin: DeckUi.f(12)
         anchors.verticalCenter: parent.verticalCenter
         height: title.implicitHeight
-        opacity: row.dimmed ? 0.6 : 1
 
         Text {
             id: title

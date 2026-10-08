@@ -8,11 +8,11 @@ Item {
     id: ses
 
     readonly property var actions: [
-        { id: "rest",     glyph: Sh.icLock,    label: "Rest",      hint: "Clock screen, any key returns" },
-        { id: "suspend",  glyph: Sh.icMoon,    label: "Suspend",   hint: "Sleep until you open the lid" },
-        { id: "logout",   glyph: Sh.icLogOut,  label: "Log out",   hint: "End the mango session",  confirm: true },
-        { id: "reboot",   glyph: Sh.icRotate,  label: "Reboot",    hint: "Restart the machine",    confirm: true },
-        { id: "poweroff", glyph: Sh.icPower,   label: "Shut down", hint: "Power off",              confirm: true }
+        { id: "rest",     glyph: Sh.icLock,    label: "Rest" },
+        { id: "suspend",  glyph: Sh.icMoon,    label: "Suspend" },
+        { id: "logout",   glyph: Sh.icLogOut,  label: "Log out",   confirm: true },
+        { id: "reboot",   glyph: Sh.icRotate,  label: "Reboot",    confirm: true },
+        { id: "poweroff", glyph: Sh.icPower,   label: "Shut down", confirm: true }
     ]
     property int cur: 0
     property string armed: ""
@@ -71,7 +71,7 @@ Item {
     Row {
         id: row
         anchors.centerIn: parent
-        anchors.verticalCenterOffset: DeckUi.f(10)
+        anchors.verticalCenterOffset: header.height / 2
         spacing: DeckUi.f(14)
         readonly property real w: Math.min(DeckUi.f(118), (ses.width - spacing * 4) / 5)
 
@@ -103,10 +103,10 @@ Item {
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.bottom: parent.bottom
                     anchors.bottomMargin: DeckUi.f(16)
-                    text: ab.arm ? "Again to confirm" : ab.modelData.label
+                    text: ab.arm ? "Confirm" : ab.modelData.label
                     color: ab.arm ? DeckUi.danger : DeckUi.text
                     font.family: DeckUi.sans
-                    font.pixelSize: DeckUi.f(ab.arm ? 10.5 : 12.5)
+                    font.pixelSize: DeckUi.f(12.5)
                     font.weight: Font.Medium
                 }
                 MouseArea {
@@ -119,15 +119,5 @@ Item {
                 }
             }
         }
-    }
-
-    Text {
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.top: row.bottom
-        anchors.topMargin: DeckUi.f(18)
-        text: ses.actions[ses.cur].hint
-        color: DeckUi.faint
-        font.family: DeckUi.sans
-        font.pixelSize: DeckUi.f(11.5)
     }
 }

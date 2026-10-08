@@ -260,16 +260,6 @@ Column {
                     model: sound.soundRows
                     Row_ { width: mix.width }
                 }
-                Text {
-                    visible: sound.streams.length === 0
-                    width: mix.width
-                    topPadding: DeckUi.f(4)
-                    leftPadding: DeckUi.f(46)
-                    text: "Apps playing sound show up here"
-                    color: DeckUi.faint
-                    font.family: DeckUi.sans
-                    font.pixelSize: DeckUi.f(11)
-                }
             }
         }
 

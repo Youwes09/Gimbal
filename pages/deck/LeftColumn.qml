@@ -156,25 +156,13 @@ Column {
             trailing: media.p ? media.p.identity : ""
         }
 
-        Column {
+        Text {
             anchors.centerIn: parent
-            anchors.verticalCenterOffset: DeckUi.f(10)
             visible: media.p === null
-            spacing: DeckUi.f(6)
-            Text {
-                anchors.horizontalCenter: parent.horizontalCenter
-                text: Sh.icMusic
-                color: DeckUi.faint
-                font.family: Sh.iconFont
-                font.pixelSize: DeckUi.f(20)
-            }
-            Text {
-                anchors.horizontalCenter: parent.horizontalCenter
-                text: "Nothing playing"
-                color: DeckUi.faint
-                font.family: DeckUi.sans
-                font.pixelSize: DeckUi.f(12)
-            }
+            text: "Nothing playing"
+            color: DeckUi.faint
+            font.family: DeckUi.sans
+            font.pixelSize: DeckUi.f(12)
         }
 
         // Two rows that never meet: the track on top, transport and progress along the bottom.

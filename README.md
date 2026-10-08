@@ -19,7 +19,7 @@ It also owns your wallpaper (static / GIF / video, cross-faded on switch), repai
 **Deck**
 - Left: clock and battery, now playing (art, seek, controls), CPU / RAM / GPU / temperature as matching ring tiles
 - Centre, with a section rail:
-  - **Home** — greeting and a one-line summary, the folders you open most from the launcher with their git branch and uncommitted changes, your most-used apps, the latest notifications
+  - **Home** — your most-used apps, the folders you open most from the launcher with their git branch and uncommitted changes, the latest notifications
   - **Notifications** — full history; open, dismiss, clear, Focus (Do Not Disturb)
   - **Captures** — newest screenshots and recordings; open, copy, trash; take new ones
   - **Session** — rest, suspend, log out, reboot, shut down (the last three ask twice)

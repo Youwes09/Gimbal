@@ -29,6 +29,21 @@ QtObject {
         return root._c("timeout", 6000)
     }
 
+    // Display helpers shared by the toasts, the deck's notification rows and Home.
+    // Notification text arrives as limited HTML; this flattens it to one plain line.
+    function plain(s) {
+        return String(s || "").replace(/<[^>]+>/g, "")
+            .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+            .replace(/&#39;|&apos;/g, "'").replace(/&quot;/g, '"').replace(/\s+/g, " ").trim()
+    }
+    // Live notification images (image://qsimage) die with the notification; use the app icon then.
+    function iconFor(r) {
+        if (!r) return ""
+        const s = (/^image:\/\/qsimage/.test(r.image || "") ? "" : r.image) || r.appIcon || r.desktopEntry
+        if (!s) return ""
+        return (s.indexOf("/") === 0 || s.indexOf("://") >= 0) ? s : Quickshell.iconPath(s, true)
+    }
+
     function _q(s) { return "'" + String(s).replace(/'/g, "'\\''") + "'" }
 
     function _rec(n) {

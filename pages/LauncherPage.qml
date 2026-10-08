@@ -433,7 +433,6 @@ Item {
         Sh.closeLauncher()
     }
     function activate()    { root.activateWith("") }
-    function activateAlt() { root.activateWith("terminal") }
     function _enter(ev) {
         ev.accepted = true
         if (ev.isAutoRepeat || root._fired) return

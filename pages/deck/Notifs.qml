@@ -95,23 +95,12 @@ Item {
         remove: Transition { NumberAnimation { property: "opacity"; to: 0; duration: 140 } }
     }
 
-    Column {
+    Text {
         anchors.centerIn: list
         visible: nt.count === 0
-        spacing: DeckUi.f(8)
-        Text {
-            anchors.horizontalCenter: parent.horizontalCenter
-            text: Sh.icSparkles
-            color: DeckUi.faint
-            font.family: Sh.iconFont
-            font.pixelSize: DeckUi.f(28)
-        }
-        Text {
-            anchors.horizontalCenter: parent.horizontalCenter
-            text: "All caught up"
-            color: DeckUi.dim
-            font.family: DeckUi.sans
-            font.pixelSize: DeckUi.f(13)
-        }
+        text: "No notifications"
+        color: DeckUi.faint
+        font.family: DeckUi.sans
+        font.pixelSize: DeckUi.f(12)
     }
 }
