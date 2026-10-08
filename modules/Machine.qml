@@ -68,14 +68,14 @@ QtObject {
 
     // ── keyboard backlight ──────────────────────────────────────────────
     // Brightness via asusctl; the colour follows the wallpaper's accent.
-    property string kbd: ""              // Off / Low / Med / High; "" until read or without asusctl
+    readonly property var kbdLevels: ["Off", "Low", "Med", "High"]
+    property string kbd: ""              // one of kbdLevels; "" until read or without asusctl
     readonly property bool hasKbd: root.kbd.length > 0
-    property string _kbdOn: "High"       // the level the toggle turns back on to
 
-    function toggleKbd() {
+    function nextKbd() {
         if (!root.hasKbd) return
-        if (root.kbd !== "Off") root._kbdOn = root.kbd
-        root.kbd = root.kbd === "Off" ? root._kbdOn : "Off"
+        const i = root.kbdLevels.indexOf(root.kbd)
+        root.kbd = root.kbdLevels[(i + 1) % root.kbdLevels.length]   // optimistic; read back below
         _setKbd.command = ["asusctl", "leds", "set", root.kbd.toLowerCase()]
         _setKbd.running = true
     }
