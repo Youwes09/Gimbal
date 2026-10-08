@@ -144,13 +144,16 @@ Column {
             onTriggered: media.p.positionChanged()
         }
 
-        function clock(s) {
-            s = Math.max(0, Math.floor(s))
-            return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0")
+        Caption {
+            id: mediaCap
+            anchors { left: parent.left; right: parent.right; top: parent.top; margins: DeckUi.f(16) }
+            text: "Now playing"
+            trailing: media.p ? media.p.identity : ""
         }
 
         Column {
             anchors.centerIn: parent
+            anchors.verticalCenterOffset: DeckUi.f(10)
             visible: media.p === null
             spacing: DeckUi.f(6)
             Text {
@@ -169,15 +172,47 @@ Column {
             }
         }
 
-        // Two rows that never meet: the track on top, transport and progress along the bottom.
+        // Flat transport key: just the glyph, filled only on hover or keyboard focus.
+        component Ctl: Rectangle {
+            id: c
+            property string glyph: ""
+            property int i: 0
+            property real size: DeckUi.f(15)
+            readonly property bool sel: media.focused && media.btn === c.i
+            height: DeckUi.f(32)
+            radius: DeckUi.innerRadius
+            color: c.sel ? DeckUi.sel : cma.containsMouse ? DeckUi.hover : "transparent"
+            border.width: 1
+            border.color: c.sel ? DeckUi.selRim : "transparent"
+            Behavior on color { ColorAnimation { duration: 120 } }
+            Text {
+                anchors.centerIn: parent
+                text: c.glyph
+                color: DeckUi.text
+                font.family: Sh.iconFont
+                font.pixelSize: c.size
+            }
+            MouseArea {
+                id: cma
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: media.act(c.i)
+            }
+        }
+
+        // Cover as tall as the body allows; track and transport centred beside it.
         Item {
-            anchors.fill: parent
+            id: body
+            anchors { left: parent.left; right: parent.right; bottom: parent.bottom; top: mediaCap.bottom }
             anchors.margins: DeckUi.f(16)
+            anchors.topMargin: DeckUi.f(12)
             visible: media.p !== null
 
             ClippingRectangle {
                 id: art
-                width: DeckUi.f(52); height: width
+                height: body.height
+                width: height
                 radius: DeckUi.innerRadius
                 color: DeckUi.graphite
                 Text {
@@ -185,103 +220,74 @@ Column {
                     text: Sh.icMusic
                     color: DeckUi.faint
                     font.family: Sh.iconFont
-                    font.pixelSize: DeckUi.f(18)
+                    font.pixelSize: DeckUi.f(22)
                 }
                 Image {
                     anchors.fill: parent
                     source: media.p ? media.p.trackArtUrl : ""
                     fillMode: Image.PreserveAspectCrop
                     asynchronous: true
-                    sourceSize.width: DeckUi.f(104); sourceSize.height: DeckUi.f(104)
-                }
-            }
-            Column {
-                anchors.left: art.right
-                anchors.leftMargin: DeckUi.f(12)
-                anchors.right: parent.right
-                anchors.verticalCenter: art.verticalCenter
-                spacing: DeckUi.f(3)
-                Text {
-                    width: parent.width
-                    elide: Text.ElideRight
-                    text: media.p ? media.p.trackTitle : ""
-                    color: DeckUi.text
-                    font.family: DeckUi.sans
-                    font.pixelSize: DeckUi.f(13)
-                    font.weight: Font.Medium
-                }
-                Text {
-                    width: parent.width
-                    elide: Text.ElideRight
-                    text: media.p ? [media.p.trackArtist, media.p.identity].filter(s => s).join("  ·  ") : ""
-                    color: DeckUi.faint
-                    font.family: DeckUi.sans
-                    font.pixelSize: DeckUi.f(11.5)
+                    sourceSize.width: art.width * 2; sourceSize.height: art.height * 2
                 }
             }
 
-            Row {
-                id: transport
-                anchors.left: parent.left
-                anchors.bottom: parent.bottom
-                spacing: DeckUi.f(4)
-                Button {
-                    width: DeckUi.f(30); implicitHeight: DeckUi.f(28)
-                    glyph: Sh.icSkipBack
-                    glyphSize: DeckUi.f(12)
-                    selected: media.focused && media.btn === 0
-                    onClicked: media.act(0)
-                }
-                Button {
-                    width: DeckUi.f(30); implicitHeight: DeckUi.f(28)
-                    glyph: Status.playing ? Sh.icPause : Sh.icPlay
-                    glyphSize: DeckUi.f(12)
-                    selected: media.focused && media.btn === 1
-                    onClicked: media.act(1)
-                }
-                Button {
-                    width: DeckUi.f(30); implicitHeight: DeckUi.f(28)
-                    glyph: Sh.icSkipForward
-                    glyphSize: DeckUi.f(12)
-                    selected: media.focused && media.btn === 2
-                    onClicked: media.act(2)
-                }
-            }
+            Item {
+                anchors { left: art.right; leftMargin: DeckUi.f(12); right: parent.right; top: parent.top; bottom: parent.bottom }
 
-            Text {
-                id: remain
-                anchors.right: parent.right
-                anchors.verticalCenter: transport.verticalCenter
-                visible: seekTrack.len > 0
-                text: media.p ? "-" + media.clock(seekTrack.len - media.p.position) : ""
-                color: DeckUi.faint
-                font.family: DeckUi.mono
-                font.pixelSize: DeckUi.f(10.5)
-            }
-            Rectangle {
-                id: seekTrack
-                anchors.left: transport.right
-                anchors.leftMargin: DeckUi.f(12)
-                anchors.right: remain.visible ? remain.left : parent.right
-                anchors.rightMargin: remain.visible ? DeckUi.f(10) : 0
-                anchors.verticalCenter: transport.verticalCenter
-                height: DeckUi.f(3)
-                radius: height / 2
-                color: DeckUi.line
-                readonly property real len: media.p ? media.p.length : 0
+                Column {
+                    anchors { left: parent.left; right: parent.right; top: parent.top; topMargin: DeckUi.f(4) }
+                    spacing: DeckUi.f(3)
+                    Text {
+                        width: parent.width
+                        horizontalAlignment: Text.AlignHCenter
+                        elide: Text.ElideRight
+                        text: media.p ? media.p.trackTitle : ""
+                        color: DeckUi.text
+                        font.family: DeckUi.sans
+                        font.pixelSize: DeckUi.f(13.5)
+                        font.weight: Font.DemiBold
+                    }
+                    Text {
+                        width: parent.width
+                        horizontalAlignment: Text.AlignHCenter
+                        elide: Text.ElideRight
+                        text: media.p ? media.p.trackArtist : ""
+                        color: DeckUi.dim
+                        font.family: DeckUi.sans
+                        font.pixelSize: DeckUi.f(12)
+                    }
+                }
+
                 Rectangle {
-                    width: seekTrack.len > 0 ? parent.width * Math.min(1, media.p.position / seekTrack.len) : 0
-                    height: parent.height
+                    id: seekTrack
+                    anchors { left: parent.left; right: parent.right; bottom: transport.top; margins: DeckUi.f(6); bottomMargin: DeckUi.f(8) }
+                    height: DeckUi.f(3)
                     radius: height / 2
-                    color: DeckUi.accent
+                    color: DeckUi.line
+                    readonly property real len: media.p ? media.p.length : 0
+                    Rectangle {
+                        width: seekTrack.len > 0 ? parent.width * Math.min(1, media.p.position / seekTrack.len) : 0
+                        height: parent.height
+                        radius: height / 2
+                        color: DeckUi.accent
+                    }
+                    MouseArea {
+                        anchors.fill: parent
+                        anchors.margins: -DeckUi.f(6)
+                        enabled: media.p !== null && media.p.canSeek && seekTrack.len > 0
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: (m) => media.p.position =
+                            Math.max(0, Math.min(1, (m.x - DeckUi.f(6)) / seekTrack.width)) * seekTrack.len
+                    }
                 }
-                MouseArea {
-                    anchors.fill: parent
-                    anchors.margins: -DeckUi.f(8)
-                    enabled: media.p !== null && media.p.canSeek && seekTrack.len > 0
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: (m) => media.p.position =
-                        Math.max(0, Math.min(1, (m.x - DeckUi.f(8)) / seekTrack.width)) * seekTrack.len
+
+                Row {
+                    id: transport
+                    anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+                    readonly property real kw: width / 3
+                    Ctl { width: transport.kw; i: 0; glyph: Sh.icSkipBack }
+                    Ctl { width: transport.kw; i: 1; glyph: Status.playing ? Sh.icPause : Sh.icPlay; size: DeckUi.f(18) }
+                    Ctl { width: transport.kw; i: 2; glyph: Sh.icSkipForward }
                 }
             }
         }
@@ -294,7 +300,7 @@ Column {
         spacing: DeckUi.f(12)
         width: col.innerW
         readonly property real tw: (col.innerW - spacing) / 2
-        readonly property real th: tiles.tw   // square; now playing takes what is left
+        readonly property real th: tiles.tw * 0.8   // now playing takes what is left
 
         component Tile: Card {
             id: tile
