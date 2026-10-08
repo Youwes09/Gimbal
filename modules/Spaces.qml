@@ -82,6 +82,7 @@ QtObject {
                          focused: !!c.is_focused, floating: !!c.is_floating,
                          x: c.x, y: c.y, w: c.width, h: c.height }))
         const fewer = list.length < root.clients.length
+        root._park(list)
         root.clients = list
         root._place(list)
         // Closing windows waits longer before it's saved, so a logout that closes everything
@@ -105,6 +106,23 @@ QtObject {
             }
         }
         root.monitors = m
+    }
+
+    // A window closed into the tray keeps its place in the layout while the app runs, so a
+    // restore wakes it back onto its workspace.
+    property var _parked: ({})        // appid → last window
+    function _park(list) {
+        const open = {}
+        for (const c of list) open[c.appid] = true
+        const parked = {}
+        for (const a in root._parked) if (!open[a]) parked[a] = root._parked[a]
+        for (const c of root.clients)
+            if (c.appid && !open[c.appid] && Compositor.findTray(root._names(c.appid))) parked[c.appid] = c
+        root._parked = parked
+    }
+    function _names(appid) {
+        const e = DesktopEntries.heuristicLookup(appid)
+        return e ? [appid, e.startupClass, e.id, e.name] : [appid]
     }
 
     // Snapshots
@@ -139,7 +157,9 @@ QtObject {
         }
     }
     function _snapshot(done) {
-        const list = root.clients.filter(c => c.appid && c.tag > 0)
+        const parked = Object.keys(root._parked).map(a => root._parked[a])
+            .filter(c => Compositor.findTray(root._names(c.appid)))
+        const list = root.clients.concat(parked).filter(c => c.appid && c.tag > 0)
         if (!list.length || root._procs.running) return
         root._procs.list = list
         root._procs.done = done
@@ -210,10 +230,11 @@ QtObject {
             pending.push({ appid: w.appid, tag: w.tag })
             const argv = root._argv(w)
             // Terminals open one window per launch; anything else restores its own windows.
-            const key = root._terminal(w.appid) ? "" : argv.join(" ")
-            if (!argv.length || (key && launched[key])) continue
+            const key = root._terminal(w.appid) ? "" : w.appid + " " + argv.join(" ")
+            if (key && launched[key]) continue
             if (key) launched[key] = true
-            Compositor.spawn(argv)
+            // Running in the tray: wake it, relaunching only if that brings up no window.
+            Compositor.wake(root._names(w.appid), () => { if (argv.length) Compositor.spawn(argv) })
         }
         const known = {}
         for (const c of root.clients) known[c.id] = true

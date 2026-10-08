@@ -10,7 +10,7 @@ QtObject {
     id: root
 
     function _norm(s) {
-        return String(s || "").toLowerCase().replace(/\.desktop$/, "")
+        return String(s || "").toLowerCase().replace(/\.desktop$/, "").replace(/_status_icon_\d+$/, "")
     }
 
     function _score(cands, pats) {
@@ -94,12 +94,43 @@ QtObject {
         if (pats.length && root._recentlyKilled(pats)) { if (onMiss) onMiss(); return }
         const tl = root.find(names)
         if (tl) { tl.activate(); return }
-        const tr = root.findTray(names)
-        if (tr) { tr.activate(); return }
-        if (onMiss) onMiss()
+        root.wake(names, onMiss)
     }
 
-    function focus(names) { root.raiseOrRun(names, null) }
+    // Brings back an app that lives in the tray with no window. Not every tray icon opens a
+    // window when clicked (menu-only icons, apps that ignore Activate), so when none shows up
+    // in time, onMiss runs instead: a second launch of a single-instance app raises it.
+    function wake(names, onMiss) {
+        const tr = root.findTray(names)
+        if (!tr || tr.onlyMenu) { if (onMiss) onMiss(); return }
+        tr.activate()
+        root._waking = root._waking.concat([{ names: names, onMiss: onMiss, until: Date.now() + 1500 }])
+        _wakeCheck.start()
+    }
+    property var _waking: []
+    property Timer _wakeCheck: Timer {
+        interval: 150; repeat: true
+        onTriggered: {
+            const now = Date.now(), left = []
+            for (const w of root._waking) {
+                if (root.find(w.names)) continue
+                if (now < w.until) left.push(w)
+                else if (w.onMiss) w.onMiss()
+            }
+            root._waking = left
+            if (!left.length) stop()
+        }
+    }
+
+    // Raises an app's window, waking it from the tray if that's where it is. Nothing is
+    // launched unless the app is running.
+    function focus(names) {
+        if (!root.findTray(names)) { root.raiseOrRun(names, null); return }
+        root.raiseOrRun(names, () => {
+            const e = (names || []).map(n => n && DesktopEntries.heuristicLookup(n)).find(e => e)
+            if (e && e.command && e.command.length) root.spawn(e.command)
+        })
+    }
 
     property var _killPats: []
     property string _killExec: ""
