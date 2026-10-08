@@ -20,31 +20,16 @@ Item {
     readonly property bool kb: DeckUi.zone === "center"
     readonly property var focusTags: sp.row === "saved" && sp.saved[sp.ri]
         ? Spaces.group(sp.saved[sp.ri].snap.windows) : Spaces.tags
-    readonly property var focusShown: sp.row === "saved" ? sp._used(sp.focusTags) : sp._live()
-
-    function _used(t) {
-        const out = []
-        for (let i = 1; i <= 9; i++) if ((t[i - 1] || []).length) out.push(i)
-        return out
-    }
-    function _live() {
-        const u = sp._used(Spaces.tags)
-        const n = Math.max(5, u.length ? u[u.length - 1] : 0, Spaces.active)
-        return Array.from({ length: n }, (_, i) => i + 1)
-    }
     function _ago(ms) { const a = Status.ago(ms); return a === "now" ? "just now" : a + " ago" }
 
     function enterRow(r, i) {
         sp.row = r
         sp.ri = i || 0
         sp.armed = ""
-        const shown = r === "saved" ? sp._used(Spaces.group(sp.saved[sp.ri].snap.windows)) : sp._live()
-        if (shown.indexOf(sp.tag) < 0) sp.tag = r === "now" ? Spaces.active : (shown[0] || 1)
     }
     function stepTag(d) {
-        const s = sp.focusShown, i = s.indexOf(sp.tag)
-        if (i + d < 0 || i + d >= s.length) return false
-        sp.tag = s[i + d]
+        if (sp.tag + d < 1 || sp.tag + d > 9) return false
+        sp.tag += d
         return true
     }
     function activate() {
@@ -157,7 +142,7 @@ Item {
     }
     SpaceStrip {
         id: nowStrip
-        anchors { left: parent.left; top: nowCap.bottom; topMargin: DeckUi.f(8) }
+        anchors { left: parent.left; right: parent.right; top: nowCap.bottom; topMargin: DeckUi.f(8) }
         tags: Spaces.tags
         active: Spaces.active
         selected: sp.kb && sp.row === "now" ? sp.tag : 0
@@ -242,11 +227,9 @@ Item {
                     }
                 }
                 SpaceStrip {
-                    anchors { left: parent.left; leftMargin: DeckUi.f(144); verticalCenter: parent.verticalCenter }
+                    anchors { left: parent.left; right: parent.right; leftMargin: DeckUi.f(144); rightMargin: DeckUi.f(72); verticalCenter: parent.verticalCenter }
                     height: DeckUi.f(42)
                     tags: Spaces.group(srow.modelData.snap.windows)
-                    minCount: 0
-                    maxIcons: 3
                     selected: srow.sel ? sp.tag : 0
                     onHovered: (t) => { sp.enterRow("saved", srow.index); sp.tag = t }
                     onPicked: { sp.enterRow("saved", srow.index); sp.activate() }
