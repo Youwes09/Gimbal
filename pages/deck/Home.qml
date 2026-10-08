@@ -116,25 +116,27 @@ Item {
         }
     }
 
-    // ── frequent apps: one row of keys, Wallpapers on the header line ──
-    Caption {
-        id: appsCap
-        anchors { left: parent.left; right: wallBtn.left; rightMargin: DeckUi.f(12); verticalCenter: wallBtn.verticalCenter }
-        text: "Frequent"
-    }
-    Button {
-        id: wallBtn
-        anchors.right: parent.right
-        anchors.top: parent.top
-        glyph: Sh.icWallpaper
-        label: "Wallpapers"
-        selected: home.kb && home.pane === "head"
-        onClicked: Sh.walls()
+    PageHeader {
+        id: header
+        anchors { left: parent.left; right: parent.right; top: parent.top }
+        title: "Home"
+        Button {
+            glyph: Sh.icWallpaper
+            label: "Wallpapers"
+            selected: home.kb && home.pane === "head"
+            onClicked: Sh.walls()
+        }
     }
 
+    // ── frequent apps: one row of keys ──────────────────────────────────
+    Caption {
+        id: appsCap
+        anchors { left: parent.left; right: parent.right; top: header.bottom; topMargin: DeckUi.f(16) }
+        text: "Frequent"
+    }
     Row {
         id: keys
-        anchors { left: parent.left; right: parent.right; top: wallBtn.bottom; topMargin: DeckUi.f(10) }
+        anchors { left: parent.left; right: parent.right; top: appsCap.bottom; topMargin: DeckUi.f(10) }
         spacing: DeckUi.f(10)
         readonly property real kw: (width - spacing * 5) / 6
         height: DeckUi.f(68)

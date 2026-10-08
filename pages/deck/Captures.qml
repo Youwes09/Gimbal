@@ -83,28 +83,12 @@ Item {
         }
     }
 
-    Column {
+    PageHeader {
         id: header
-        anchors.left: parent.left
-        spacing: DeckUi.f(4)
-        Text {
-            text: "Captures"
-            color: DeckUi.text
-            font.family: DeckUi.sans
-            font.pixelSize: DeckUi.f(24)
-            font.weight: Font.DemiBold
-        }
-        Text {
-            text: Capture.recording ? "Recording…" : "Screenshots and recordings, newest first"
-            color: Capture.recording ? DeckUi.danger : DeckUi.dim
-            font.family: DeckUi.sans
-            font.pixelSize: DeckUi.f(12)
-        }
-    }
-    Row {
-        anchors.right: parent.right
-        anchors.top: parent.top
-        spacing: DeckUi.f(8)
+        anchors { left: parent.left; right: parent.right; top: parent.top }
+        title: "Captures"
+        detail: Capture.recording ? "Recording" : ""
+        detailTint: DeckUi.danger
         Button { glyph: Sh.icCamera; label: "Region"; selected: cap.barKb && cap.btn === 0; onClicked: cap.bar[0]() }
         Button { glyph: Sh.icMonitor; label: "Screen"; selected: cap.barKb && cap.btn === 1; onClicked: cap.bar[1]() }
         Button {
@@ -125,7 +109,7 @@ Item {
     Grid {
         id: grid
         anchors { left: parent.left; right: parent.right; top: header.bottom; bottom: parent.bottom }
-        anchors.topMargin: DeckUi.f(20)
+        anchors.topMargin: DeckUi.f(16)
         columns: cap.cols
         spacing: DeckUi.f(12)
         readonly property real cw: (width - spacing * (cap.cols - 1)) / cap.cols

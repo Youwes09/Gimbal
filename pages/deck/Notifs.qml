@@ -50,29 +50,11 @@ Item {
         }
     }
 
-    Column {
+    PageHeader {
         id: header
-        anchors.left: parent.left
-        spacing: DeckUi.f(4)
-        Text {
-            text: "Notifications"
-            color: DeckUi.text
-            font.family: DeckUi.sans
-            font.pixelSize: DeckUi.f(24)
-            font.weight: Font.DemiBold
-        }
-        Text {
-            text: nt.count === 0 ? "Nothing new" : nt.count + (nt.count === 1 ? " notification" : " notifications")
-                  + (Notifications.dnd ? "  ·  Focus is on, popups are silenced" : "")
-            color: DeckUi.dim
-            font.family: DeckUi.sans
-            font.pixelSize: DeckUi.f(12)
-        }
-    }
-    Row {
-        anchors.right: parent.right
-        anchors.top: parent.top
-        spacing: DeckUi.f(8)
+        anchors { left: parent.left; right: parent.right; top: parent.top }
+        title: "Notifications"
+        detail: (nt.count > 0 ? String(nt.count) : "") + (Notifications.dnd ? (nt.count > 0 ? "  ·  " : "") + "Popups silenced" : "")
         Button {
             glyph: Notifications.dnd ? Sh.icBellOff : Sh.icBell
             label: "Focus"
@@ -92,7 +74,7 @@ Item {
     ListView {
         id: list
         anchors { left: parent.left; right: parent.right; top: header.bottom; bottom: parent.bottom }
-        anchors.topMargin: DeckUi.f(20)
+        anchors.topMargin: DeckUi.f(14)
         model: Notifications.historyModel
         spacing: DeckUi.f(8)
         clip: true

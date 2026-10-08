@@ -2,7 +2,7 @@ import QtQuick
 import Quickshell
 import "root:/modules"
 
-// One notification, in the deck's list-row style: app icon on the shared tile, summary over
+// One notification, in the deck's list-row style: a bare app icon, summary over
 // body, app · age in mono on the right. Nothing drawn at rest.
 Rectangle {
     id: nr
@@ -11,7 +11,7 @@ Rectangle {
     property bool selected: false
     signal clicked()
 
-    implicitHeight: nr.compact ? DeckUi.f(56) : DeckUi.f(74)
+    implicitHeight: nr.compact ? DeckUi.f(48) : DeckUi.f(64)
     radius: DeckUi.innerRadius
     color: nr.selected ? DeckUi.sel : ma.containsMouse ? DeckUi.hover : "transparent"
     border.width: 1
@@ -45,19 +45,15 @@ Rectangle {
         color: DeckUi.danger
     }
 
-    Rectangle {
+    Item {
         id: ic
         anchors.left: parent.left
         anchors.leftMargin: DeckUi.f(12)
         anchors.verticalCenter: parent.verticalCenter
-        width: nr.compact ? DeckUi.f(32) : DeckUi.f(38); height: width
-        radius: DeckUi.f(8)
-        color: DeckUi.graphite
-        border.width: 1
-        border.color: DeckUi.line
+        width: nr.compact ? DeckUi.f(20) : DeckUi.f(24); height: width
         AppIcon {
-            anchors.centerIn: parent
-            width: parent.width * 0.62; height: width
+            anchors.fill: parent
+            fallbackColor: DeckUi.dim
             // Live notification images (image://qsimage) die with the notification; use the app icon then.
             icon: nr.rec ? nr._icon((/^image:\/\/qsimage/.test(nr.rec.image) ? "" : nr.rec.image)
                                     || nr.rec.appIcon || nr.rec.desktopEntry) : ""

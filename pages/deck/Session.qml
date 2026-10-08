@@ -61,23 +61,11 @@ Item {
         }
     }
 
-    Column {
+    PageHeader {
         id: header
-        anchors.left: parent.left
-        spacing: DeckUi.f(4)
-        Text {
-            text: "Session"
-            color: DeckUi.text
-            font.family: DeckUi.sans
-            font.pixelSize: DeckUi.f(24)
-            font.weight: Font.DemiBold
-        }
-        Text {
-            text: "Up " + ses.uptime + "  ·  " + Quickshell.env("USER") + " on " + ses.host
-            color: DeckUi.dim
-            font.family: DeckUi.sans
-            font.pixelSize: DeckUi.f(12)
-        }
+        anchors { left: parent.left; right: parent.right; top: parent.top }
+        title: "Session"
+        detail: Quickshell.env("USER") + "@" + ses.host + "  ·  up " + ses.uptime
     }
 
     Row {
