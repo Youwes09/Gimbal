@@ -23,7 +23,7 @@ It also owns your wallpaper (static / GIF / video, cross-faded on switch), repai
   - **Notifications** — full history; open, dismiss, clear, Focus (Do Not Disturb)
   - **Captures** — newest screenshots and recordings; open, copy, trash; take new ones
   - **Session** — rest, suspend, log out, reboot, shut down (the last three ask twice)
-- Right: quick toggles (Focus, Stay awake, power profile via `asusctl`, warm light via WayOLED's `oledctl`; each shows "Unavailable" without its tool) above Sound (output, microphone, a slider per app playing, with its icon) and Display (brightness)
+- Right: quick toggles (Focus, keyboard backlight and power profile via `asusctl`, the keyboard lit in the wallpaper's accent, warm light via WayOLED's `oledctl`; each shows "Unavailable" without its tool) above Sound (output, microphone, a slider per app playing, with its icon) and Display (brightness)
 - Fully keyboard driven with arrows and `enter`: arrows move spatially across the whole deck and hand off between panels at the edges; in the mixer `←`/`→` set the level. `tab` / `1`–`4` switch pages, `space` play/pause, `esc` close. Key chips under the deck show what works where you are
 - Frosted backdrop from one blurred still of the screen; everything is built on open and torn down on close. Stats and git state are only sampled while it is open
 

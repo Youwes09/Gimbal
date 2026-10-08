@@ -12,14 +12,14 @@ QtObject {
     readonly property bool dark: _darkMon.isIdle
 
     property IdleMonitor _restMon: IdleMonitor {
-        enabled: Config.idleRest > 0 && !DeckUi.stayAwake
+        enabled: Config.idleRest > 0
         timeout: Config.idleRest
         respectInhibitors: true
         onIsIdleChanged: if (isIdle && !(Sh.shown && Sh.page === "rest")) Sh.rest()
     }
 
     property IdleMonitor _darkMon: IdleMonitor {
-        enabled: Config.idleDark > 0 && !DeckUi.stayAwake
+        enabled: Config.idleDark > 0
         timeout: Config.idleDark
         respectInhibitors: true
     }

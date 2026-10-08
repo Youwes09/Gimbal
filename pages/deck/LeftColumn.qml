@@ -92,13 +92,6 @@ Column {
                 font.pixelSize: DeckUi.f(14)
             }
             Text {
-                visible: DeckUi.stayAwake
-                text: Sh.icEye
-                color: DeckUi.text
-                font.family: Sh.iconFont
-                font.pixelSize: DeckUi.f(14)
-            }
-            Text {
                 visible: Capture.recording
                 text: Sh.icRecord
                 color: DeckUi.danger

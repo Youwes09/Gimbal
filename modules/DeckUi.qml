@@ -74,7 +74,4 @@ QtObject {
         root.zone = "center"
         root.section = "home"
     }
-
-    // Keeps Gimbal's own idle rest screen away (Stay awake tile).
-    property bool stayAwake: false
 }

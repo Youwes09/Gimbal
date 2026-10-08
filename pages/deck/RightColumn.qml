@@ -21,9 +21,9 @@ Column {
             { glyph: Notifications.dnd ? Sh.icBellOff : Sh.icBell, label: "Focus",
               state: Notifications.dnd ? "Silenced" : "Off", on: Notifications.dnd,
               act: () => Notifications.toggleDnd() },
-            { glyph: Sh.icEye, label: "Stay awake",
-              state: DeckUi.stayAwake ? "On" : "Off", on: DeckUi.stayAwake,
-              act: () => DeckUi.stayAwake = !DeckUi.stayAwake },
+            { glyph: Machine.kbd === "Off" ? Sh.icKeyboardOff : Sh.icKeyboard, label: "Keyboard",
+              state: !Machine.hasKbd ? "Unavailable" : Machine.kbd === "Med" ? "Medium" : Machine.kbd,
+              on: Machine.hasKbd && Machine.kbd !== "Off", act: () => Machine.toggleKbd() },
             // Enter cycles Quiet → Balanced → Performance; lit whenever it's off the default.
             { glyph: Machine.profile === "Performance" ? Sh.icBolt
                    : Machine.profile === "Quiet" ? Sh.icChevronsDown : Sh.icGauge,
