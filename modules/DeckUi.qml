@@ -68,8 +68,10 @@ QtObject {
         root.section = root.sections[(i + dir + root.sections.length) % root.sections.length]
         root.zone = "center"
     }
+    property string openTo: ""          // page the next open lands on
     function reset() {
         root.zone = "center"
-        root.section = "home"
+        root.section = root.openTo || "home"
+        root.openTo = ""
     }
 }

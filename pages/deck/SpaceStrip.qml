@@ -10,6 +10,8 @@ Rectangle {
     property int selected: 0
     signal picked(int tag)
     signal hovered(int tag)
+    property bool acceptsWindows: false  // pills take windows dragged out of the preview
+    signal windowDropped(int tag, var window)
 
     readonly property real pad: DeckUi.f(4)
     readonly property real gap: DeckUi.f(4)
@@ -43,9 +45,9 @@ Rectangle {
                 width: strip.pillW
                 height: strip.height - strip.pad * 2
                 radius: DeckUi.f(9)
-                color: pill.on ? DeckUi.sel : pma.containsMouse ? DeckUi.hover : "transparent"
+                color: drop.containsDrag ? Qt.alpha(DeckUi.accent, 0.18) : pill.on ? DeckUi.sel : pma.containsMouse ? DeckUi.hover : "transparent"
                 border.width: 1
-                border.color: pill.sel ? DeckUi.selRim : "transparent"
+                border.color: pill.sel || drop.containsDrag ? DeckUi.selRim : "transparent"
                 Behavior on color { CAnim {} }
 
                 Row {
@@ -86,6 +88,13 @@ Rectangle {
                     }
                 }
 
+                DropArea {
+                    id: drop
+                    anchors.fill: parent
+                    enabled: strip.acceptsWindows
+                    keys: ["gimbal-window"]
+                    onDropped: (d) => strip.windowDropped(pill.tag, d.source.modelData)
+                }
                 MouseArea {
                     id: pma
                     anchors.fill: parent

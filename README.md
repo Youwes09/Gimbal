@@ -115,7 +115,7 @@ gimbal rest             show the rest screen
 gimbal wallpaper …      next | prev | random | rescan | list | <name>
 gimbal screenshot …     region | full
 gimbal record …         full | region | toggle | stop
-gimbal spaces …         restore | load <name> | save <name> | remove <name> | list
+gimbal spaces …         restore | load <name> | save <name> | remove <name> | rename <from> <to> | list
 ```
 
 **In the carousel:** `←`/`→` cycle · `enter` apply · `esc` close

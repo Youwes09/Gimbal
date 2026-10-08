@@ -47,10 +47,16 @@ QtObject {
     function view(tag) { Quickshell.execDetached(["mmsg", "dispatch", "view," + tag + ",0"]) }
     function _move(id, tag) { Quickshell.execDetached(["mmsg", "dispatch", "tagsilent," + tag, "client," + id]) }
 
+    function moveWindow(w, tag) { if (w && tag !== w.tag) root._move(w.id, tag) }
+    function closeWindow(w) { if (w) Quickshell.execDetached(["mmsg", "dispatch", "killclient", "client," + w.id]) }
+
+    function toplevel(w) {
+        const tls = (ToplevelManager.toplevels && ToplevelManager.toplevels.values) || []
+        return tls.find(t => t.appId === w.appid && t.title === w.title) || tls.find(t => t.appId === w.appid) || null
+    }
     function focus(w) {
         root.view(w.tag)
-        const tls = (ToplevelManager.toplevels && ToplevelManager.toplevels.values) || []
-        const tl = tls.find(t => t.appId === w.appid && t.title === w.title) || tls.find(t => t.appId === w.appid)
+        const tl = root.toplevel(w)
         if (tl) tl.activate()
     }
 
@@ -172,12 +178,30 @@ QtObject {
         onTriggered: root._snapshot(s => { root._current = s; root._write() })
     }
 
+    // Saving under an existing name overwrites that setup in place.
     function saveSetup(name) {
         root._snapshot(s => {
-            const rest = root.setups.filter(x => x.name !== name)
-            root.setups = rest.concat([Object.assign({ name: name }, s)])
+            const next = Object.assign({ name: name }, s)
+            const i = root.setups.findIndex(x => x.name === name)
+            root.setups = i < 0 ? root.setups.concat([next]) : root.setups.map((x, j) => j === i ? next : x)
             root._write()
         })
+    }
+    function renameSetup(from, to) {
+        to = String(to || "").trim()
+        if (!to || from === to || root.setups.some(x => x.name === to)) return false
+        root.setups = root.setups.map(x => x.name === from ? Object.assign({}, x, { name: to }) : x)
+        root._write()
+        return true
+    }
+    function moveSetup(name, d) {
+        const i = root.setups.findIndex(x => x.name === name), j = i + d
+        if (i < 0 || j < 0 || j >= root.setups.length) return false
+        const s = root.setups.slice()
+        s.splice(j, 0, s.splice(i, 1)[0])
+        root.setups = s
+        root._write()
+        return true
     }
     function deleteSetup(name) {
         root.setups = root.setups.filter(x => x.name !== name)

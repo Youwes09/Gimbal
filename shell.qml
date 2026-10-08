@@ -27,6 +27,11 @@ ShellRoot {
         function toggle(): void { Sh.toggleDeck() }
         function open():   void { Sh.openDeck() }
         function close():  void { Sh.closeDeck() }
+        function page(id: string): void {
+            if (DeckUi.sections.indexOf(id) < 0) return
+            if (Sh.deckShown) DeckUi.section = id
+            else { DeckUi.openTo = id; Sh.openDeck() }
+        }
     }
 
     IpcHandler {
@@ -85,6 +90,7 @@ ShellRoot {
         function load(name: string): void { Spaces.loadSetup(name ?? "") }
         function save(name: string): void { Spaces.saveSetup(name ?? "") }
         function remove(name: string): void { Spaces.deleteSetup(name ?? "") }
+        function rename(from: string, to: string): bool { return Spaces.renameSetup(from ?? "", to ?? "") }
         function list():           string { return Spaces.setups.map(s => s.name).join("\n") }
     }
 

@@ -187,7 +187,7 @@ Item {
             if (z === "quick") return [["⏎", "toggle"]]
             if (z === "media") return Status.player ? [["←→", "pick"], ["⏎", "press"]] : []
             if (z === "rail")  return [["↑↓", "page"], ["⏎", "enter"]]
-            if (s === "spaces") return [["⏎", "switch · restore"], ["del", "delete setup"]]
+            if (s === "spaces") return [["⏎", "switch · restore"], ["r", "rename"], ["u", "replace"], ["del", "delete"], ["⇧↑↓", "reorder"]]
             if (s === "notifications") return [["⏎", "open"], ["del", "dismiss"], ["c", "clear all"]]
             if (s === "captures") return [["⏎", "open"], ["c", "copy"], ["del", "trash"]]
             if (s === "session") return [["⏎", "run"]]

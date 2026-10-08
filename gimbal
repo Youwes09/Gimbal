@@ -74,7 +74,7 @@ gimbal — summoned-overlay shell daemon control
                           manage the wallpaper (no arg prints the current one)
   gimbal screenshot [region|full] [quiet]   take a screenshot (default region; quiet: clipboard only, no file)
   gimbal record [full|region|toggle|stop]   screen recording
-  gimbal spaces [restore|load|save|remove <name>]
+  gimbal spaces [restore|load|save|remove <name>|rename <from> <to>]
                           workspace layouts (no arg lists saved setups)
   gimbal volume [up|down [step]|mute]       adjust output volume (default step 5)
   gimbal brightness [up|down [step]]        adjust screen brightness (default step 5)
@@ -159,6 +159,8 @@ spaces)
         restore)              ipc spaces restore ;;
         load | save | remove) [ -n "$3" ] || { echo "gimbal: spaces $2 needs a name" >&2; exit 1; }
                               ipc spaces "$2" "$3" ;;
+        rename)               [ -n "$3" ] && [ -n "$4" ] || { echo "gimbal: spaces rename needs <from> <to>" >&2; exit 1; }
+                              ipc spaces rename "$3" "$4" ;;
         *)                    ipc spaces list ;;
     esac
     ;;

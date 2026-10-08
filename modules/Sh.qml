@@ -69,6 +69,7 @@ QtObject {
     readonly property string icRestore:       "\ue1f5"
     readonly property string icWallpaper:     "\ue44b"
     readonly property string icTrash:         "\ue18d"
+    readonly property string icPencil:        "\ue1f9"
     readonly property string icFolderOpen:    "\ue247"
     readonly property string icRotate:        "\ue149"
     readonly property string icLogOut:        "\ue10e"
