@@ -7,7 +7,7 @@ Item {
     id: deck
 
     property real t: 1   // reveal 0..1, drives the slide-in
-    // Columns arrive left to right, a beat apart, each finishing its own curve.
+    // Columns arrive left to right, slightly staggered.
     function _stage(d) { return Math.max(0, Math.min(1, (deck.t - d) / 0.8)) }
     readonly property real inL: _stage(0)
     readonly property real inC: _stage(0.1)
@@ -41,7 +41,6 @@ Item {
             opacity: deck.inL
         }
 
-        // ── centre ──────────────────────────────────────────────────────
         Card {
             id: center
             x: deck.sideW + deck.gap
@@ -81,7 +80,7 @@ Item {
                         required property int index
                         readonly property bool on: DeckUi.section === modelData.id
                         readonly property bool kb: rb.on && DeckUi.zone === "rail"
-                        // Session sits at the bottom of the rail, like a settings cog.
+                        // Session sits at the bottom of the rail.
                         y: index === deck.sections.length - 1 ? rail.height - height : index * (height + rail.spacing)
                         width: rail.width
                         height: width
@@ -91,7 +90,7 @@ Item {
                         border.color: rb.kb ? DeckUi.selRim : "transparent"
                         Behavior on color { CAnim {} }
 
-                        // Active page: a short accent pill on the card's edge.
+                        // Active page marker on the card edge.
                         Rectangle {
                             x: -DeckUi.f(12) - width / 2
                             anchors.verticalCenter: parent.verticalCenter
@@ -108,7 +107,6 @@ Item {
                             font.family: Sh.iconFont
                             font.pixelSize: DeckUi.f(17)
                         }
-                        // Unread badge on notifications.
                         Rectangle {
                             visible: rb.modelData.id === "notifications" && Notifications.historyModel.count > 0
                             anchors { right: parent.right; top: parent.top; margins: DeckUi.f(6) }
@@ -172,7 +170,7 @@ Item {
         }
     }
 
-    // ── key hints: chips for what works right here, then the constants ─
+    // Key hints: what works in the focused zone, then the global keys.
     Row {
         id: hints
         anchors.horizontalCenter: parent.horizontalCenter

@@ -10,7 +10,6 @@ Column {
 
     readonly property real quickH: DeckUi.f(232)
 
-    // ── quick toggles ───────────────────────────────────────────────────
     Card {
         id: quick
         width: col.width
@@ -70,8 +69,6 @@ Column {
                     required property var modelData
                     required property int index
                     readonly property bool sel: quick.focused && quick.cur === index
-                    // On fills the chip with the accent; Record uses coral.
-                    readonly property color tint: modelData.tint || DeckUi.accent
                     width: (parent.width - parent.spacing) / 2
                     height: (parent.height - parent.spacing) / 2
                     radius: DeckUi.innerRadius
@@ -87,12 +84,12 @@ Column {
                         anchors { left: parent.left; top: parent.top; margins: DeckUi.f(10) }
                         width: DeckUi.f(28); height: width
                         radius: width / 2
-                        color: qt.modelData.on ? qt.tint : DeckUi.graphite
+                        color: qt.modelData.on ? DeckUi.accent : DeckUi.graphite
                         Behavior on color { CAnim {} }
                         Text {
                             anchors.centerIn: parent
                             text: qt.modelData.glyph
-                            color: qt.modelData.on ? (qt.modelData.tint ? "#ffffff" : DeckUi.accentInk) : DeckUi.text
+                            color: qt.modelData.on ? DeckUi.accentInk : DeckUi.text
                             font.family: Sh.iconFont
                             font.pixelSize: DeckUi.f(14)
                         }
@@ -131,9 +128,8 @@ Column {
         }
     }
 
-    // ── sound + display ─────────────────────────────────────────────────
-    // Sound: the output, the microphone, then one row per app playing (with its own icon).
-    // Display: brightness, pinned to the bottom. One keyboard list runs through both.
+    // Sound (output, mic, each app playing) and Display (brightness, pinned to the bottom).
+    // One keyboard list runs through both.
     Card {
         id: sound
         width: col.width

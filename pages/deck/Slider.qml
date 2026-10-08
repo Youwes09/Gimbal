@@ -1,9 +1,7 @@
 import QtQuick
 import "root:/modules"
 
-// One level control: an icon tile (click to mute), the label with its value on one line,
-// the bar underneath. Drag or click the bar; with keyboard focus ←/→ nudge it (the owner
-// handles keys).
+// Level control: icon (click to mute), label and value, then the bar. The owner handles keys.
 Item {
     id: sl
     property string label: ""

@@ -10,17 +10,14 @@ QtObject {
     readonly property real scale: 1.3
     function f(px) { return Sh.fs(px * root.scale) }
 
-    // Raycast's system: an achromatic near-black stack, edges instead of shadows (a hairline
-    // ring plus a faint inset highlight along the top, the "key"), neutral fills for anything
-    // selected or on, and one accent (the wallpaper's), rationed to focus, active and on states.
-    // The neutrals are fixed; only the accent follows the wallpaper.
+    // Neutrals are fixed; only the accent follows the wallpaper.
     readonly property color canvas:   "#040506"
     readonly property color card:     "#07080a"
     readonly property color recessed: "#111214"
     readonly property color graphite: "#1b1c1e"
     readonly property color text:     "#ffffff"
-    readonly property color dim:      "#9c9c9d"   // ash: secondary text
-    readonly property color faint:    "#6a6b6c"   // smoke: muted labels
+    readonly property color dim:      "#9c9c9d"   // secondary text
+    readonly property color faint:    "#6a6b6c"   // labels, metadata
     readonly property color accent:   Theme.accent
     readonly property color danger:   "#ff6363"
     // Glyphs sitting on an accent fill: dark on a light accent, white on a deep one.
@@ -40,13 +37,12 @@ QtObject {
     readonly property int innerRadius: f(8)
     readonly property int badgeRadius: f(6)
 
-    // One face everywhere: the shell's own Adwaita Mono. `sans`/`mono` stay as names so a
-    // surface can still mark what is body text and what is metadata.
+    // Both are the shell font; the names mark body text and metadata.
     readonly property string sans: Sh.font
     readonly property string mono: Sh.font
 
-    // Keyboard focus. Arrows move spatially; when a zone runs out of room in a direction it
-    // hands focus on with go(). Left to right: media | rail | center | quick, mixer under quick.
+    // Keyboard focus. A zone that runs out of room in a direction hands focus on with go().
+    // Left to right: media | rail | center | quick, with mixer under quick.
     property string zone: "center"
     property string section: "home"     // center panel: home | notifications | captures | session
     readonly property var sections: ["home", "notifications", "captures", "session"]

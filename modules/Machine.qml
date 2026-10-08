@@ -11,7 +11,7 @@ import "root:/modules"
 QtObject {
     id: root
 
-    // ── power profile ───────────────────────────────────────────────────
+    // Power profile
     readonly property var profiles: ["Quiet", "Balanced", "Performance"]
     property string profile: ""          // "" until read, or when asusctl is missing
     readonly property bool hasProfile: root.profile.length > 0
@@ -38,7 +38,7 @@ QtObject {
         onExited: root._getProfile.running = true
     }
 
-    // ── colour temperature ──────────────────────────────────────────────
+    // Colour temperature
     property bool warmth: false
     property int kelvin: 0
     property bool hasWarmth: false
@@ -66,8 +66,7 @@ QtObject {
         onExited: root._getWarmth.running = true
     }
 
-    // ── keyboard backlight ──────────────────────────────────────────────
-    // Brightness via asusctl; the colour follows the wallpaper's accent.
+    // Keyboard backlight. The colour follows the wallpaper accent.
     readonly property var kbdLevels: ["Off", "Low", "Med", "High"]
     property string kbd: ""              // one of kbdLevels; "" until read or without asusctl
     readonly property bool hasKbd: root.kbd.length > 0

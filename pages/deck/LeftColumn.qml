@@ -9,7 +9,6 @@ Column {
 
     readonly property real innerW: col.width
 
-    // ── clock ───────────────────────────────────────────────────────────
     Card {
         width: col.innerW
         height: DeckUi.f(150)
@@ -78,7 +77,7 @@ Column {
             }
         }
 
-        // Status flags in the corner: only what's actually on.
+        // Flags for what is on: Focus, recording.
         Row {
             anchors.right: parent.right
             anchors.bottom: parent.bottom
@@ -101,7 +100,6 @@ Column {
         }
     }
 
-    // ── now playing ─────────────────────────────────────────────────────
     Card {
         id: media
         width: col.innerW
@@ -158,7 +156,6 @@ Column {
             font.pixelSize: DeckUi.f(12)
         }
 
-        // Two rows that never meet: the track on top, transport and progress along the bottom.
         Item {
             anchors { left: parent.left; right: parent.right; bottom: parent.bottom; top: mediaCap.bottom }
             anchors.margins: DeckUi.f(16)
@@ -278,7 +275,7 @@ Column {
         }
     }
 
-    // ── system tiles: the same ring for each, icon and value in the middle ─
+    // System tiles
     Grid {
         id: tiles
         columns: 2

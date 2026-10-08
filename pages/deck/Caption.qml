@@ -1,7 +1,7 @@
 import QtQuick
 import "root:/modules"
 
-// Section header, Raycast style: a quiet sentence-case label, a count or note on the right.
+// Section label with an optional note on the right.
 Item {
     id: cap
     property string text: ""

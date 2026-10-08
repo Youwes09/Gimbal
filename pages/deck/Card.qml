@@ -2,10 +2,8 @@ import QtQuick
 import QtQuick.Effects
 import "root:/modules"
 
-// Deck surface, Raycast's "key": a near-black card defined by its edge (hairline ring, a faint
-// highlight along the inside of the top edge, a darker line along the bottom) rather than by
-// a lifted fill. The soft outer shadow is only there because the deck floats over the desktop;
-// it's analytic, so nothing renders offscreen.
+// Deck card: near-black fill, hairline rim, top highlight. RectangularShadow is analytic,
+// so nothing renders offscreen.
 Rectangle {
     id: card
     property bool focused: false

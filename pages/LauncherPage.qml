@@ -21,9 +21,7 @@ Item {
     readonly property int rMd: f(12)
     readonly property int rLg: f(16)
 
-    // Same language as the deck (DeckUi): near-black panel, a hairline edge a touch brighter
-    // than the deck's so it still pops over windows, the inset top highlight, neutral
-    // selection with an accent ring.
+    // Deck palette, with a slightly brighter rim so the panel reads over windows.
     readonly property color cPanel:  DeckUi.card
     readonly property color cRim:    Qt.rgba(1, 1, 1, 0.13)
     readonly property color cSheen:  DeckUi.sheen
@@ -719,8 +717,7 @@ Item {
                                     Anim { duration: Motion.fast }
                                 }
 
-                                // Every icon and glyph sits on the same tile (as in the deck's lists);
-                                // images and colour swatches fill it instead.
+                                // Icons and glyphs sit on a tile; images and colour swatches fill it.
                                 Rectangle {
                                     anchors.fill: parent
                                     visible: !rowItem.isImg && modelData.kind !== "color"

@@ -96,8 +96,6 @@ PanelWindow {
                     x: card.dragX
                     opacity: 1 - Math.min(0.9, Math.abs(card.dragX) / win.cardW)
 
-                    // Same surface as the deck and launcher: near-black, hairline edge, inset
-                    // top highlight, analytic shadow (no offscreen layer per toast).
                     RectangularShadow {
                         anchors.fill: panel
                         radius: panel.radius

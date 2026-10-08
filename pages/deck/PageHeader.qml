@@ -1,8 +1,7 @@
 import QtQuick
 import "root:/modules"
 
-// Page toolbar, Raycast style: the title with a short status beside it, the page's actions on
-// the right, and a hairline across the panel underneath. Children become the actions.
+// Page title with a short status, actions on the right (the children), and a divider below.
 Item {
     id: ph
     property string title: ""
@@ -45,7 +44,7 @@ Item {
         spacing: DeckUi.f(6)
     }
 
-    // Runs edge to edge: from the rail divider to the card's right edge (the body's margins).
+    // Spans the whole panel, past the body margins.
     Rectangle {
         anchors.bottom: parent.bottom
         anchors.left: parent.left

@@ -1,8 +1,8 @@
 import QtQuick
 import "root:/modules"
 
-// Icon (+ label) button. At rest a quiet recessed well; `on` is an accent wash (coral when
-// `danger`, i.e. recording); `selected` shows keyboard focus as an accent ring.
+// Icon and/or label button. `on` tints it with the accent (coral with `danger`);
+// `selected` marks keyboard focus.
 Rectangle {
     id: b
     property string glyph: ""

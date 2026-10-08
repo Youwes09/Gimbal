@@ -1,8 +1,7 @@
 import QtQuick
 import "root:/modules"
 
-// One notification, in the deck's list-row style: a bare app icon, summary over
-// body, app · age in mono on the right. Nothing drawn at rest.
+// Notification row: app icon, summary over body, app and age on the right.
 Rectangle {
     id: nr
     property var rec: null

@@ -2,8 +2,7 @@ import QtQuick
 import Quickshell
 import "root:/modules"
 
-// One list row, Raycast style: a bare icon, the title with a quieter subtitle on the same
-// line, accessories on the right. Nothing drawn at rest; hover and selection fill it.
+// List row: icon, title with an inline subtitle, accessories on the right.
 Rectangle {
     id: row
     property string icon: ""          // image path / theme icon; falls back to `glyph`

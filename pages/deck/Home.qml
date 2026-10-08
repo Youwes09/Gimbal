@@ -2,13 +2,10 @@ import QtQuick
 import Quickshell
 import "root:/modules"
 
-// Overview. Your most-used apps as one row of keys, then two lists side by side:
-// folders to pick back up and the latest notifications. Both lists share one row style and
-// grow to fill the page.
+// Frequent apps, then recent projects and the latest notifications side by side.
 Item {
     id: home
 
-    // ── data ────────────────────────────────────────────────────────────
     readonly property var apps: {
         const _ = Frecency.rev
         return Frecency.top("app:", 6).map(k => DesktopEntries.byId(k.slice(4))).filter(a => a)
@@ -39,8 +36,7 @@ Item {
     readonly property int notes: Math.min(Notifications.historyModel.count,
         Math.max(1, Math.floor((notesList.height + home.rowGap) / (home.rowH + home.rowGap))))
 
-    // ── keyboard: four panes laid out like the page ─────────────────────
-    //   head (Wallpapers) / app keys / projects | notifications
+    // Keyboard panes: head (Wallpapers), apps, then proj | notes.
     property string pane: "apps"
     property int idx: 0
     readonly property bool kb: DeckUi.zone === "center"
@@ -111,7 +107,6 @@ Item {
         }
     }
 
-    // ── frequent apps: one row of keys ──────────────────────────────────
     Caption {
         id: appsCap
         anchors { left: parent.left; right: parent.right; top: header.bottom; topMargin: DeckUi.f(16) }
@@ -139,7 +134,6 @@ Item {
                 border.color: key.sel ? DeckUi.selRim : DeckUi.line
                 Behavior on color { CAnim {} }
 
-                // Key highlight along the inside of the top edge.
                 Rectangle {
                     anchors { top: parent.top; left: parent.left; right: parent.right; margins: DeckUi.f(8) }
                     anchors.topMargin: 1
@@ -163,13 +157,11 @@ Item {
         }
     }
 
-    // ── continue | notifications ────────────────────────────────────────
     Item {
         id: lists
         anchors { left: parent.left; right: parent.right; top: keys.bottom; bottom: parent.bottom; topMargin: DeckUi.f(28) }
         readonly property real colW: (width - DeckUi.f(28)) / 2
 
-        // Continue
         Caption {
             id: projCap
             anchors { left: parent.left; top: parent.top }
@@ -199,7 +191,6 @@ Item {
             }
         }
 
-        // Notifications
         Caption {
             id: noteCap
             anchors { right: parent.right; top: parent.top }
