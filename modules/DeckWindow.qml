@@ -79,6 +79,11 @@ PanelWindow {
         anchors.fill: parent
         focus: true
 
+        Connections {
+            target: DeckUi
+            function onRefocus() { keys.forceActiveFocus() }
+        }
+
         Keys.onPressed: (e) => {
             const k = e.key
             const p = Status.player
@@ -86,7 +91,7 @@ PanelWindow {
             if (k === Qt.Key_Escape) Sh.closeDeck()
             else if (k === Qt.Key_Tab) DeckUi.page(1)
             else if (k === Qt.Key_Backtab) DeckUi.page(-1)
-            else if (k >= Qt.Key_1 && k <= Qt.Key_4) {
+            else if (k >= Qt.Key_1 && k < Qt.Key_1 + DeckUi.sections.length) {
                 DeckUi.section = DeckUi.sections[k - Qt.Key_1]
                 DeckUi.zone = "center"
             }

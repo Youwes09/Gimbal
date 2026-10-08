@@ -9,6 +9,7 @@ ShellRoot {
     readonly property int _trayCount: SystemTray.items ? SystemTray.items.values.length : 0
     readonly property int _batteryWatch: BatteryWatch.pct
     readonly property bool _idle: Idle.dark
+    readonly property int _spaces: Spaces.active
 
     WallpaperWindow { }
     Overlay { id: overlay }
@@ -75,6 +76,16 @@ ShellRoot {
         function stop():                   void { Capture.recStop() }
         function recordToggle():           void { Capture.recToggle() }
         function recording():            string { return Capture.recording ? "on" : "off" }
+    }
+
+    IpcHandler {
+        target: "spaces"
+
+        function restore():         void { Spaces.restore(Spaces.last) }
+        function load(name: string): void { Spaces.loadSetup(name ?? "") }
+        function save(name: string): void { Spaces.saveSetup(name ?? "") }
+        function remove(name: string): void { Spaces.deleteSetup(name ?? "") }
+        function list():           string { return Spaces.setups.map(s => s.name).join("\n") }
     }
 
     IpcHandler {

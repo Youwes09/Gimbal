@@ -21,6 +21,7 @@ Item {
 
     readonly property var sections: [
         { id: "home",          glyph: Sh.icHome,   label: "Home" },
+        { id: "spaces",        glyph: Sh.icSpaces, label: "Spaces" },
         { id: "notifications", glyph: Sh.icBell,   label: "Notifications" },
         { id: "captures",      glyph: Sh.icImages, label: "Captures" },
         { id: "session",       glyph: Sh.icPower,  label: "Session" }
@@ -156,6 +157,7 @@ Item {
                     Behavior on opacity { Anim {} }
                 }
                 Section { sid: "home";          sourceComponent: Home {} }
+                Section { sid: "spaces";        sourceComponent: Workspaces {} }
                 Section { sid: "notifications"; sourceComponent: Notifs {} }
                 Section { sid: "captures";      sourceComponent: Captures {} }
                 Section { sid: "session";       sourceComponent: Session {} }
@@ -185,6 +187,7 @@ Item {
             if (z === "quick") return [["⏎", "toggle"]]
             if (z === "media") return Status.player ? [["←→", "pick"], ["⏎", "press"]] : []
             if (z === "rail")  return [["↑↓", "page"], ["⏎", "enter"]]
+            if (s === "spaces") return [["⏎", "switch · restore"], ["del", "delete setup"]]
             if (s === "notifications") return [["⏎", "open"], ["del", "dismiss"], ["c", "clear all"]]
             if (s === "captures") return [["⏎", "open"], ["c", "copy"], ["del", "trash"]]
             if (s === "session") return [["⏎", "run"]]

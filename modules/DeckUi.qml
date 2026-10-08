@@ -44,8 +44,8 @@ QtObject {
     // Keyboard focus. A zone that runs out of room in a direction hands focus on with go().
     // Left to right: media | rail | center | quick, with mixer under quick.
     property string zone: "center"
-    property string section: "home"     // center panel: home | notifications | captures | session
-    readonly property var sections: ["home", "notifications", "captures", "session"]
+    property string section: "home"     // center panel: one of `sections`
+    readonly property var sections: ["home", "spaces", "notifications", "captures", "session"]
     readonly property var _next: ({
         media:  { right: "rail" },
         rail:   { left: "media", right: "center" },
@@ -55,6 +55,8 @@ QtObject {
     })
 
     signal nav(int key, int modifiers)
+    // Hands keyboard focus back to the deck after a text field had it.
+    signal refocus()
 
     // Deferred so the zone being entered doesn't also act on the key that got it there.
     function go(dir) {
