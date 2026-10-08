@@ -24,7 +24,7 @@ Rectangle {
          : ma.containsMouse ? DeckUi.hover : DeckUi.well
     border.width: 1
     border.color: b.selected ? DeckUi.selRim : b.on ? Qt.alpha(b.tint, 0.35) : "transparent"
-    Behavior on color { ColorAnimation { duration: 120 } }
+    Behavior on color { CAnim {} }
 
     Row {
         id: row

@@ -14,7 +14,7 @@ Rectangle {
     color: nr.selected ? DeckUi.sel : ma.containsMouse ? DeckUi.hover : "transparent"
     border.width: 1
     border.color: nr.selected ? DeckUi.selRim : "transparent"
-    Behavior on color { ColorAnimation { duration: 120 } }
+    Behavior on color { CAnim {} }
 
     readonly property bool crit: nr.rec && nr.rec.urgency === "critical"
 

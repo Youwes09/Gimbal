@@ -41,8 +41,8 @@ PanelWindow {
 
         opacity: win.up ? 1 : 0
         scale: win.up ? 1 : 0.94
-        Behavior on opacity { NumberAnimation { id: fade; duration: 200; easing.type: Easing.OutCubic } }
-        Behavior on scale { NumberAnimation { duration: 260; easing.type: Easing.OutBack; easing.overshoot: 1.1 } }
+        Behavior on opacity { Anim { id: fade } }
+        Behavior on scale { Anim {} }
 
         layer.enabled: true
         layer.effect: MultiEffect {
@@ -83,7 +83,7 @@ PanelWindow {
                     height: parent.height
                     radius: height / 2
                     color: Theme.accent
-                    Behavior on width { NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
+                    Behavior on width { Anim { duration: Motion.fast } }
                 }
             }
 

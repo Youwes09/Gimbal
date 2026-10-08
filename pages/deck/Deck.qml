@@ -89,7 +89,7 @@ Item {
                         color: rb.on ? DeckUi.sel : rbMa.containsMouse ? DeckUi.hover : "transparent"
                         border.width: 1
                         border.color: rb.kb ? DeckUi.selRim : "transparent"
-                        Behavior on color { ColorAnimation { duration: 120 } }
+                        Behavior on color { CAnim {} }
 
                         // Active page: a short accent pill on the card's edge.
                         Rectangle {
@@ -99,7 +99,7 @@ Item {
                             height: rb.on ? DeckUi.f(18) : 0
                             radius: width / 2
                             color: DeckUi.accent
-                            Behavior on height { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+                            Behavior on height { Anim {} }
                         }
                         Text {
                             anchors.centerIn: parent
@@ -155,7 +155,7 @@ Item {
                     active: DeckUi.section === sid || opacity > 0.01
                     opacity: DeckUi.section === sid ? 1 : 0
                     visible: opacity > 0.01
-                    Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                    Behavior on opacity { Anim {} }
                 }
                 Section { sid: "home";          sourceComponent: Home {} }
                 Section { sid: "notifications"; sourceComponent: Notifs {} }

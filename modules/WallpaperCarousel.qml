@@ -14,7 +14,7 @@ Item {
     property bool _touched: false
     Behavior on pos {
         id: posBehavior
-        NumberAnimation { duration: 360; easing.type: Easing.OutCubic }
+        Anim { duration: Motion.slow }
     }
 
     readonly property int sel: walls.length > 0
@@ -75,11 +75,7 @@ Item {
     }
 
     property real applyFlash: 0
-    NumberAnimation {
-        id: applyPulse
-        target: root; property: "applyFlash"; from: 1; to: 0
-        duration: 520; easing.type: Easing.OutCubic
-    }
+    Anim { id: applyPulse; target: root; property: "applyFlash"; from: 1; to: 0; duration: Motion.slow * 1.6 }
 
     Item {
         id: strip
@@ -91,12 +87,11 @@ Item {
 
         ParallelAnimation {
             id: enterAnim
-            NumberAnimation { target: strip; property: "opacity"; from: 0; to: 1; duration: 200; easing.type: Easing.OutCubic }
-            NumberAnimation { target: strip; property: "scale"; from: 0.92; to: 1; duration: 460; easing.type: Easing.OutBack; easing.overshoot: 1.5 }
-            NumberAnimation {
+            Anim { target: strip; property: "opacity"; from: 0; to: 1 }
+            Anim { target: strip; property: "scale"; from: 0.96; to: 1; duration: Motion.slow }
+            Anim {
                 target: strip; property: "anchors.verticalCenterOffset"
-                from: -Sh.fs(28) + Sh.fs(34); to: -Sh.fs(28)
-                duration: 460; easing.type: Easing.OutBack; easing.overshoot: 1.5
+                from: -Sh.fs(28) + Sh.fs(20); to: -Sh.fs(28); duration: Motion.slow
             }
         }
 

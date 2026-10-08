@@ -79,7 +79,7 @@ Column {
                          : qt.sel ? DeckUi.sel : qtMa.containsMouse ? DeckUi.hover : DeckUi.well
                     border.width: 1
                     border.color: qt.sel ? DeckUi.selRim : "transparent"
-                    Behavior on color { ColorAnimation { duration: 140 } }
+                    Behavior on color { CAnim {} }
 
                     // Icon chip: filled while the toggle is on.
                     Rectangle {
@@ -88,7 +88,7 @@ Column {
                         width: DeckUi.f(28); height: width
                         radius: width / 2
                         color: qt.modelData.on ? qt.tint : DeckUi.graphite
-                        Behavior on color { ColorAnimation { duration: 160 } }
+                        Behavior on color { CAnim {} }
                         Text {
                             anchors.centerIn: parent
                             text: qt.modelData.glyph

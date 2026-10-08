@@ -89,7 +89,7 @@ Item {
                 color: ab.arm ? Qt.alpha(DeckUi.danger, 0.16) : ab.sel ? DeckUi.sel : abMa.containsMouse ? DeckUi.hover : DeckUi.well
                 border.width: 1
                 border.color: ab.arm ? Qt.alpha(DeckUi.danger, 0.6) : ab.sel ? DeckUi.selRim : "transparent"
-                Behavior on color { ColorAnimation { duration: 140 } }
+                Behavior on color { CAnim {} }
 
                 Text {
                     anchors.centerIn: parent

@@ -14,7 +14,7 @@ Rectangle {
     color: DeckUi.card
     border.width: 1
     border.color: card.focused ? DeckUi.focusRim : DeckUi.rim
-    Behavior on border.color { ColorAnimation { duration: 180 } }
+    Behavior on border.color { CAnim {} }
 
     RectangularShadow {
         anchors.fill: parent

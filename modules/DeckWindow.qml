@@ -32,14 +32,10 @@ PanelWindow {
             keys.forceActiveFocus()
         } else hideAnim.restart()
     }
-    NumberAnimation {
-        id: showAnim
-        target: root; property: "t"; to: 1
-        duration: 260; easing.type: Easing.OutCubic
-    }
+    Anim { id: showAnim; target: root; property: "t"; to: 1; duration: Motion.slow }
     SequentialAnimation {
         id: hideAnim
-        NumberAnimation { target: root; property: "t"; to: 0; duration: 160; easing.type: Easing.InCubic }
+        AnimOut { target: root; property: "t"; to: 0 }
         ScriptAction { script: root.active = false }
     }
 

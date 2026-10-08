@@ -91,8 +91,8 @@ Item {
             selected: nt.kb && !nt.atBar && nt.cur === index
             onClicked: nt.open(index)
         }
-        displaced: Transition { NumberAnimation { property: "y"; duration: 160; easing.type: Easing.OutCubic } }
-        remove: Transition { NumberAnimation { property: "opacity"; to: 0; duration: 140 } }
+        displaced: Transition { Anim { property: "y" } }
+        remove: Transition { AnimOut { property: "opacity"; to: 0; duration: Motion.fast } }
     }
 
     Text {

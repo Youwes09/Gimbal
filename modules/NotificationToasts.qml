@@ -48,18 +48,15 @@ PanelWindow {
             model: Notifications.popupModel
 
             add: Transition {
-                NumberAnimation { property: "opacity"; from: 0; to: 1
-                    duration: 200; easing.type: Easing.OutCubic }
-                NumberAnimation { property: "y"; from: -win.cardH - Sh.fs(10)
-                    duration: 380; easing.type: Easing.OutBack; easing.overshoot: 1.04 }
+                Anim { property: "opacity"; from: 0; to: 1 }
+                Anim { property: "y"; from: -win.cardH - Sh.fs(10); duration: Motion.slow }
             }
             remove: Transition {
-                NumberAnimation { property: "opacity"; to: 0; duration: 200; easing.type: Easing.InCubic }
-                NumberAnimation { property: "scale"; to: 0.95; duration: 220; easing.type: Easing.InCubic }
-                NumberAnimation { property: "y"; to: Sh.fs(10); duration: 220; easing.type: Easing.InCubic }
+                AnimOut { property: "opacity"; to: 0 }
+                AnimOut { property: "scale"; to: 0.96 }
             }
             displaced: Transition {
-                NumberAnimation { property: "y"; duration: 240; easing.type: Easing.OutCubic }
+                Anim { property: "y" }
             }
 
             delegate: Item {
@@ -239,11 +236,7 @@ PanelWindow {
                         onCentroidChanged: if (active)
                             card.dragX = centroid.position.x - centroid.pressPosition.x
                     }
-                    NumberAnimation {
-                        id: snapBack
-                        target: card; property: "dragX"; to: 0
-                        duration: 220; easing.type: Easing.OutBack; easing.overshoot: 1.1
-                    }
+                    Anim { id: snapBack; target: card; property: "dragX"; to: 0 }
                 }
             }
         }

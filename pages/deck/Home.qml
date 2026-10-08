@@ -137,7 +137,7 @@ Item {
                 color: key.sel ? DeckUi.sel : keyMa.containsMouse ? DeckUi.hover : DeckUi.well
                 border.width: 1
                 border.color: key.sel ? DeckUi.selRim : DeckUi.line
-                Behavior on color { ColorAnimation { duration: 120 } }
+                Behavior on color { CAnim {} }
 
                 // Key highlight along the inside of the top edge.
                 Rectangle {

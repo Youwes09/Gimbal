@@ -300,7 +300,7 @@ Column {
             border.width: 0   // the ring is the edge
 
             property real shown: Math.max(0, Math.min(1, tile.level))
-            Behavior on shown { NumberAnimation { duration: 700; easing.type: Easing.OutCubic } }
+            Behavior on shown { Anim { duration: Motion.slow * 2 } }
             onShownChanged: ring.requestPaint()
             onTintChanged: ring.requestPaint()
 

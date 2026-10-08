@@ -463,13 +463,10 @@ Item {
         if (root.inspectOpen) { root.inspectActive = true; root._loadInspect(); iOpen.restart() }
         else iClose.restart()
     }
-    NumberAnimation {
-        id: iOpen; target: root; property: "iT"; to: 1
-        duration: 340; easing.type: Easing.OutBack; easing.overshoot: 1.05
-    }
+    Anim { id: iOpen; target: root; property: "iT"; to: 1; duration: Motion.slow }
     SequentialAnimation {
         id: iClose
-        NumberAnimation { target: root; property: "iT"; to: 0; duration: 170; easing.type: Easing.InCubic }
+        AnimOut { target: root; property: "iT"; to: 0 }
         ScriptAction { script: root.inspectActive = false }
     }
 
@@ -493,7 +490,7 @@ Item {
 
         width: Math.min(root.f(800), root.width * 0.54)
         height: panelWrap.barH + (root.expanded ? panelWrap.resultsH : 0)
-        Behavior on height { NumberAnimation { duration: 170; easing.type: Easing.OutCubic } }
+        Behavior on height { Anim {} }
 
         opacity: root.inspectActive ? 1 - 0.72 * root.iT : 1
         scale:   root.inspectActive ? 1 - 0.02 * root.iT : 1
@@ -632,8 +629,8 @@ Item {
                             font.family: DeckUi.mono
                             font.pixelSize: root.f(root.tCaption)
                         }
-                        Behavior on width { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
-                        Behavior on opacity { NumberAnimation { duration: 120 } }
+                        Behavior on width { Anim { duration: Motion.fast } }
+                        Behavior on opacity { Anim { duration: Motion.fast } }
                         opacity: visible ? 1 : 0
                     }
                 }
@@ -643,7 +640,7 @@ Item {
                     height: 1
                     color: root.cLine
                     opacity: root.results.length > 0 ? 1 : 0
-                    Behavior on opacity { NumberAnimation { duration: 120 } }
+                    Behavior on opacity { Anim { duration: Motion.fast } }
                 }
             }
 
@@ -666,15 +663,13 @@ Item {
                         SequentialAnimation {
                             PauseAnimation { duration: Math.min(6, pop.ViewTransition.index) * 24 }
                             ParallelAnimation {
-                                NumberAnimation { property: "opacity"; from: 0; to: 1
-                                    duration: 170; easing.type: Easing.OutCubic }
-                                NumberAnimation { property: "scale"; from: 0.97; to: 1
-                                    duration: 200; easing.type: Easing.OutCubic }
+                                Anim { property: "opacity"; from: 0; to: 1; duration: Motion.fast }
+                                Anim { property: "scale"; from: 0.97; to: 1 }
                             }
                         }
                     }
                     displaced: Transition {
-                        NumberAnimation { property: "y"; duration: 150; easing.type: Easing.OutCubic }
+                        Anim { property: "y" }
                     }
 
                     highlightFollowsCurrentItem: true
@@ -689,7 +684,7 @@ Item {
                         border.width: 1
                         border.color: root.cSelRim
                         opacity: root.results.length > 0 ? 1 : 0
-                        Behavior on opacity { NumberAnimation { duration: 120 } }
+                        Behavior on opacity { Anim { duration: Motion.fast } }
                     }
 
                     delegate: Item {
@@ -707,7 +702,7 @@ Item {
                             anchors.bottomMargin: 2
                             radius: root.rSm
                             color: (!rowItem.sel && rowMouse.containsMouse) ? root.cHover : "transparent"
-                            Behavior on color { ColorAnimation { duration: 100 } }
+                            Behavior on color { CAnim {} }
                         }
 
                         Row {
@@ -721,7 +716,7 @@ Item {
                                 width: root.f(34); height: root.f(34)
                                 scale: rowItem.sel ? 1.04 : 1
                                 Behavior on scale {
-                                    NumberAnimation { duration: 170; easing.type: Easing.OutBack; easing.overshoot: 2.4 }
+                                    Anim { duration: Motion.fast }
                                 }
 
                                 // Every icon and glyph sits on the same tile (as in the deck's lists);
@@ -858,7 +853,7 @@ Item {
         border.color: root.cRim
         opacity: (!root.expanded && !root.inspectActive) ? 1 : 0
         visible: opacity > 0.01
-        Behavior on opacity { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
+        Behavior on opacity { Anim {} }
 
         ScrambleText {
             id: legendText
@@ -931,8 +926,8 @@ Item {
             height: inspectLayer.cardH
             opacity: root.iT
             scale: 0.9 + 0.1 * root.iT
-            Behavior on width  { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
-            Behavior on height { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
+            Behavior on width  { Anim {} }
+            Behavior on height { Anim {} }
 
             MouseArea { anchors.fill: parent; hoverEnabled: true }
 

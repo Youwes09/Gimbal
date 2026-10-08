@@ -36,7 +36,7 @@ Item {
         color: sl.muted ? Qt.alpha(DeckUi.danger, 0.14) : tileMa.containsMouse ? DeckUi.recessed : DeckUi.graphite
         border.width: 1
         border.color: sl.muted ? Qt.alpha(DeckUi.danger, 0.35) : DeckUi.line
-        Behavior on color { ColorAnimation { duration: 120 } }
+        Behavior on color { CAnim {} }
 
         AppIcon {
             anchors.centerIn: parent
@@ -102,7 +102,7 @@ Item {
             height: parent.height
             radius: height / 2
             color: sl.muted ? DeckUi.faint : DeckUi.accent
-            Behavior on width { enabled: !ma.pressed; NumberAnimation { duration: 120 } }
+            Behavior on width { enabled: !ma.pressed; Anim { duration: Motion.fast } }
         }
         Rectangle {
             width: DeckUi.f(12); height: width; radius: width / 2
@@ -111,7 +111,7 @@ Item {
             color: DeckUi.text
             opacity: ma.containsMouse || ma.pressed || sl.selected ? 1 : 0
             scale: ma.pressed ? 1.15 : 1
-            Behavior on opacity { NumberAnimation { duration: 120 } }
+            Behavior on opacity { Anim { duration: Motion.fast } }
         }
         MouseArea {
             id: ma

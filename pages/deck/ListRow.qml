@@ -20,7 +20,7 @@ Rectangle {
     color: row.selected ? DeckUi.sel : ma.containsMouse ? DeckUi.hover : "transparent"
     border.width: 1
     border.color: row.selected ? DeckUi.selRim : "transparent"
-    Behavior on color { ColorAnimation { duration: 120 } }
+    Behavior on color { CAnim {} }
 
     Item {
         id: ic

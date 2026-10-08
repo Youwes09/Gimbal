@@ -25,14 +25,10 @@ PanelWindow {
         if (root.open) { root.active = true; showAnim.restart() }
         else hideAnim.restart()
     }
-    NumberAnimation {
-        id: showAnim
-        target: root; property: "t"; to: 1
-        duration: 130; easing.type: Easing.OutCubic
-    }
+    Anim { id: showAnim; target: root; property: "t"; to: 1; duration: Motion.fast }
     SequentialAnimation {
         id: hideAnim
-        NumberAnimation { target: root; property: "t"; to: 0; duration: 110; easing.type: Easing.InCubic }
+        AnimOut { target: root; property: "t"; to: 0; duration: Motion.fast }
         ScriptAction { script: root.active = false }
     }
 
