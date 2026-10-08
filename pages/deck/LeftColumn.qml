@@ -33,21 +33,17 @@ Column {
                 Text {
                     anchors.baseline: clockText.baseline
                     text: Status.meridiem
-                    color: DeckUi.accent
+                    color: DeckUi.faint
                     font.family: DeckUi.sans
                     font.pixelSize: DeckUi.f(14)
                     font.weight: Font.Medium
-                    font.letterSpacing: 1.5
                 }
             }
             Text {
-                text: Status.day + "  ·  " + Status.date
+                text: Status.day + ", " + Status.date
                 color: DeckUi.dim
                 font.family: DeckUi.sans
-                font.pixelSize: DeckUi.f(11)
-                font.weight: Font.Medium
-                font.letterSpacing: 2.2
-                font.capitalization: Font.AllUppercase
+                font.pixelSize: DeckUi.f(12.5)
             }
         }
 
@@ -148,16 +144,13 @@ Column {
             onTriggered: media.p.positionChanged()
         }
 
-        Caption {
-            id: mediaCap
-            anchors { left: parent.left; right: parent.right; top: parent.top; margins: DeckUi.f(16) }
-            text: "Now playing"
-            trailing: media.p ? media.p.identity : ""
+        function clock(s) {
+            s = Math.max(0, Math.floor(s))
+            return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0")
         }
 
         Column {
             anchors.centerIn: parent
-            anchors.verticalCenterOffset: DeckUi.f(8)
             visible: media.p === null
             spacing: DeckUi.f(6)
             Text {
@@ -165,34 +158,41 @@ Column {
                 text: Sh.icMusic
                 color: DeckUi.faint
                 font.family: Sh.iconFont
-                font.pixelSize: DeckUi.f(22)
+                font.pixelSize: DeckUi.f(20)
             }
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: "Nothing playing"
-                color: DeckUi.dim
+                color: DeckUi.faint
                 font.family: DeckUi.sans
                 font.pixelSize: DeckUi.f(12)
             }
         }
 
+        // Two rows that never meet: the track on top, transport and progress along the bottom.
         Item {
-            anchors { left: parent.left; right: parent.right; top: mediaCap.bottom; bottom: parent.bottom }
+            anchors.fill: parent
             anchors.margins: DeckUi.f(16)
-            anchors.topMargin: DeckUi.f(12)
             visible: media.p !== null
 
             ClippingRectangle {
                 id: art
-                width: DeckUi.f(60); height: width
-                radius: DeckUi.f(9)
-                color: DeckUi.well
+                width: DeckUi.f(52); height: width
+                radius: DeckUi.innerRadius
+                color: DeckUi.graphite
+                Text {
+                    anchors.centerIn: parent
+                    text: Sh.icMusic
+                    color: DeckUi.faint
+                    font.family: Sh.iconFont
+                    font.pixelSize: DeckUi.f(18)
+                }
                 Image {
                     anchors.fill: parent
                     source: media.p ? media.p.trackArtUrl : ""
                     fillMode: Image.PreserveAspectCrop
                     asynchronous: true
-                    sourceSize.width: DeckUi.f(120); sourceSize.height: DeckUi.f(120)
+                    sourceSize.width: DeckUi.f(104); sourceSize.height: DeckUi.f(104)
                 }
             }
             Column {
@@ -207,25 +207,64 @@ Column {
                     text: media.p ? media.p.trackTitle : ""
                     color: DeckUi.text
                     font.family: DeckUi.sans
-                    font.pixelSize: DeckUi.f(14)
-                    font.weight: Font.DemiBold
+                    font.pixelSize: DeckUi.f(13)
+                    font.weight: Font.Medium
                 }
                 Text {
                     width: parent.width
                     elide: Text.ElideRight
-                    text: media.p ? media.p.trackArtist : ""
-                    color: DeckUi.dim
+                    text: media.p ? [media.p.trackArtist, media.p.identity].filter(s => s).join("  ·  ") : ""
+                    color: DeckUi.faint
                     font.family: DeckUi.sans
-                    font.pixelSize: DeckUi.f(12)
+                    font.pixelSize: DeckUi.f(11.5)
                 }
             }
 
+            Row {
+                id: transport
+                anchors.left: parent.left
+                anchors.bottom: parent.bottom
+                spacing: DeckUi.f(4)
+                Button {
+                    width: DeckUi.f(30); implicitHeight: DeckUi.f(28)
+                    glyph: Sh.icSkipBack
+                    glyphSize: DeckUi.f(12)
+                    selected: media.focused && media.btn === 0
+                    onClicked: media.act(0)
+                }
+                Button {
+                    width: DeckUi.f(30); implicitHeight: DeckUi.f(28)
+                    glyph: Status.playing ? Sh.icPause : Sh.icPlay
+                    glyphSize: DeckUi.f(12)
+                    selected: media.focused && media.btn === 1
+                    onClicked: media.act(1)
+                }
+                Button {
+                    width: DeckUi.f(30); implicitHeight: DeckUi.f(28)
+                    glyph: Sh.icSkipForward
+                    glyphSize: DeckUi.f(12)
+                    selected: media.focused && media.btn === 2
+                    onClicked: media.act(2)
+                }
+            }
+
+            Text {
+                id: remain
+                anchors.right: parent.right
+                anchors.verticalCenter: transport.verticalCenter
+                visible: seekTrack.len > 0
+                text: media.p ? "-" + media.clock(seekTrack.len - media.p.position) : ""
+                color: DeckUi.faint
+                font.family: DeckUi.mono
+                font.pixelSize: DeckUi.f(10.5)
+            }
             Rectangle {
                 id: seekTrack
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.top: art.bottom
-                anchors.topMargin: DeckUi.f(12)
+                anchors.left: transport.right
+                anchors.leftMargin: DeckUi.f(12)
+                anchors.right: remain.visible ? remain.left : parent.right
+                anchors.rightMargin: remain.visible ? DeckUi.f(10) : 0
+                anchors.verticalCenter: transport.verticalCenter
                 height: DeckUi.f(3)
                 radius: height / 2
                 color: DeckUi.line
@@ -238,38 +277,11 @@ Column {
                 }
                 MouseArea {
                     anchors.fill: parent
-                    anchors.margins: -DeckUi.f(6)
+                    anchors.margins: -DeckUi.f(8)
                     enabled: media.p !== null && media.p.canSeek && seekTrack.len > 0
+                    cursorShape: Qt.PointingHandCursor
                     onClicked: (m) => media.p.position =
-                        Math.max(0, Math.min(1, (m.x - DeckUi.f(6)) / seekTrack.width)) * seekTrack.len
-                }
-            }
-
-            Row {
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.bottom: parent.bottom
-                spacing: DeckUi.f(10)
-                Button {
-                    width: DeckUi.f(40); implicitHeight: DeckUi.f(30)
-                    glyph: Sh.icSkipBack
-                    glyphSize: DeckUi.f(13)
-                    selected: media.focused && media.btn === 0
-                    onClicked: media.act(0)
-                }
-                Button {
-                    width: DeckUi.f(52); implicitHeight: DeckUi.f(30)
-                    glyph: Status.playing ? Sh.icPause : Sh.icPlay
-                    glyphSize: DeckUi.f(13)
-                    on: !(media.focused && media.btn === 1)
-                    selected: media.focused && media.btn === 1
-                    onClicked: media.act(1)
-                }
-                Button {
-                    width: DeckUi.f(40); implicitHeight: DeckUi.f(30)
-                    glyph: Sh.icSkipForward
-                    glyphSize: DeckUi.f(13)
-                    selected: media.focused && media.btn === 2
-                    onClicked: media.act(2)
+                        Math.max(0, Math.min(1, (m.x - DeckUi.f(8)) / seekTrack.width)) * seekTrack.len
                 }
             }
         }
@@ -375,10 +387,8 @@ Column {
                     text: tile.label
                     color: DeckUi.faint
                     font.family: DeckUi.sans
-                    font.pixelSize: DeckUi.f(9.5)
-                    font.weight: Font.DemiBold
-                    font.letterSpacing: 1.8
-                    font.capitalization: Font.AllUppercase
+                    font.pixelSize: DeckUi.f(11)
+                    font.weight: Font.Medium
                 }
             }
         }
@@ -391,7 +401,7 @@ Column {
         }
         Tile {
             glyph: Sh.icRam
-            label: "RAM · " + SysStats.memUsed.toFixed(1) + "G"
+            label: "Memory"
             value: SysStats.memTotal > 0 ? Math.round(SysStats.memUsed / SysStats.memTotal * 100) + "%" : "–"
             level: SysStats.memTotal > 0 ? SysStats.memUsed / SysStats.memTotal : 0
         }

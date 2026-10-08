@@ -2,9 +2,8 @@ import QtQuick
 import Quickshell
 import "root:/modules"
 
-// One list row, Raycast style: an icon in a uniform container, title over a quieter subtitle,
-// metadata on the right in mono. Nothing drawn at rest; hover lifts it, selection adds the
-// accent ring.
+// One list row, Raycast style: a bare icon, the title with a quieter subtitle on the same
+// line, accessories on the right. Nothing drawn at rest; hover and selection fill it.
 Rectangle {
     id: row
     property string icon: ""          // image path / theme icon; falls back to `glyph`
@@ -12,36 +11,31 @@ Rectangle {
     property string title: ""
     property string subtitle: ""
     property string meta: ""
-    property string badge: ""         // short accent figure, e.g. "+19"
+    property string badge: ""         // short accent tag, e.g. "+19"
     property bool selected: false
     property bool dimmed: false
     signal clicked()
 
-    implicitHeight: DeckUi.f(52)
+    implicitHeight: DeckUi.f(40)
     radius: DeckUi.innerRadius
     color: row.selected ? DeckUi.sel : ma.containsMouse ? DeckUi.hover : "transparent"
     border.width: 1
     border.color: row.selected ? DeckUi.selRim : "transparent"
     Behavior on color { ColorAnimation { duration: 120 } }
 
-    // Icon container: every icon sits on the same 32px tile, whatever its own shape.
-    Rectangle {
-        id: tile
+    Item {
+        id: ic
         anchors.left: parent.left
         anchors.leftMargin: DeckUi.f(10)
         anchors.verticalCenter: parent.verticalCenter
-        width: DeckUi.f(32); height: width
-        radius: DeckUi.f(8)
-        color: DeckUi.graphite
-        border.width: 1
-        border.color: DeckUi.line
+        width: DeckUi.f(20); height: width
 
         AppIcon {
-            anchors.centerIn: parent
+            anchors.fill: parent
             visible: row.icon.length > 0
-            width: DeckUi.f(20); height: width
             icon: row.icon
             fallbackGlyph: row.glyph || Sh.icApp
+            fallbackColor: DeckUi.dim
         }
         Text {
             anchors.centerIn: parent
@@ -49,33 +43,39 @@ Rectangle {
             text: row.glyph
             color: DeckUi.dim
             font.family: Sh.iconFont
-            font.pixelSize: DeckUi.f(14)
+            font.pixelSize: DeckUi.f(15)
         }
     }
 
-    Column {
-        anchors.left: tile.right
+    Item {
+        id: body
+        anchors.left: ic.right
         anchors.leftMargin: DeckUi.f(12)
         anchors.right: side.left
         anchors.rightMargin: DeckUi.f(12)
         anchors.verticalCenter: parent.verticalCenter
-        spacing: DeckUi.f(2)
+        height: title.implicitHeight
         opacity: row.dimmed ? 0.6 : 1
+
         Text {
-            width: parent.width
+            id: title
+            width: Math.min(implicitWidth, body.width)
             elide: Text.ElideRight
             text: row.title
             color: DeckUi.text
             font.family: DeckUi.sans
-            font.pixelSize: DeckUi.f(13)
-            font.weight: Font.DemiBold
+            font.pixelSize: DeckUi.f(12.5)
+            font.weight: Font.Medium
         }
         Text {
-            width: parent.width
-            visible: text.length > 0
+            anchors.left: title.right
+            anchors.leftMargin: DeckUi.f(10)
+            anchors.right: parent.right
+            anchors.baseline: title.baseline
+            visible: row.subtitle.length > 0 && width > DeckUi.f(24)
             elide: Text.ElideRight
             text: row.subtitle
-            color: DeckUi.dim
+            color: DeckUi.faint
             font.family: DeckUi.sans
             font.pixelSize: DeckUi.f(11.5)
         }
@@ -84,17 +84,25 @@ Rectangle {
     Row {
         id: side
         anchors.right: parent.right
-        anchors.rightMargin: DeckUi.f(12)
+        anchors.rightMargin: DeckUi.f(10)
         anchors.verticalCenter: parent.verticalCenter
-        spacing: DeckUi.f(8)
-        Text {
+        spacing: DeckUi.f(10)
+        Rectangle {
             anchors.verticalCenter: parent.verticalCenter
             visible: row.badge.length > 0
-            text: row.badge
-            color: DeckUi.accent
-            font.family: DeckUi.mono
-            font.pixelSize: DeckUi.f(10.5)
-            font.weight: Font.Medium
+            width: tag.implicitWidth + DeckUi.f(10)
+            height: tag.implicitHeight + DeckUi.f(4)
+            radius: DeckUi.badgeRadius
+            color: Qt.alpha(DeckUi.accent, 0.14)
+            Text {
+                id: tag
+                anchors.centerIn: parent
+                text: row.badge
+                color: DeckUi.accent
+                font.family: DeckUi.mono
+                font.pixelSize: DeckUi.f(10.5)
+                font.weight: Font.Medium
+            }
         }
         Text {
             anchors.verticalCenter: parent.verticalCenter

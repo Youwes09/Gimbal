@@ -2,7 +2,7 @@ import QtQuick
 import Quickshell
 import "root:/modules"
 
-// Overview. A greeting, your most-used apps as one row of keys, then two lists side by side:
+// Overview. Your most-used apps as one row of keys, then two lists side by side:
 // folders to pick back up and the latest notifications. Both lists share one row style and
 // grow to fill the page.
 Item {
@@ -33,20 +33,6 @@ Item {
         Notifications.dismiss(r.nid)
     }
 
-    readonly property string greeting: {
-        const h = Status.now.getHours()
-        return h < 5 ? "Up late" : h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening"
-    }
-    readonly property string summary: {
-        const bits = []
-        const n = Notifications.historyModel.count
-        bits.push(n === 0 ? "No notifications" : n + (n === 1 ? " notification" : " notifications"))
-        const d = Projects.dirtyCount
-        if (d > 0) bits.push(d + (d === 1 ? " project with changes" : " projects with changes"))
-        if (Status.playing) bits.push("playing " + Status.player.trackTitle)
-        return bits.join("  ·  ")
-    }
-
     function ago(ms) {
         if (!ms) return ""
         const s = Math.max(0, (Date.now() - ms) / 1000)
@@ -64,8 +50,8 @@ Item {
         return (s.indexOf("/") === 0 || s.indexOf("://") >= 0) ? s : Quickshell.iconPath(s, true)
     }
 
-    readonly property real rowH: DeckUi.f(52)
-    readonly property real rowGap: DeckUi.f(4)
+    readonly property real rowH: DeckUi.f(40)
+    readonly property real rowGap: DeckUi.f(2)
     // As many notifications as the right list has room for.
     readonly property int notes: Math.min(Notifications.historyModel.count,
         Math.max(1, Math.floor((notesList.height + home.rowGap) / (home.rowH + home.rowGap))))
@@ -130,28 +116,11 @@ Item {
         }
     }
 
-    // ── header ──────────────────────────────────────────────────────────
-    Column {
-        id: header
-        anchors.left: parent.left
-        anchors.right: wallBtn.left
-        anchors.rightMargin: DeckUi.f(12)
-        spacing: DeckUi.f(6)
-        Text {
-            text: home.greeting
-            color: DeckUi.text
-            font.family: DeckUi.sans
-            font.pixelSize: DeckUi.f(24)
-            font.weight: Font.DemiBold
-        }
-        Text {
-            width: parent.width
-            elide: Text.ElideRight
-            text: home.summary
-            color: DeckUi.dim
-            font.family: DeckUi.sans
-            font.pixelSize: DeckUi.f(12.5)
-        }
+    // ── frequent apps: one row of keys, Wallpapers on the header line ──
+    Caption {
+        id: appsCap
+        anchors { left: parent.left; right: wallBtn.left; rightMargin: DeckUi.f(12); verticalCenter: wallBtn.verticalCenter }
+        text: "Frequent"
     }
     Button {
         id: wallBtn
@@ -163,15 +132,9 @@ Item {
         onClicked: Sh.walls()
     }
 
-    // ── frequent apps: one row of keys ──────────────────────────────────
-    Caption {
-        id: appsCap
-        anchors { left: parent.left; right: parent.right; top: header.bottom; topMargin: DeckUi.f(28) }
-        text: "Frequent"
-    }
     Row {
         id: keys
-        anchors { left: parent.left; right: parent.right; top: appsCap.bottom; topMargin: DeckUi.f(12) }
+        anchors { left: parent.left; right: parent.right; top: wallBtn.bottom; topMargin: DeckUi.f(10) }
         spacing: DeckUi.f(10)
         readonly property real kw: (width - spacing * 5) / 6
         height: DeckUi.f(68)
@@ -227,7 +190,7 @@ Item {
             anchors { left: parent.left; top: parent.top }
             width: lists.colW
             text: "Continue"
-            trailing: Projects.dirtyCount > 0 ? Projects.dirtyCount + " with changes" : ""
+            trailing: Projects.dirtyCount > 0 ? Projects.dirtyCount + " changed" : ""
         }
         Column {
             anchors { left: parent.left; top: projCap.bottom; topMargin: DeckUi.f(10) }
@@ -242,7 +205,7 @@ Item {
                     height: home.rowH
                     glyph: Sh.icFolderGit
                     title: modelData.name
-                    subtitle: modelData.branch.length ? modelData.branch + "  ·  " + modelData.short : modelData.short
+                    subtitle: modelData.branch.length ? modelData.branch : modelData.short
                     badge: modelData.dirty > 0 ? "+" + modelData.dirty : ""
                     meta: home.ago(modelData.last)
                     selected: home.kb && home.pane === "proj" && home.idx === index
@@ -267,8 +230,7 @@ Item {
             anchors { right: parent.right; top: parent.top }
             width: lists.colW
             text: "Notifications"
-            trailing: Notifications.historyModel.count > home.notes
-                      ? "+" + (Notifications.historyModel.count - home.notes) + " on page 2" : ""
+            trailing: Notifications.historyModel.count > 0 ? String(Notifications.historyModel.count) : ""
         }
         Item {
             id: notesList
