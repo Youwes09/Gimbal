@@ -22,6 +22,7 @@ Item {
     readonly property var sections: [
         { id: "home",          glyph: Sh.icHome,   label: "Home" },
         { id: "spaces",        glyph: Sh.icSpaces, label: "Spaces" },
+        { id: "network",       glyph: Sh.icWifi,   label: "Network" },
         { id: "notifications", glyph: Sh.icBell,   label: "Notifications" },
         { id: "captures",      glyph: Sh.icImages, label: "Captures" },
         { id: "session",       glyph: Sh.icPower,  label: "Session" }
@@ -114,12 +115,12 @@ Item {
                             width: Math.max(DeckUi.f(15), badge.implicitWidth + DeckUi.f(8))
                             height: DeckUi.f(15)
                             radius: height / 2
-                            color: DeckUi.accent
+                            color: Qt.rgba(1, 1, 1, 0.16)
                             Text {
                                 id: badge
                                 anchors.centerIn: parent
                                 text: Math.min(99, Notifications.historyModel.count)
-                                color: DeckUi.accentInk
+                                color: DeckUi.text
                                 font.family: DeckUi.sans
                                 font.pixelSize: DeckUi.f(9)
                                 font.weight: Font.Bold
@@ -158,6 +159,7 @@ Item {
                 }
                 Section { sid: "home";          sourceComponent: Home {} }
                 Section { sid: "spaces";        sourceComponent: Workspaces {} }
+                Section { sid: "network";       sourceComponent: Network {} }
                 Section { sid: "notifications"; sourceComponent: Notifs {} }
                 Section { sid: "captures";      sourceComponent: Captures {} }
                 Section { sid: "session";       sourceComponent: Session {} }
@@ -187,7 +189,11 @@ Item {
             if (z === "quick") return [["⏎", "toggle"]]
             if (z === "media") return Status.player ? [["←→", "pick"], ["⏎", "press"]] : []
             if (z === "rail")  return [["↑↓", "page"], ["⏎", "enter"]]
-            if (s === "spaces") return [["⏎", "switch · restore"], ["r", "rename"], ["u", "replace"], ["del", "delete"], ["⇧↑↓", "reorder"]]
+            if (z === "clock") return [["⏎", DeckUi.calendarOpen ? "close calendar" : "calendar"]]
+            if (z === "calendar") return [["←→", "month"], ["⏎", "this month"]]
+            if (z === "tiles") return [["⏎", "flip"]]
+            if (s === "spaces") return [["⏎", "open"], ["⇧←→", "move window"], ["del", "close · delete"], ["r", "rename"], ["u", "replace"], ["⇧↑↓", "reorder"]]
+            if (s === "network") return [["⏎", "connect"], ["←→", "day"], ["del", "forget"]]
             if (s === "notifications") return [["⏎", "open"], ["del", "dismiss"], ["c", "clear all"]]
             if (s === "captures") return [["⏎", "open"], ["c", "copy"], ["del", "trash"]]
             if (s === "session") return [["⏎", "run"]]

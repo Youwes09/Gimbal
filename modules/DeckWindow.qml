@@ -26,6 +26,7 @@ PanelWindow {
 
     onOpenChanged: {
         if (root.open) {
+            hideAnim.stop()
             DeckUi.reset()
             root.active = true
             showAnim.restart()
@@ -39,34 +40,58 @@ PanelWindow {
         ScriptAction { script: root.active = false }
     }
 
-    // One still of the screen per open, blurred; bleeds past the edges so they stay soft.
+    // One still of the screen per open, blurred; bleeds past the edges so they stay soft. The
+    // blur runs once: its result is kept as a texture and the effect stops drawing, since
+    // the whole window repaints on every animation frame and a live full-screen blur made
+    // every animation in the deck expensive.
     Loader {
         anchors.fill: parent
         active: root.active
         sourceComponent: Item {
+            opacity: shot.hasContent ? root.t : 0
             ScreencopyView {
+                id: shot
                 anchors.fill: parent
                 anchors.margins: -96
                 captureSource: root.screen
                 live: false
-                opacity: hasContent ? root.t : 0
-                layer.enabled: true
-                layer.effect: MultiEffect {
+                visible: false
+                onHasContentChanged: if (hasContent) bake.start()
+            }
+            // Blur and dim, baked together into `still`.
+            Item {
+                id: backdrop
+                anchors.fill: shot
+                MultiEffect {
+                    anchors.fill: parent
+                    source: shot
                     blurEnabled: true
                     blur: 1.0
                     blurMax: 64
                     blurMultiplier: 1.6
                     saturation: -0.2
                 }
+                Rectangle {
+                    anchors.fill: parent
+                    color: Qt.alpha(DeckUi.canvas, 0.62)
+                }
+            }
+            ShaderEffectSource {
+                id: still
+                anchors.fill: shot
+                sourceItem: backdrop
+                live: false
+                visible: false
+            }
+            // Two frames for the capture and its blur to land, then freeze them.
+            Timer {
+                id: bake
+                interval: 80
+                onTriggered: { still.scheduleUpdate(); still.hideSource = true; still.visible = true }
             }
         }
     }
-    Rectangle {
-        anchors.fill: parent
-        visible: root.active
-        color: Qt.alpha(DeckUi.canvas, 0.62 * root.t)
-        MouseArea { anchors.fill: parent; onClicked: Sh.closeDeck() }
-    }
+    MouseArea { anchors.fill: parent; enabled: root.active; onClicked: Sh.closeDeck() }
 
     Loader {
         anchors.fill: parent

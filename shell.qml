@@ -1,3 +1,4 @@
+import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.SystemTray
@@ -10,6 +11,9 @@ ShellRoot {
     readonly property int _batteryWatch: BatteryWatch.pct
     readonly property bool _idle: Idle.dark
     readonly property int _spaces: Spaces.active
+    readonly property bool _net: Net.live
+    readonly property real _power: Power.watts
+    readonly property int _gpus: SysStats.gpus.length
 
     WallpaperWindow { }
     Overlay { id: overlay }
@@ -20,6 +24,7 @@ ShellRoot {
     RecordingIndicator { }
     OsdIndicator { }
     RegionPicker { }
+    PolkitPrompt { }
 
     IpcHandler {
         target: "deck"
@@ -31,6 +36,12 @@ ShellRoot {
             if (DeckUi.sections.indexOf(id) < 0) return
             if (Sh.deckShown) DeckUi.section = id
             else { DeckUi.openTo = id; Sh.openDeck() }
+        }
+        // Feeds one key to the open deck's navigation (left, right, up, down, enter, delete).
+        function key(name: string): void {
+            const k = { left: Qt.Key_Left, right: Qt.Key_Right, up: Qt.Key_Up, down: Qt.Key_Down,
+                        enter: Qt.Key_Return, delete: Qt.Key_Delete }[name]
+            if (Sh.deckShown && k) DeckUi.nav(k, 0)
         }
     }
 
@@ -48,6 +59,7 @@ ShellRoot {
         function toggle(): void { Sh.toggleLauncher() }
         function open():   void { Sh.openLauncher() }
         function close():  void { Sh.closeLauncher() }
+        function search(text: string): void { Sh.launcherSeed = text ?? ""; if (!Sh.launcherShown) Sh.openLauncher() }
     }
 
     IpcHandler {

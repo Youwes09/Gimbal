@@ -7,6 +7,8 @@ Item {
     id: pv
     property var windows: []
     property bool live: false
+    property int selected: -1          // keyboard focus, an index into `windows`
+    property bool closeArmed: false    // the selected window is waiting for a second Delete
     property Item dragLayer: pv          // a dragged window is lifted here, above the strips
     readonly property bool dragging: pv._drag !== null
     property var _drag: null
@@ -30,6 +32,8 @@ Item {
             Item {
                 id: slot
                 required property var modelData
+                required property int index
+                readonly property bool sel: pv.selected === slot.index
                 readonly property real gap: DeckUi.f(2)
                 x: (modelData.x - pv.geo.x) * pv.k + gap
                 y: (modelData.y - pv.geo.y) * pv.k + gap
@@ -44,8 +48,8 @@ Item {
                     radius: DeckUi.f(6)
                     clip: true
                     color: wma.containsMouse ? DeckUi.recessed : DeckUi.graphite
-                    border.width: 1
-                    border.color: slot.modelData.focused || wma.containsMouse ? DeckUi.selRim : DeckUi.rim
+                    border.width: slot.sel ? 2 : 1
+                    border.color: slot.sel || wma.containsMouse ? DeckUi.selRim : slot.modelData.focused ? Qt.alpha(DeckUi.selRim, 0.5) : DeckUi.rim
                     opacity: Drag.active ? 0.9 : 1
                     scale: Drag.active ? Math.min(1, DeckUi.f(120) / Math.max(width, height)) : 1
                     Behavior on color { CAnim {} }
@@ -103,11 +107,11 @@ Item {
                     // Close
                     Rectangle {
                         anchors { right: parent.right; top: parent.top; margins: DeckUi.f(5) }
-                        visible: pv.live && (wma.containsMouse || xma.containsMouse) && !win.Drag.active
+                        visible: pv.live && (wma.containsMouse || xma.containsMouse || slot.sel) && !win.Drag.active
                                  && win.width > DeckUi.f(44) && win.height > DeckUi.f(30)
                         width: DeckUi.f(20); height: width
                         radius: DeckUi.f(5)
-                        color: xma.containsMouse ? DeckUi.danger : Qt.rgba(0, 0, 0, 0.55)
+                        color: xma.containsMouse || (slot.sel && pv.closeArmed) ? DeckUi.danger : Qt.rgba(0, 0, 0, 0.55)
                         Behavior on color { CAnim {} }
                         Text {
                             anchors.centerIn: parent

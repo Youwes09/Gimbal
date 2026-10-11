@@ -17,19 +17,20 @@ It also owns your wallpaper (static / GIF / video, cross-faded on switch), repai
 ## Features
 
 **Deck**
-- Left: clock and battery, now playing (art, seek, controls), CPU / RAM / GPU / temperature as matching ring tiles
+- Left: clock and battery (Enter or click it for a calendar with day, month and year progress; ←→ change month), now playing (art, seek, controls), CPU / RAM / GPU / temperature as matching ring tiles
 - Centre, with a section rail:
   - **Home** — your most-used apps, the folders you open most from the launcher with their git branch and uncommitted changes, the latest notifications
   - **Spaces** — every workspace with the apps open on it and a preview of its layout; the last session and saved setups as strips you can restore. Restoring moves open windows back onto their workspaces and relaunches the rest (terminals in their old directory). The layout is saved as it changes, through `mmsg` (mango)
+  - **Network** — the link you're on (signal, band, channel and rate, address, gateway, internet, Tailscale), live throughput with average and peak, data used per day and per network (counted in the background, kept across reboots), Wi-Fi networks (passwords asked inline) and Bluetooth devices with battery and how long they've been connected
   - **Notifications** — full history; open, dismiss, clear, Focus (Do Not Disturb)
   - **Captures** — newest screenshots and recordings; open, copy, trash; take new ones
-  - **Session** — rest, suspend, log out, reboot, shut down (the last three ask twice)
+  - **Session** — your machine at a glance (host, OS, kernel, uptime, NixOS generation and when it was built), then rest, suspend, log out, reboot, shut down (the last three ask twice)
 - Right: quick toggles (Focus, keyboard backlight and power profile via `asusctl`, the keyboard lit in the wallpaper's accent, warm light via WayOLED's `oledctl`; each shows "Unavailable" without its tool) above Sound (output, microphone, a slider per app playing, with its icon) and Display (brightness)
-- Fully keyboard driven with arrows and `enter`: arrows move spatially across the whole deck and hand off between panels at the edges; in the mixer `←`/`→` set the level. `tab` / `1`–`5` switch pages, `space` play/pause, `esc` close. Key chips under the deck show what works where you are
+- Fully keyboard driven with arrows and `enter`: arrows move spatially across the whole deck and hand off between panels at the edges; in the mixer `←`/`→` set the level. `tab` / `1`–`6` switch pages, `space` play/pause, `esc` close. Key chips under the deck show what works where you are
 - Frosted backdrop from one blurred still of the screen; everything is built on open and torn down on close. Stats and git state are only sampled while it is open
 
 **Launcher**
-- `apps` (default) · `>` run a command · `=` calculator · `/` or `~` files & folders · `;` clipboard history
+- `apps` (default) · `>` run a command · `=` calculator · `/` or `~` files & folders · `;` clipboard history · `:` emoji & symbols (enter types it where you were; see `emojiAction`)
 - Frecency ranking — what you actually reach for floats up
 - Files: `enter` = smart open (project dir → editor, else file manager), `ctrl+enter` = editor, `alt+enter` = file manager, `shift+enter` = terminal there. It **learns** your pick per directory.
 - Inspect card (`tab`) — text/image/video previews, colour swatches, binary metadata, app details; scrollable, mouse-locked
@@ -51,6 +52,9 @@ It also owns your wallpaper (static / GIF / video, cross-faded on switch), repai
 **Colours**
 - Wallpaper → palette written to `~/.config/gimbal/colors.json`, live-reloaded by the theme
 - Derived from an ImageMagick histogram of the current wallpaper: surfaces, accent, and contrast/secondary/tertiary/error state colours rotated around the accent
+
+**Polkit**
+- Gimbal is the polkit agent: when an app asks for admin rights, a card asks for your password (stop any other agent)
 
 **Notifications**
 - Own `org.freedesktop.Notifications` server (disable mako / dunst / swaync)
@@ -174,11 +178,14 @@ bindsym $mod+Tab exec gimbal toggle
   "dirOpen": "smart",
   "idleRest": 300,
   "idleDark": 600,
+  "emojiAction": "type",
   "fileRoots": ["~/Projects", "~/Documents", "~/Downloads"]
 }
 ```
 
 `dirOpen` — what plain `enter` does on a directory before it's learned a pick: `smart` | `editor` | `files` | `terminal`.
+
+`emojiAction` — what `enter` does on a `:` emoji or symbol: `type` it into the window you were in (needs `wtype`; falls back to copying) | `copy` it to the clipboard.
 
 Env vars override the file: `GIMBAL_EDITOR`, `GIMBAL_FILE_MANAGER`, `GIMBAL_TERMINAL`, `GIMBAL_DIR_OPEN`, `GIMBAL_FILE_ROOTS` (`:`-separated), `GIMBAL_WALLPAPER_DIR`.
 

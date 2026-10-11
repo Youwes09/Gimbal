@@ -22,7 +22,7 @@ PanelWindow {
     property real t: 0
 
     onOpenChanged: {
-        if (root.open) { root.active = true; showAnim.restart() }
+        if (root.open) { hideAnim.stop(); root.active = true; showAnim.restart() }
         else hideAnim.restart()
     }
     Anim { id: showAnim; target: root; property: "t"; to: 1; duration: Motion.fast }

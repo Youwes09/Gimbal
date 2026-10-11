@@ -28,6 +28,12 @@ QtObject {
         return t
     }
     readonly property var tags: root.group(root.clients)
+    // Workspaces 1 through the last one in use (or `active`, if later); at least one.
+    function span(tags, active) {
+        let n = Math.max(1, active || 0)
+        for (let i = 0; i < 9; i++) if ((tags[i] || []).length) n = Math.max(n, i + 1)
+        return n
+    }
 
     function geometry(name) {
         return root.monitors[name] || root.monitors[root.monitor] || { x: 0, y: 0, w: 16, h: 10 }
@@ -86,7 +92,9 @@ QtObject {
             .map(c => ({ id: c.id, pid: c.pid, appid: c.appid || "", title: c.title || "",
                          tag: (c.tags && c.tags[0]) || 0, monitor: c.monitor || "",
                          focused: !!c.is_focused, floating: !!c.is_floating,
+                         full: !!(c.is_maximized || c.is_fullscreen), shown: !!c.is_visible,
                          x: c.x, y: c.y, w: c.width, h: c.height }))
+        root._retile(list)
         const fewer = list.length < root.clients.length
         root._park(list)
         root.clients = list
@@ -99,12 +107,67 @@ QtObject {
         }
     }
 
+    // mango only arranges workspaces that are on screen, so a hidden one keeps its old window
+    // sizes after windows move in or out. Those are laid out here the way the tile layout
+    // would: one window fills the area; more split into a main column and an even stack.
+    property var _seen: ({})           // "monitor:tag" → window ids when last on screen
+    property var _layouts: ({})        // "monitor:tag" → layout symbol
+    property real _mfact: 0.555        // main column share, measured from visible workspaces
+    property real _gap: 10
+    property bool _seeded: false
+
+    function _retile(list) {
+        const byTag = {}
+        for (const c of list) (byTag[c.monitor + ":" + c.tag] = byTag[c.monitor + ":" + c.tag] || []).push(c)
+        const seen = Object.assign({}, root._seen)
+        for (const key in byTag) {
+            const wins = byTag[key]
+            const ids = wins.map(c => c.id).sort((a, b) => a - b).join(",")
+            const tiled = wins.filter(c => !c.floating && !c.full)
+            // Sizes mango reported before anything moved are still right.
+            if (wins.some(c => c.shown) || !root._seeded) {
+                seen[key] = ids
+                root._measure(tiled)
+                continue
+            }
+            if (seen[key] === ids) continue
+            const layout = root._layouts[key] || "T"
+            if (layout !== "T" && layout !== "M") continue
+            const g = root.geometry(wins[0].monitor), o = root._gap
+            const area = { x: g.x + o, y: g.y + o, w: g.w - 2 * o, h: g.h - 2 * o }
+            const place = (c, x, y, w, h) => { c.x = Math.round(x); c.y = Math.round(y); c.w = Math.round(w); c.h = Math.round(h) }
+            for (const c of wins) if (c.full) place(c, area.x, area.y, area.w, area.h)
+            tiled.sort((a, b) => a.x - b.x || a.y - b.y)
+            if (layout === "M" || tiled.length === 1) {
+                for (const c of tiled) place(c, area.x, area.y, area.w, area.h)
+                continue
+            }
+            if (!tiled.length) continue
+            const mw = (area.w - o) * root._mfact, sh = (area.h - o * (tiled.length - 2)) / (tiled.length - 1)
+            place(tiled[0], area.x, area.y, mw, area.h)
+            tiled.slice(1).forEach((c, i) => place(c, area.x + mw + o, area.y + i * (sh + o), area.w - mw - o, sh))
+        }
+        root._seen = seen
+        root._seeded = true
+    }
+    function _measure(tiled) {
+        if (tiled.length < 2) return
+        const g = root.geometry(tiled[0].monitor)
+        const main = tiled.reduce((a, b) => a.x <= b.x ? a : b)
+        const o = main.x - g.x
+        if (o < 0 || o > 64) return
+        root._gap = o
+        const f = main.w / (g.w - 3 * o)
+        if (f > 0.1 && f < 0.9) root._mfact = f
+    }
+
     function _onMonitors(line) {
         let j
         try { j = JSON.parse(line) } catch (e) { return }
-        const m = {}
+        const m = {}, layouts = {}
         for (const mon of j.monitors || []) {
             m[mon.name] = { x: mon.x, y: mon.y, w: mon.width, h: mon.height }
+            for (const t of mon.tags || []) layouts[mon.name + ":" + t.index] = t.layout
             if (mon.active) {
                 root.monitor = mon.name
                 const t = (mon.tags || []).find(t => t.is_active)
@@ -112,6 +175,7 @@ QtObject {
             }
         }
         root.monitors = m
+        root._layouts = layouts
     }
 
     // A window closed into the tray keeps its place in the layout while the app runs, so a

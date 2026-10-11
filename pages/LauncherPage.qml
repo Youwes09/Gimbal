@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Effects
 import Quickshell
 import Quickshell.Widgets
+import Quickshell.Io
 import "root:/modules"
 
 Item {
@@ -54,6 +55,7 @@ Item {
         if (s.startsWith(">")) return { m: "run",       q: s.slice(1).replace(/^\s+/, "") }
         if (s.startsWith("=")) return { m: "calc",      q: s.slice(1).replace(/^\s+/, "") }
         if (s.startsWith(";")) return { m: "clipboard", q: s.slice(1).replace(/^\s+/, "") }
+        if (s.startsWith(":")) return { m: "emoji",     q: s.slice(1).trim().toLowerCase() }
         if (s.startsWith("/") || s.startsWith("~")) return { m: "files", q: s }
         return { m: "apps", q: raw.trim() }
     }
@@ -224,6 +226,29 @@ Item {
         }]
     }
 
+    // Emoji and symbols from assets/emoji.tsv (char, name, group). Enter types or copies one (Config.emojiAction).
+    property var _emoji: []
+    FileView {
+        path: root.mode === "emoji" || root._emoji.length ? Quickshell.shellDir + "/assets/emoji.tsv" : ""
+        onLoaded: root._emoji = text().split("\n").filter(l => l).map(l => { const f = l.split("\t"); return { c: f[0], n: f[1], g: f[2] || "" } })
+    }
+    readonly property var emojiResults: {
+        if (root.mode !== "emoji") return []
+        const words = root.q.split(/\s+/).filter(w => w)
+        const hits = words.length
+            ? root._emoji.filter(e => words.every(w => e.n.indexOf(w) >= 0 || e.g.indexOf(w) >= 0))
+                .sort((a, b) => (b.n.startsWith(words[0]) - a.n.startsWith(words[0])) || a.n.length - b.n.length)
+            : root._emoji.filter(e => e.g !== "symbol")
+        return hits.slice(0, 60).map(e => ({
+            id: "emoji:" + e.c, title: e.n.charAt(0).toUpperCase() + e.n.slice(1), path: e.g === "symbol" ? "Symbol" : e.g,
+            kind: "emoji", iconPath: "", iconGlyph: e.c, body: e.c,
+            // Typing waits for the launcher to hand keyboard focus back to the window you were in.
+            run: () => Quickshell.execDetached(["sh", "-c", Config.emojiAction === "type"
+                ? 'sleep 0.2; command -v wtype >/dev/null && wtype -- "$1" || printf %s "$1" | wl-copy'
+                : 'printf %s "$1" | wl-copy', "_", e.c])
+        }))
+    }
+
     readonly property var runResults: {
         const c = root.q.trim()
         if (c.length === 0) return []
@@ -323,6 +348,7 @@ Item {
         : root.mode === "files"     ? root.fileResults
         : root.mode === "calc"      ? root.calcResults
         : root.mode === "run"       ? root.runResults
+        : root.mode === "emoji"     ? root.emojiResults
         : root.captureResults.concat(root.dndResults).concat(root.appResults)
     onResultsChanged: { selected = 0; inspectOpen = false }
     readonly property var current: results.length > 0
@@ -357,7 +383,7 @@ Item {
              : kind === "run" ? "Command" : kind === "calc" ? "Result"
              : kind === "action" ? "Action"
              : kind === "link" ? "Link" : kind === "image" ? "Image"
-             : kind === "color" ? "Color" : "Text"
+             : kind === "color" ? "Color" : kind === "emoji" ? "Emoji" : "Text"
     }
 
     function _rgb(hex) {
@@ -451,6 +477,7 @@ Item {
     function reset() {
         input.clear()
         query = ""
+        if (Sh.launcherSeed) { input.text = Sh.launcherSeed; Sh.launcherSeed = "" }
         selected = 0
         inspectOpen = false
         Places.rescan()
@@ -471,6 +498,7 @@ Item {
     Connections {
         target: Sh
         function onLauncherShownChanged() { if (Sh.launcherShown) root.reset() }
+        function onLauncherSeedChanged() { if (Sh.launcherShown && Sh.launcherSeed) { input.text = Sh.launcherSeed; Sh.launcherSeed = "" } }
     }
     Component.onCompleted: if (Sh.launcherShown) root.reset()
 
@@ -763,8 +791,8 @@ Item {
                                              && !rowItem.isImg && modelData.kind !== "color"
                                     text: modelData.iconGlyph || root._glyph(modelData.kind)
                                     color: rowItem.sel ? DeckUi.text : DeckUi.dim
-                                    font.family: Sh.iconFont
-                                    font.pixelSize: root.f(16)
+                                    font.family: modelData.kind === "emoji" ? DeckUi.sans : Sh.iconFont
+                                    font.pixelSize: root.f(modelData.kind === "emoji" ? 19 : 16)
                                 }
                             }
 

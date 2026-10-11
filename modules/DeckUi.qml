@@ -42,12 +42,18 @@ QtObject {
     readonly property string mono: Sh.font
 
     // Keyboard focus. A zone that runs out of room in a direction hands focus on with go().
-    // Left to right: media | rail | center | quick, with mixer under quick.
+    // Left to right: clock over media (or the calendar) | rail | center | quick, with mixer
+    // under quick.
     property string zone: "center"
     property string section: "home"     // center panel: one of `sections`
-    readonly property var sections: ["home", "spaces", "notifications", "captures", "session"]
+    readonly property var sections: ["home", "spaces", "network", "notifications", "captures", "session"]
+    property bool calendarOpen: false
+    property int tile: 0               // focused stat tile, 0..3 (CPU, memory, GPU, temp)
     readonly property var _next: ({
-        media:  { right: "rail" },
+        clock:    { right: "rail", down: "media" },
+        media:    { up: "clock", right: "rail", down: "tiles" },
+        tiles:    { up: "media", right: "rail" },
+        calendar: { up: "clock" },
         rail:   { left: "media", right: "center" },
         center: { left: "rail", right: "quick" },
         quick:  { left: "center", down: "mixer" },
@@ -60,8 +66,11 @@ QtObject {
 
     // Deferred so the zone being entered doesn't also act on the key that got it there.
     function go(dir) {
-        const z = (root._next[root.zone] || {})[dir]
-        if (z && !(z === "media" && !Status.player)) Qt.callLater(() => root.zone = z)
+        let z = (root._next[root.zone] || {})[dir]
+        // The calendar takes the media card's place; with nothing playing, the media card is
+        // skipped (down to the tiles, up or left to the clock).
+        if (z === "media") z = root.calendarOpen ? "calendar" : Status.player ? "media" : root.zone === "clock" ? "tiles" : "clock"
+        if (z) Qt.callLater(() => root.zone = z)
     }
     function page(dir) {
         const i = root.sections.indexOf(root.section)

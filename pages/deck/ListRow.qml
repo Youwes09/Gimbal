@@ -10,7 +10,8 @@ Rectangle {
     property string title: ""
     property string subtitle: ""
     property string meta: ""
-    property string badge: ""         // short accent tag, e.g. "+19"
+    property string badge: ""         // short tag, e.g. "+19"
+    property bool badgeLive: false    // accent for live state ("Connected"); neutral otherwise
     property bool selected: false
     signal clicked()
 
@@ -90,12 +91,12 @@ Rectangle {
             width: tag.implicitWidth + DeckUi.f(10)
             height: tag.implicitHeight + DeckUi.f(4)
             radius: DeckUi.badgeRadius
-            color: Qt.alpha(DeckUi.accent, 0.14)
+            color: row.badgeLive ? Qt.alpha(DeckUi.accent, 0.14) : Qt.rgba(1, 1, 1, 0.07)
             Text {
                 id: tag
                 anchors.centerIn: parent
                 text: row.badge
-                color: DeckUi.accent
+                color: row.badgeLive ? DeckUi.accent : DeckUi.dim
                 font.family: DeckUi.mono
                 font.pixelSize: DeckUi.f(10.5)
                 font.weight: Font.Medium

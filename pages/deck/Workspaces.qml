@@ -18,19 +18,24 @@ Item {
     property string armAct: ""         // …to "delete" or "replace" it
     property bool naming: false
     property string renaming: ""       // setup whose name is being edited
+    property int win: 0                // selected window in the preview row
+    readonly property var previewWins: sp.focusTags[sp.tag - 1] || []
 
     readonly property bool kb: DeckUi.zone === "center"
     readonly property var focusTags: sp.row === "saved" && sp.saved[sp.ri]
         ? Spaces.group(sp.saved[sp.ri].snap.windows) : Spaces.tags
+    readonly property int focusCount: Spaces.span(sp.focusTags, sp.row === "saved" ? 0 : Spaces.active)
     function _ago(ms) { const a = Status.ago(ms); return a === "now" ? "just now" : a + " ago" }
 
     function enterRow(r, i) {
         sp.row = r
         sp.ri = i || 0
         sp.armed = ""
+        sp.tag = Math.min(sp.tag, sp.focusCount)
+        sp.win = Math.max(0, Math.min(sp.win, sp.previewWins.length - 1))
     }
     function stepTag(d) {
-        if (sp.tag + d < 1 || sp.tag + d > 9) return false
+        if (sp.tag + d < 1 || sp.tag + d > sp.focusCount) return false
         sp.tag += d
         return true
     }
@@ -80,7 +85,7 @@ Item {
             if (DeckUi.zone !== "center" || DeckUi.section !== "spaces") return
             const L = key === Qt.Key_Left, R = key === Qt.Key_Right, U = key === Qt.Key_Up, D = key === Qt.Key_Down
             const s = sp.row === "saved" && sp.saved[sp.ri] && sp.saved[sp.ri].kind === "setup" ? sp.saved[sp.ri] : null
-            if (key === Qt.Key_Return || key === Qt.Key_Enter) { sp.activate(); return }
+            if (sp.row !== "preview" && (key === Qt.Key_Return || key === Qt.Key_Enter)) { sp.activate(); return }
             if (s && (mods & Qt.ShiftModifier) && (U || D)) { sp.reorder(s.name, U ? -1 : 1); return }
             if (s && (key === Qt.Key_Delete || key === Qt.Key_Backspace || key === Qt.Key_X)) { sp.confirm(s.name, "delete"); return }
             if (s && key === Qt.Key_U) { sp.confirm(s.name, "replace"); return }
@@ -88,13 +93,38 @@ Item {
             if (sp.row === "head") {
                 if (L) DeckUi.go("left")
                 if (R) DeckUi.go("right")
+                if (D) sp.enterRow(sp.previewWins.length ? "preview" : "now")
+                return
+            }
+            // Preview: ←→ pick a window, Enter focuses it, Shift+←→ moves it a workspace over,
+            // Delete twice closes it.
+            if (sp.row === "preview") {
+                const ws = sp.previewWins, w = ws[sp.win]
+                const shift = mods & Qt.ShiftModifier
+                if (!w) { sp.enterRow("now"); return }
+                if (shift && (L || R)) {
+                    const t = sp.tag + (L ? -1 : 1)
+                    if (t >= 1 && t <= 9) Spaces.moveWindow(w, t)
+                    sp.win = Math.max(0, Math.min(sp.win, ws.length - 2))
+                    return
+                }
+                if (L) { if (sp.win === 0) DeckUi.go("left"); else sp.win-- }
+                if (R) { if (sp.win === ws.length - 1) DeckUi.go("right"); else sp.win++ }
+                if (U) sp.enterRow("head")
                 if (D) sp.enterRow("now")
+                if (key === Qt.Key_Return || key === Qt.Key_Enter) { Spaces.focus(w); Sh.closeDeck() }
+                if (key === Qt.Key_Delete || key === Qt.Key_Backspace || key === Qt.Key_X) {
+                    if (sp.armed !== "win:" + w.id) { sp.armed = "win:" + w.id; return }
+                    sp.armed = ""
+                    Spaces.closeWindow(w)
+                    sp.win = Math.max(0, Math.min(sp.win, ws.length - 2))
+                }
                 return
             }
             if (L && !sp.stepTag(-1)) DeckUi.go("left")
             if (R && !sp.stepTag(1)) DeckUi.go("right")
             if (U) {
-                if (sp.row === "now") sp.enterRow("head")
+                if (sp.row === "now") sp.enterRow(sp.previewWins.length ? "preview" : "head")
                 else if (sp.ri === 0) sp.enterRow("now")
                 else sp.enterRow("saved", sp.ri - 1)
             }
@@ -166,8 +196,8 @@ Item {
         Text {
             anchors { right: parent.right; baseline: peekTitle.baseline; rightMargin: DeckUi.f(14) }
             readonly property int n: (sp.focusTags[sp.tag - 1] || []).length
-            text: preview.dragging ? "Drop on a workspace" : n + (n === 1 ? " window" : " windows")
-            color: preview.dragging ? DeckUi.accent : DeckUi.faint
+            text: preview.dragging ? "Drop on a workspace" : sp.armed.startsWith("win:") ? "Delete again to close" : n + (n === 1 ? " window" : " windows")
+            color: preview.dragging ? DeckUi.accent : sp.armed.startsWith("win:") ? DeckUi.danger : DeckUi.faint
             font.family: DeckUi.mono
             font.pixelSize: DeckUi.f(11)
         }
@@ -176,6 +206,8 @@ Item {
             anchors { left: parent.left; right: parent.right; top: peekTitle.bottom; bottom: parent.bottom; margins: DeckUi.f(14); topMargin: DeckUi.f(10) }
             windows: sp.focusTags[sp.tag - 1] || []
             live: sp.row !== "saved"
+            selected: sp.kb && sp.row === "preview" ? sp.win : -1
+            closeArmed: sp.armed.startsWith("win:")
             dragLayer: sp
             onOpened: Sh.closeDeck()
         }
@@ -193,6 +225,7 @@ Item {
         active: Spaces.active
         selected: sp.kb && sp.row === "now" ? sp.tag : 0
         acceptsWindows: true
+        showAll: preview.dragging
         onHovered: (t) => { if (!preview.dragging) { sp.enterRow("now"); sp.tag = t } }
         onPicked: (t) => { Spaces.view(t); Sh.closeDeck() }
         onWindowDropped: (t, w) => Spaces.moveWindow(w, t)
@@ -323,7 +356,7 @@ Item {
                             text: srow.editing ? "Enter to rename"
                                 : srow.arm ? (sp.armAct === "delete" ? "Delete again" : "Replace again")
                                 : sp._ago(srow.modelData.snap.at)
-                            color: srow.arm ? (sp.armAct === "delete" ? DeckUi.danger : DeckUi.accent) : DeckUi.faint
+                            color: srow.arm ? (sp.armAct === "delete" ? DeckUi.danger : DeckUi.text) : DeckUi.faint
                             font.family: DeckUi.mono
                             font.pixelSize: DeckUi.f(10.5)
                         }
@@ -351,7 +384,7 @@ Item {
                             anchors { right: parent.right; rightMargin: DeckUi.f(6); verticalCenter: parent.verticalCenter }
                             visible: !srow.setup && srow.sel
                             text: "Restore"
-                            color: DeckUi.accent
+                            color: DeckUi.dim
                             font.family: DeckUi.sans
                             font.pixelSize: DeckUi.f(12)
                             font.weight: Font.Medium

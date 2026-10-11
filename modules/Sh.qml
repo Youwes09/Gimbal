@@ -70,6 +70,26 @@ QtObject {
     readonly property string icWallpaper:     "\ue44b"
     readonly property string icTrash:         "\ue18d"
     readonly property string icPencil:        "\ue1f9"
+    readonly property string icEmpty:         "\ue1cb"
+    readonly property string icWifi:          "\ue1ae"
+    readonly property string icWifiHigh:      "\ue5f7"
+    readonly property string icWifiLow:       "\ue5f8"
+    readonly property string icWifiZero:      "\ue5f9"
+    readonly property string icWifiOff:       "\ue1af"
+    readonly property string icBluetooth:     "\ue05c"
+    readonly property string icBluetoothOn:   "\ue1b8"
+    readonly property string icBluetoothOff:  "\ue1b9"
+    readonly property string icRadar:         "\ue497"
+    readonly property string icHeadphones:    "\ue0f1"
+    readonly property string icMouse:         "\ue28e"
+    readonly property string icGamepad:       "\ue0df"
+    readonly property string icPhone:         "\ue163"
+    readonly property string icSpeaker:       "\ue166"
+    readonly property string icWatch:         "\ue1ad"
+    readonly property string icLaptop:        "\ue1cd"
+    readonly property string icNetwork:       "\ue125"
+    readonly property string icGlobe:         "\ue0e8"
+    readonly property string icCalendar:      "\ue063"
     readonly property string icFolderOpen:    "\ue247"
     readonly property string icRotate:        "\ue149"
     readonly property string icLogOut:        "\ue10e"
@@ -99,6 +119,7 @@ QtObject {
     property bool launcherShown: false
     function toggleLauncher() { if (root.launcherShown) root.closeLauncher(); else root.openLauncher() }
     function openLauncher()   { root._closeAll(); root.launcherShown = true }
+    property string launcherSeed: ""     // text the next launcher open starts with
     function closeLauncher()  { root.launcherShown = false }
 
     // The deck (Super+Tab).

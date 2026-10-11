@@ -47,6 +47,26 @@ Item {
 
     property string uptime: ""
     property string host: ""
+    property var bootedAt: null
+    property var sys: ({})
+    property Process _sys: Process {
+        running: Sh.deckShown
+        command: ["sh", "-c", ". /etc/os-release; echo \"os=$PRETTY_NAME\"; echo \"kernel=$(uname -r)\"; "
+            + "p=/nix/var/nix/profiles/system; "
+            + "echo \"gen=$(readlink $p | sed 's/system-\\(.*\\)-link/\\1/')\"; echo \"built=$(stat -c %Y $p 2>/dev/null)\""]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const o = {}
+                for (const ln of this.text.split("\n")) { const i = ln.indexOf("="); if (i > 0) o[ln.slice(0, i)] = ln.slice(i + 1) }
+                ses.sys = o
+            }
+        }
+    }
+    function _when(sec) {
+        if (!sec) return ""
+        const d = new Date(sec * 1000), days = Math.floor((Date.now() - d) / 86400000)
+        return d.toLocaleDateString(Qt.locale(), "MMM d") + (days ? "  ·  " + days + "d ago" : "  ·  today")
+    }
     property Process _up: Process {
         running: Sh.deckShown
         command: ["cat", "/proc/uptime", "/proc/sys/kernel/hostname"]
@@ -56,6 +76,7 @@ Item {
                 ses.host = (ln[1] || "").trim()
                 const s = Math.floor(parseFloat(ln[0]) || 0)
                 const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60)
+                ses.bootedAt = new Date(Date.now() - s * 1000)
                 ses.uptime = (d > 0 ? d + "d " : "") + (h > 0 ? h + "h " : "") + m + "m"
             }
         }
@@ -65,13 +86,44 @@ Item {
         id: header
         anchors { left: parent.left; right: parent.right; top: parent.top }
         title: "Session"
-        detail: Quickshell.env("USER") + "@" + ses.host + "  ·  up " + ses.uptime
+        detail: Quickshell.env("USER") + "@" + ses.host
+    }
+
+    // The machine, spec-sheet style.
+    Row {
+        id: specs
+        anchors { left: parent.left; right: parent.right; top: header.bottom; topMargin: DeckUi.f(18) }
+        spacing: DeckUi.f(28)
+        readonly property real colW: (width - spacing) / 2
+        Column {
+            width: specs.colW
+            Caption { width: parent.width; text: "System"; height: DeckUi.f(24) }
+            Spec { label: "Host"; value: ses.host }
+            Spec { label: "User"; value: Quickshell.env("USER") }
+            Spec { label: "OS"; value: ses.sys.os || "" }
+            Spec { label: "Kernel"; value: ses.sys.kernel || "" }
+        }
+        Column {
+            width: specs.colW
+            Caption { width: parent.width; text: "Uptime"; height: DeckUi.f(24) }
+            Spec { label: "Up"; value: ses.uptime; valueColor: DeckUi.text }
+            Spec { label: "Booted"; value: ses.bootedAt ? ses.bootedAt.toLocaleString(Qt.locale(), "MMM d  ·  HH:mm") : "" }
+            Spec { label: "Generation"; value: ses.sys.gen ? "#" + ses.sys.gen : "" }
+            Spec { label: "Built"; value: ses._when(parseInt(ses.sys.built)) }
+        }
+    }
+    Rectangle {
+        id: specRule
+        anchors { left: parent.left; right: parent.right; top: specs.bottom; topMargin: DeckUi.f(18) }
+        height: 1
+        color: DeckUi.line
     }
 
     Row {
         id: row
-        anchors.centerIn: parent
-        anchors.verticalCenterOffset: header.height / 2
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.verticalCenterOffset: (specRule.y + 1) / 2
         spacing: DeckUi.f(14)
         readonly property real w: Math.min(DeckUi.f(118), (ses.width - spacing * 4) / 5)
 

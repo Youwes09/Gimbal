@@ -41,6 +41,10 @@ QtObject {
     readonly property int idleRest: root._j.idleRest !== undefined ? root._j.idleRest : 300
     readonly property int idleDark: root._j.idleDark !== undefined ? root._j.idleDark : 600
 
+    // What Enter does on an emoji or symbol in the launcher: "type" it into the window you were
+    // in (needs wtype), or "copy" it to the clipboard.
+    readonly property string emojiAction: root._j.emojiAction === "copy" ? "copy" : "type"
+
     readonly property var notifications:
         (root._j.notifications && typeof root._j.notifications === "object")
             ? root._j.notifications : ({})
