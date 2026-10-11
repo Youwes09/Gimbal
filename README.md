@@ -25,7 +25,7 @@ It also owns your wallpaper (static / GIF / video, cross-faded on switch), repai
   - **Notifications** — full history; open, dismiss, clear, Focus (Do Not Disturb)
   - **Captures** — newest screenshots and recordings; open, copy, trash; take new ones
   - **Session** — your machine at a glance (host, OS, kernel, uptime, NixOS generation and when it was built), then rest, suspend, log out, reboot, shut down (the last three ask twice)
-- Right: quick toggles (Focus, keyboard backlight and power profile via `asusctl`, the keyboard lit in the wallpaper's accent, warm light via WayOLED's `oledctl`; each shows "Unavailable" without its tool) above Sound (output, microphone, a slider per app playing, with its icon) and Display (brightness)
+- Right: quick toggles (Focus, keyboard backlight, power profile via `asusctl`, warm light via WayOLED's `oledctl`; each shows "Unavailable" without its tool) above Sound (output, microphone, a slider per app playing, with its icon) and Display (brightness)
 - Fully keyboard driven with arrows and `enter`: arrows move spatially across the whole deck and hand off between panels at the edges; in the mixer `←`/`→` set the level. `tab` / `1`–`6` switch pages, `space` play/pause, `esc` close. Key chips under the deck show what works where you are
 - Frosted backdrop from one blurred still of the screen; everything is built on open and torn down on close. Stats and git state are only sampled while it is open
 
@@ -97,12 +97,13 @@ The script checks dependencies, installs the missing ones (`pacman` + `paru`/`ya
 | | `wl-clipboard`, `cliphist` | clipboard history (`wl-paste --watch cliphist store` must run) |
 | | `imagemagick` | wallpaper colour palette, wallpaper still-cache, app icon normalisation |
 | | `grim` | screenshots |
-| | `brightnessctl` | screen brightness (used if no `oledctl` on `$PATH`) |
+| | `brightnessctl` | screen brightness (used if no `oledctl` on `$PATH`), keyboard backlight fallback |
 | | `libnotify` | screenshot toasts |
 | | `xdg-utils` | fallback opener when no file manager is configured |
 | **optional** | `qt6-multimedia` | video wallpapers |
 | | `ffmpeg` | video wallpaper poster frames |
 | | `wl-screenrec` | screen recording |
+| | `glib` (`gdbus`) | keyboard backlight through UPower, kept in step with the Fn keys |
 | | `upower` | low-battery warnings |
 | | `file` | richer file-type detection in the inspect card |
 
@@ -120,6 +121,7 @@ gimbal wallpaper …      next | prev | random | rescan | list | <name>
 gimbal screenshot …     region | full
 gimbal record …         full | region | toggle | stop
 gimbal spaces …         restore | load <name> | save <name> | remove <name> | rename <from> <to> | list
+gimbal kbd …            up | down | cycle | set <n>   (keyboard backlight)
 ```
 
 **In the carousel:** `←`/`→` cycle · `enter` apply · `esc` close
@@ -179,6 +181,8 @@ bindsym $mod+Tab exec gimbal toggle
   "idleRest": 300,
   "idleDark": 600,
   "emojiAction": "type",
+  "scale": 1.0,
+  "kbdBacklight": "auto",
   "fileRoots": ["~/Projects", "~/Documents", "~/Downloads"]
 }
 ```
@@ -187,7 +191,11 @@ bindsym $mod+Tab exec gimbal toggle
 
 `emojiAction` — what `enter` does on a `:` emoji or symbol: `type` it into the window you were in (needs `wtype`; falls back to copying) | `copy` it to the clipboard.
 
-Env vars override the file: `GIMBAL_EDITOR`, `GIMBAL_FILE_MANAGER`, `GIMBAL_TERMINAL`, `GIMBAL_DIR_OPEN`, `GIMBAL_FILE_ROOTS` (`:`-separated), `GIMBAL_WALLPAPER_DIR`.
+`scale` — size of everything Gimbal draws: a number, or `"auto"` to follow the screen's pixel density (a 243 PPI panel is 1.0). Use this instead of `QT_SCALE_FACTOR`, which blurs images and leaks into apps launched from Gimbal.
+
+`kbdBacklight` — keyboard backlight backend: `auto` | `asusctl` | `upower` | `brightnessctl` | `none`. `auto` takes `asusctl` only with an ASUS Aura keyboard (which is also lit in the wallpaper's accent), then UPower, then `brightnessctl`.
+
+Env vars override the file: `GIMBAL_EDITOR`, `GIMBAL_FILE_MANAGER`, `GIMBAL_TERMINAL`, `GIMBAL_DIR_OPEN`, `GIMBAL_SCALE`, `GIMBAL_KBD_BACKLIGHT`, `GIMBAL_FILE_ROOTS` (`:`-separated), `GIMBAL_WALLPAPER_DIR`.
 
 State (frecency, current wallpaper, video posters) lives under `~/.local/state/gimbal` and `~/.cache/gimbal`.
 

@@ -50,11 +50,11 @@ Variants {
 
             Rectangle {
                 anchors.bottom: parent.top
-                anchors.bottomMargin: 6
+                anchors.bottomMargin: Sh.fs(6)
                 anchors.horizontalCenter: parent.horizontalCenter
-                width: dimText.implicitWidth + 12
-                height: dimText.implicitHeight + 6
-                radius: 5
+                width: dimText.implicitWidth + Sh.fs(12)
+                height: dimText.implicitHeight + Sh.fs(6)
+                radius: Sh.fs(5)
                 color: Qt.rgba(0, 0, 0, 0.7)
                 visible: parent.width > 2 && parent.height > 2
 

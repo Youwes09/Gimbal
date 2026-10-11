@@ -14,6 +14,7 @@ ShellRoot {
     readonly property bool _net: Net.live
     readonly property real _power: Power.watts
     readonly property int _gpus: SysStats.gpus.length
+    readonly property bool _kbd: Kbd.available
 
     WallpaperWindow { }
     Overlay { id: overlay }
@@ -113,6 +114,16 @@ ShellRoot {
         function down(step: string): void { Audio.nudge(-(parseFloat(step) || 5) / 100) }
         function mute():             void { Audio.toggleMute() }
         function get():            string { return Math.round(Audio.volume * 100) + (Audio.muted ? " muted" : "") }
+    }
+
+    IpcHandler {
+        target: "kbd"
+
+        function up():             void { Kbd.up() }
+        function down():           void { Kbd.down() }
+        function cycle():          void { Kbd.cycle() }
+        function set(n: string):   void { Kbd.set(parseInt(n) || 0) }
+        function get():          string { return Kbd.available ? Kbd.level + "/" + Kbd.max + " " + Kbd.backend : "unavailable" }
     }
 
     IpcHandler {

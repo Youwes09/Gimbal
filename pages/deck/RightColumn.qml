@@ -20,10 +20,9 @@ Column {
             { glyph: Notifications.dnd ? Sh.icBellOff : Sh.icBell, label: "Focus",
               state: Notifications.dnd ? "Silenced" : "Off", on: Notifications.dnd,
               act: () => Notifications.toggleDnd() },
-            // Enter steps Off → Low → Medium → High.
-            { glyph: Machine.kbd === "Off" ? Sh.icKeyboardOff : Sh.icKeyboard, label: "Keyboard",
-              state: !Machine.hasKbd ? "Unavailable" : Machine.kbd === "Med" ? "Medium" : Machine.kbd,
-              on: Machine.hasKbd && Machine.kbd !== "Off", act: () => Machine.nextKbd() },
+            // Enter steps through the levels and back to off.
+            { glyph: Kbd.available && Kbd.level === 0 ? Sh.icKeyboardOff : Sh.icKeyboard, label: "Keyboard",
+              state: Kbd.label, on: Kbd.available && Kbd.level > 0, act: () => Kbd.cycle() },
             // Enter cycles Quiet → Balanced → Performance; lit whenever it's off the default.
             { glyph: Machine.profile === "Performance" ? Sh.icBolt
                    : Machine.profile === "Quiet" ? Sh.icChevronsDown : Sh.icGauge,

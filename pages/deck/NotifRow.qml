@@ -20,8 +20,8 @@ Rectangle {
     Rectangle {
         visible: nr.crit
         anchors { left: parent.left; top: parent.top; bottom: parent.bottom; margins: DeckUi.f(10) }
-        width: 2
-        radius: 1
+        width: DeckUi.f(2)
+        radius: width / 2
         color: DeckUi.danger
     }
 

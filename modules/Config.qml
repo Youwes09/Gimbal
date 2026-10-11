@@ -34,6 +34,12 @@ QtObject {
     readonly property string dirOpen:
         _pick("dirOpen", "GIMBAL_DIR_OPEN", "smart")
 
+    // UI scale: a number, or "auto" to follow the screen's pixel density (see Theme.scale).
+    readonly property var scale: _pick("scale", "GIMBAL_SCALE", 1)
+
+    // Keyboard backlight backend: "auto" | "asusctl" | "upower" | "brightnessctl" | "none".
+    readonly property string kbdBacklight: _pick("kbdBacklight", "GIMBAL_KBD_BACKLIGHT", "auto")
+
     readonly property bool raiseRunning:
         root._j.raiseRunning !== undefined ? !!root._j.raiseRunning : true
 

@@ -21,10 +21,13 @@ PanelWindow {
 
     readonly property bool up: Osd.kind !== ""
     readonly property bool isVol: Osd.kind === "volume"
-    readonly property real pct: isVol ? (Audio.muted ? 0 : Math.min(1, Audio.volume)) : Brightness.pct
+    readonly property bool isKbd: Osd.kind === "kbd"
+    readonly property real pct: isVol ? (Audio.muted ? 0 : Math.min(1, Audio.volume))
+        : isKbd ? Kbd.pct : Brightness.pct
     readonly property string glyph: isVol
         ? (Audio.muted || Audio.volume <= 0.001 ? Sh.icVolumeMute
            : Audio.volume < 0.5 ? Sh.icVolumeLow : Sh.icVolumeHigh)
+        : isKbd ? (Kbd.level === 0 ? Sh.icKeyboardOff : Sh.icKeyboard)
         : Sh.icSun
 
     Rectangle {
@@ -63,7 +66,7 @@ PanelWindow {
             Text {
                 anchors.verticalCenter: parent.verticalCenter
                 text: win.glyph
-                color: (win.isVol && (Audio.muted || Audio.volume <= 0.001)) ? Theme.muted : Theme.accent
+                color: win.pct <= 0.001 ? Theme.muted : Theme.accent
                 font.family: Sh.iconFont
                 font.pixelSize: Sh.fs(18)
             }

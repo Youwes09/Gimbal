@@ -78,6 +78,7 @@ gimbal — summoned-overlay shell daemon control
                           workspace layouts (no arg lists saved setups)
   gimbal volume [up|down [step]|mute]       adjust output volume (default step 5)
   gimbal brightness [up|down [step]]        adjust screen brightness (default step 5)
+  gimbal kbd [up|down|cycle|set <n>]        keyboard backlight (no arg prints level/max and backend)
   gimbal help             show this message
 EOF
 }
@@ -172,6 +173,15 @@ volume)
         down) ipc volume down "${3:-5}" ;;
         mute) ipc volume mute ;;
         *)    ipc volume get ;;
+    esac
+    ;;
+kbd)
+    ensure_daemon_fast || exit 1
+    case "$2" in
+        up | down | cycle) ipc kbd "$2" ;;
+        set)               [ -n "$3" ] || { echo "gimbal: kbd set needs a level" >&2; exit 1; }
+                           ipc kbd set "$3" ;;
+        *)                 ipc kbd get ;;
     esac
     ;;
 brightness)

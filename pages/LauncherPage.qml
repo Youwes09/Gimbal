@@ -591,7 +591,7 @@ Item {
                             font.pixelSize: root.f(root.tInput)
                             selectByMouse: true
                             clip: true
-                            cursorDelegate: Rectangle { width: 2; color: DeckUi.accent; visible: input.cursorVisible }
+                            cursorDelegate: Rectangle { width: root.f(2); color: DeckUi.accent; visible: input.cursorVisible }
                             Keys.onEscapePressed: {
                                 if (root.inspectOpen) { root.inspectOpen = false; return }
                                 if (root.query.length > 0) input.clear()
@@ -724,8 +724,8 @@ Item {
                             anchors.fill: parent
                             anchors.leftMargin: root.sp1
                             anchors.rightMargin: root.sp1
-                            anchors.topMargin: 2
-                            anchors.bottomMargin: 2
+                            anchors.topMargin: root.f(2)
+                            anchors.bottomMargin: root.f(2)
                             radius: root.rSm
                             color: (!rowItem.sel && rowMouse.containsMouse) ? root.cHover : "transparent"
                             Behavior on color { CAnim {} }
@@ -799,7 +799,7 @@ Item {
                             Column {
                                 anchors.verticalCenter: parent.verticalCenter
                                 width: parent.width - root.f(34) - root.sp3 * 2 - inspectHint.width
-                                spacing: 2
+                                spacing: root.f(2)
                                 Text {
                                     text: modelData.title
                                     color: DeckUi.text
@@ -1001,6 +1001,7 @@ Item {
                             fillMode: Image.PreserveAspectFit
                             cache: false
                             asynchronous: true
+                            sourceSize.width: Math.round(width); sourceSize.height: Math.round(height)
                             source: clipboard.previewUrl
                         }
                     }
@@ -1016,6 +1017,7 @@ Item {
                             cache: false
                             asynchronous: true
                             visible: !inspectLayer._fkSvg
+                            sourceSize.width: Math.round(width); sourceSize.height: Math.round(height)
                             source: inspectLayer._fk === "image" && !inspectLayer._fkSvg
                                     ? "file://" + inspectLayer._c.body : ""
                         }

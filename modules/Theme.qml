@@ -3,9 +3,26 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import "root:/modules"
 
 QtObject {
     id: root
+
+    // Every size in the shell goes through s(). "auto" takes the G14's 243 PPI panel as 1.0.
+    readonly property real scale: {
+        const v = String(Config.scale).trim()
+        if (v === "auto") {
+            const sc = Quickshell.screens[0]
+            return sc && sc.physicalPixelDensity > 0 ? sc.physicalPixelDensity * 25.4 / 243 : 1
+        }
+        const n = parseFloat(v)
+        return n > 0 ? n : 1
+    }
+    // Anything with a size keeps at least a pixel.
+    function s(px) {
+        const v = Math.round(px * root.scale)
+        return px > 0 ? Math.max(1, v) : v
+    }
 
     property var c: ({})
 

@@ -2,6 +2,7 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
+import "root:/modules"
 
 QtObject {
     id: root
@@ -102,7 +103,7 @@ QtObject {
     }
 
     property real fontScale: 1.06
-    function fs(px) { return Math.round(px * root.fontScale) }
+    function fs(px) { return Theme.s(px * root.fontScale) }
 
     // Only one summoned surface at a time.
     function _closeAll() { root.launcherShown = false; root.deckShown = false; root.shown = false }
