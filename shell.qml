@@ -34,9 +34,11 @@ ShellRoot {
         function toggle(): void { Sh.toggleDeck() }
         function open():   void { Sh.openDeck() }
         function close():  void { Sh.closeDeck() }
+        // Opens the deck on a page; closes it if it's already there.
         function page(id: string): void {
             if (DeckUi.sections.indexOf(id) < 0) return
-            if (Sh.deckShown) DeckUi.section = id
+            if (Sh.deckShown && DeckUi.section === id) Sh.closeDeck()
+            else if (Sh.deckShown) DeckUi.section = id
             else { DeckUi.openTo = id; Sh.openDeck() }
         }
         // Feeds one key to the open deck's navigation (left, right, up, down, enter, delete).
@@ -62,6 +64,8 @@ ShellRoot {
         function open():   void { Sh.openLauncher() }
         function close():  void { Sh.closeLauncher() }
         function search(text: string): void { Sh.launcherSeed = text ?? ""; if (!Sh.launcherShown) Sh.openLauncher() }
+        // run, calc, clipboard, emoji or files
+        function mode(m: string): void { Sh.toggleLauncherMode(m ?? "") }
     }
 
     IpcHandler {

@@ -114,7 +114,9 @@ Fonts (AdwaitaMono, Lucide) are bundled in `assets/fonts/`. The Nix flake pulls 
 ```
 gimbal start            run the daemon (compositor autostart)
 gimbal launch           the launcher
+gimbal clipboard        the launcher in one mode (also emoji, files, calc, run)
 gimbal toggle           summon / dismiss the deck
+gimbal deck <page>      the deck on a page: home | spaces | network | notifications | captures | session
 gimbal walls            summon / dismiss the wallpaper carousel
 gimbal rest             show the rest screen
 gimbal wallpaper …      next | prev | random | rescan | list | <name>
@@ -124,6 +126,8 @@ gimbal spaces …         restore | load <name> | save <name> | remove <name> | 
 gimbal kbd …            up | down | cycle | set <n>   (keyboard backlight)
 gimbal bar …            show | hide | toggle   (when `bar` is on in config)
 ```
+
+`gimbal clipboard` and `gimbal deck <page>` toggle: bound to a key, it closes what it opened and switches mode or page from anywhere else.
 
 **In the carousel:** `←`/`→` cycle · `enter` apply · `esc` close
 
@@ -137,6 +141,7 @@ gimbal bar …            show | hide | toggle   (when `bar` is on in config)
 exec-once=gimbal start
 bind=SUPER+SHIFT,a,spawn_shell,gimbal launch
 bind=SUPER,Tab,spawn_shell,gimbal toggle
+bind=SUPER,v,spawn_shell,gimbal clipboard
 ```
 </details>
 
@@ -146,6 +151,7 @@ bind=SUPER,Tab,spawn_shell,gimbal toggle
 exec-once = gimbal start
 bind = SUPER SHIFT, A, exec, gimbal launch
 bind = SUPER, Tab, exec, gimbal toggle
+bind = SUPER, V, exec, gimbal clipboard
 ```
 </details>
 
@@ -156,6 +162,7 @@ spawn-at-startup "gimbal" "start"
 binds {
     "Mod+Shift+A" { spawn "gimbal" "launch"; }
     "Mod+Tab"     { spawn "gimbal" "toggle"; }
+    "Mod+V"       { spawn "gimbal" "clipboard"; }
 }
 ```
 </details>
@@ -166,6 +173,7 @@ binds {
 exec gimbal start
 bindsym $mod+Shift+a exec gimbal launch
 bindsym $mod+Tab exec gimbal toggle
+bindsym $mod+v exec gimbal clipboard
 ```
 </details>
 

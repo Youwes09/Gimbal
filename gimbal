@@ -70,6 +70,10 @@ gimbal — summoned-overlay shell daemon control
   gimbal walls            show/hide the wallpaper carousel
   gimbal rest             show the rest screen (any key returns)
   gimbal launch [text]    show/hide the launcher, or open it with text (e.g. ":" for emoji)
+  gimbal clipboard | emoji | files | calc | run
+                          show/hide the launcher in that mode
+  gimbal deck [home|spaces|network|notifications|captures|session]
+                          show/hide the deck (on that page)
   gimbal wallpaper [name|next|prev|random|rescan|list]
                           manage the wallpaper (no arg prints the current one)
   gimbal screenshot [region|full] [quiet]   take a screenshot (default region; quiet: clipboard only, no file)
@@ -124,6 +128,21 @@ launch)
     ipc launcher toggle && exit 0
     ensure_daemon || exit 1
     for _ in $(seq 1 50); do sleep 0.1; ipc launcher toggle && exit 0; done
+    exit 1
+    ;;
+clipboard | emoji | files | calc | run)
+    reap_duplicates
+    ipc launcher mode "$1" && exit 0
+    ensure_daemon || exit 1
+    for _ in $(seq 1 50); do sleep 0.1; ipc launcher mode "$1" && exit 0; done
+    exit 1
+    ;;
+deck)
+    reap_duplicates
+    if [ -z "$2" ]; then fn=(toggle); else fn=(page "$2"); fi
+    ipc deck "${fn[@]}" && exit 0
+    ensure_daemon || exit 1
+    for _ in $(seq 1 50); do sleep 0.1; ipc deck "${fn[@]}" && exit 0; done
     exit 1
     ;;
 wallpaper)

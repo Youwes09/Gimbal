@@ -131,6 +131,16 @@ QtObject {
     function toggleLauncher() { if (root.launcherShown) root.closeLauncher(); else root.openLauncher() }
     function openLauncher()   { root._closeAll(); root.launcherShown = true }
     property string launcherSeed: ""     // text the next launcher open starts with
+    property string launcherMode: ""     // the open launcher's mode, set by its page
+    readonly property var _modePrefix: ({ run: ">", calc: "=", clipboard: ";", emoji: ":", files: "/" })
+    // Opens the launcher in one mode; closes it if it's already there.
+    function toggleLauncherMode(m) {
+        const p = root._modePrefix[m]
+        if (!p) return
+        if (root.launcherShown && root.launcherMode === m) { root.closeLauncher(); return }
+        root.launcherSeed = p
+        if (!root.launcherShown) root.openLauncher()
+    }
     function closeLauncher()  { root.launcherShown = false }
 
     // The deck (Super+Tab).

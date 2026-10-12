@@ -60,6 +60,7 @@ Item {
         return { m: "apps", q: raw.trim() }
     }
     readonly property string mode: root._parsed.m
+    onModeChanged: Sh.launcherMode = root.mode
     readonly property string q:    root._parsed.q
 
     readonly property bool expanded: root.query.length > 0 || root.results.length > 0
