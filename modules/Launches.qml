@@ -42,7 +42,7 @@ QtObject {
         interval: 200; repeat: true
         onTriggered: {
             if (root.phase !== "starting") { watch.stop(); return }
-            if (Compositor.find(root.names) || Compositor.findTray(root.names))
+            if (Compositor.find(root.names, 3) || Compositor.findTray(root.names))
                 root._found()
         }
     }
