@@ -104,8 +104,11 @@ QtObject {
 
     property real fontScale: 1.06
     function fs(px) { return Theme.s(px * root.fontScale) }
-    // A size on one surface, with its own scale from Config.scales.
-    function sz(part, px) { return Theme.s(px * root.fontScale * Config.scaleOf(part)) }
+    // A size on one surface: its built-in scale, then its own from Config.scales.
+    readonly property var _partScale: ({ bar: 1.1 })
+    function sz(part, px) {
+        return Theme.s(px * root.fontScale * (root._partScale[part] || 1) * Config.scaleOf(part))
+    }
 
     // The focused output, from mango. Summoned surfaces open on it and stay there while open.
     readonly property var focusedScreen:

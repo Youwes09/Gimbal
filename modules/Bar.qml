@@ -159,7 +159,7 @@ Variants {
                             width: Sh.sz("bar", 22); height: Sh.barHeight
                             Rectangle {
                                 anchors.centerIn: parent
-                                width: Sh.sz("bar", 22); height: width; radius: Sh.sz("bar", 6)
+                                width: Sh.sz("bar", 22); height: width; radius: Sh.sz("bar", 4)
                                 color: tiMa.containsMouse ? DeckUi.hover : "transparent"
                                 Behavior on color { CAnim {} }
                             }
@@ -271,7 +271,7 @@ Variants {
 
         width: row.implicitWidth + Sh.sz("bar", 14) * 2
         height: Sh.barHeight
-        radius: Sh.sz("bar", 11)
+        radius: Sh.sz("bar", 7)
         color: isl.hoverable && islMa.containsMouse ? DeckUi.recessed : DeckUi.card
         border.width: 1
         border.color: DeckUi.rim
@@ -330,7 +330,7 @@ Variants {
 
         Rectangle {
             anchors.fill: parent
-            radius: Sh.sz("bar", 7)
+            radius: Sh.sz("bar", 5)
             color: gMa.containsMouse ? DeckUi.hover : "transparent"
             Behavior on color { CAnim {} }
         }
