@@ -10,15 +10,16 @@ Rectangle {
     property bool on: false
     property bool danger: false
     property bool selected: false
-    property real glyphSize: DeckUi.f(15)
+    property var sz: DeckUi.f
+    property real glyphSize: b.sz(15)
     signal clicked()
 
     readonly property color tint: b.danger ? DeckUi.danger : DeckUi.accent
     readonly property color ink: b.on ? b.tint : DeckUi.text
 
-    implicitWidth: row.implicitWidth + DeckUi.f(24)
-    implicitHeight: DeckUi.f(34)
-    radius: DeckUi.innerRadius
+    implicitWidth: row.implicitWidth + b.sz(24)
+    implicitHeight: b.sz(34)
+    radius: b.sz(8)
     color: b.on ? Qt.alpha(b.tint, 0.16)
          : b.selected ? DeckUi.sel
          : ma.containsMouse ? DeckUi.hover : DeckUi.well
@@ -29,7 +30,7 @@ Rectangle {
     Row {
         id: row
         anchors.centerIn: parent
-        spacing: DeckUi.f(7)
+        spacing: b.sz(7)
         Text {
             anchors.verticalCenter: parent.verticalCenter
             visible: b.glyph.length > 0
@@ -44,7 +45,7 @@ Rectangle {
             text: b.label
             color: b.ink
             font.family: DeckUi.sans
-            font.pixelSize: DeckUi.f(12)
+            font.pixelSize: b.sz(12)
             font.weight: Font.Medium
         }
     }

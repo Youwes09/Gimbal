@@ -14,13 +14,13 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
     anchors { top: true }
 
-    readonly property int cardW: Sh.fs(492)
-    readonly property int cardH: Sh.fs(84)
-    readonly property int topGap: Sh.fs(16)
-    readonly property int pad: Sh.fs(90)
+    readonly property int cardW: Sh.sz("notifications", 492)
+    readonly property int cardH: Sh.sz("notifications", 84)
+    readonly property int topGap: Sh.sz("notifications", 16) + Sh.barTop
+    readonly property int pad: Sh.sz("notifications", 90)
 
     implicitWidth: cardW + pad * 2
-    implicitHeight: topGap + cardH * 2 + Sh.fs(48)
+    implicitHeight: topGap + cardH * 2 + Sh.sz("notifications", 48)
 
     readonly property bool hasToast: Notifications.popupModel.count > 0 && !Sh.shown
 
@@ -49,7 +49,7 @@ PanelWindow {
 
             add: Transition {
                 Anim { property: "opacity"; from: 0; to: 1 }
-                Anim { property: "y"; from: -win.cardH - Sh.fs(10); duration: Motion.slow }
+                Anim { property: "y"; from: -win.cardH - Sh.sz("notifications", 10); duration: Motion.slow }
             }
             remove: Transition {
                 AnimOut { property: "opacity"; to: 0 }
@@ -99,15 +99,15 @@ PanelWindow {
                     RectangularShadow {
                         anchors.fill: panel
                         radius: panel.radius
-                        blur: Sh.fs(36)
-                        offset.y: Sh.fs(10)
-                        spread: Sh.fs(1)
+                        blur: Sh.sz("notifications", 36)
+                        offset.y: Sh.sz("notifications", 10)
+                        spread: Sh.sz("notifications", 1)
                         color: Qt.rgba(0, 0, 0, 0.55)
                     }
                     Rectangle {
                         id: panel
                         anchors.fill: parent
-                        radius: Sh.fs(16)
+                        radius: Sh.sz("notifications", 16)
                         color: DeckUi.card
                         border.width: 1
                         border.color: Qt.rgba(1, 1, 1, 0.13)
@@ -121,22 +121,22 @@ PanelWindow {
 
                     Item {
                         anchors.fill: parent
-                        anchors.leftMargin: Sh.fs(14)
-                        anchors.rightMargin: Sh.fs(16)
-                        anchors.bottomMargin: Sh.fs(6)
+                        anchors.leftMargin: Sh.sz("notifications", 14)
+                        anchors.rightMargin: Sh.sz("notifications", 16)
+                        anchors.bottomMargin: Sh.sz("notifications", 6)
 
                         Rectangle {
                             id: tile
                             anchors.left: parent.left
                             anchors.verticalCenter: parent.verticalCenter
-                            width: Sh.fs(38); height: width
-                            radius: Sh.fs(9)
+                            width: Sh.sz("notifications", 38); height: width
+                            radius: Sh.sz("notifications", 9)
                             color: DeckUi.graphite
                             border.width: 1
                             border.color: DeckUi.line
                             AppIcon {
                                 anchors.centerIn: parent
-                                width: Sh.fs(24); height: width
+                                width: Sh.sz("notifications", 24); height: width
                                 icon: card.model.appIcon
                                 fallbackGlyph: Sh.icBell
                             }
@@ -144,10 +144,10 @@ PanelWindow {
 
                         Column {
                             anchors.left: tile.right
-                            anchors.leftMargin: Sh.fs(12)
+                            anchors.leftMargin: Sh.sz("notifications", 12)
                             anchors.right: parent.right
                             anchors.verticalCenter: parent.verticalCenter
-                            spacing: Sh.fs(3)
+                            spacing: Sh.sz("notifications", 3)
 
                             Item {
                                 width: parent.width
@@ -156,12 +156,12 @@ PanelWindow {
                                     id: summary
                                     anchors.left: parent.left
                                     anchors.right: appName.left
-                                    anchors.rightMargin: Sh.fs(10)
+                                    anchors.rightMargin: Sh.sz("notifications", 10)
                                     text: Notifications.plain(card.model.summary) || String(card.model.app)
                                     color: DeckUi.text
                                     elide: Text.ElideRight
                                     font.family: DeckUi.sans
-                                    font.pixelSize: Sh.fs(14)
+                                    font.pixelSize: Sh.sz("notifications", 14)
                                     font.weight: Font.Medium
                                 }
                                 Text {
@@ -171,7 +171,7 @@ PanelWindow {
                                     text: String(card.model.app || "")
                                     color: DeckUi.faint
                                     font.family: DeckUi.mono
-                                    font.pixelSize: Sh.fs(11)
+                                    font.pixelSize: Sh.sz("notifications", 11)
                                 }
                             }
                             Text {
@@ -181,7 +181,7 @@ PanelWindow {
                                 color: DeckUi.dim
                                 elide: Text.ElideRight
                                 font.family: DeckUi.sans
-                                font.pixelSize: Sh.fs(12.5)
+                                font.pixelSize: Sh.sz("notifications", 12.5)
                             }
                         }
                     }
@@ -192,10 +192,10 @@ PanelWindow {
                         anchors.left: parent.left
                         anchors.right: parent.right
                         anchors.bottom: parent.bottom
-                        anchors.leftMargin: Sh.fs(64)
-                        anchors.rightMargin: Sh.fs(16)
-                        anchors.bottomMargin: Sh.fs(9)
-                        height: Sh.fs(2)
+                        anchors.leftMargin: Sh.sz("notifications", 64)
+                        anchors.rightMargin: Sh.sz("notifications", 16)
+                        anchors.bottomMargin: Sh.sz("notifications", 9)
+                        height: Sh.sz("notifications", 2)
                         radius: height / 2
                         color: DeckUi.line
 

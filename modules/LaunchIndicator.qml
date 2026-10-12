@@ -15,8 +15,8 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
     anchors { bottom: true }
 
-    implicitWidth: Sh.fs(420)
-    implicitHeight: Sh.fs(120)
+    implicitWidth: Sh.sz("launch", 420)
+    implicitHeight: Sh.sz("launch", 120)
     mask: Region {}
 
     readonly property bool up: Launches.phase !== ""
@@ -25,10 +25,10 @@ PanelWindow {
         id: pill
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
-        anchors.bottomMargin: Sh.fs(28)
-        height: Sh.fs(46)
-        width: row.implicitWidth + Sh.fs(34)
-        radius: Sh.fs(15)
+        anchors.bottomMargin: Sh.sz("launch", 28)
+        height: Sh.sz("launch", 46)
+        width: row.implicitWidth + Sh.sz("launch", 34)
+        radius: Sh.sz("launch", 15)
         color: Theme.surface
         border.width: 1
         border.color: Launches.phase === "killed" ? Qt.rgba(1, 0.4, 0.4, 0.5) : Qt.alpha(Theme.accent, 0.4)
@@ -43,14 +43,14 @@ PanelWindow {
             shadowEnabled: true
             shadowColor: Qt.rgba(0, 0, 0, 0.4)
             shadowBlur: 0.9
-            shadowVerticalOffset: Sh.fs(6)
+            shadowVerticalOffset: Sh.sz("launch", 6)
             blurMax: 48
         }
 
         Row {
             id: row
             anchors.centerIn: parent
-            spacing: Sh.fs(11)
+            spacing: Sh.sz("launch", 11)
 
             Text {
                 anchors.verticalCenter: parent.verticalCenter
@@ -59,7 +59,7 @@ PanelWindow {
                     : Sh.icRefresh
                 color: Launches.phase === "killed" ? Qt.rgba(1, 0.55, 0.55, 0.95) : Theme.accent
                 font.family: Sh.iconFont
-                font.pixelSize: Sh.fs(15)
+                font.pixelSize: Sh.sz("launch", 15)
                 RotationAnimation on rotation {
                     from: 0; to: 360; duration: 850
                     loops: Animation.Infinite
@@ -76,7 +76,7 @@ PanelWindow {
                     : ("Launching " + Launches.title + "…")
                 color: Theme.fg
                 font.family: Sh.font
-                font.pixelSize: Sh.fs(13)
+                font.pixelSize: Sh.sz("launch", 13)
                 font.weight: Font.Medium
             }
         }

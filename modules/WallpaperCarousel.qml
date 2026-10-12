@@ -21,12 +21,12 @@ Item {
         ? ((stepCount % walls.length) + walls.length) % walls.length : -1
     readonly property var centeredWall: root.sel >= 0 ? root.walls[root.sel] : null
 
-    readonly property int barW: Sh.fs(264)
-    readonly property int barH: Sh.fs(496)
+    readonly property int barW: Sh.sz("wallpapers", 264)
+    readonly property int barH: Sh.sz("wallpapers", 496)
 
-    readonly property int tileTexH: Sh.fs(360)
-    readonly property int slotSpacing: Sh.fs(300)
-    readonly property real parallaxPx: Sh.fs(82)
+    readonly property int tileTexH: Sh.sz("wallpapers", 360)
+    readonly property int slotSpacing: Sh.sz("wallpapers", 300)
+    readonly property real parallaxPx: Sh.sz("wallpapers", 82)
     readonly property real edgeFloor: 0.7
     readonly property real edgeRate: 0.07
     readonly property real edgeBreak: (1 - edgeFloor) / edgeRate
@@ -81,7 +81,7 @@ Item {
         id: strip
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.verticalCenter: parent.verticalCenter
-        anchors.verticalCenterOffset: -Sh.fs(28)
+        anchors.verticalCenterOffset: -Sh.sz("wallpapers", 28)
         width: 2 * root.edgeOffset(root.halfVisible) + root.barW
         height: root.barH
 
@@ -91,7 +91,7 @@ Item {
             Anim { target: strip; property: "scale"; from: 0.96; to: 1; duration: Motion.slow }
             Anim {
                 target: strip; property: "anchors.verticalCenterOffset"
-                from: -Sh.fs(28) + Sh.fs(20); to: -Sh.fs(28); duration: Motion.slow
+                from: -Sh.sz("wallpapers", 28) + Sh.sz("wallpapers", 20); to: -Sh.sz("wallpapers", 28); duration: Motion.slow
             }
         }
 
@@ -136,8 +136,8 @@ Item {
 
                 Rectangle {
                     anchors.fill: parent
-                    anchors.margins: -Sh.fs(5)
-                    radius: Sh.fs(18)
+                    anchors.margins: -Sh.sz("wallpapers", 5)
+                    radius: Sh.sz("wallpapers", 18)
                     color: "transparent"
                     border.width: 3
                     border.color: Qt.alpha(Theme.accent, 0.35 + 0.4 * root.applyFlash * cell.selFade)
@@ -147,11 +147,11 @@ Item {
                 ClippingRectangle {
                     id: frame
                     anchors.fill: parent
-                    radius: Sh.fs(13)
+                    radius: Sh.sz("wallpapers", 13)
                     color: Qt.alpha(Theme.accent, 0.08 + 0.08 * cell.selFade)
 
                     readonly property real wide: root.barW
-                        + (root.parallaxPx * (root.halfVisible + 1) + Sh.fs(20)) * 2
+                        + (root.parallaxPx * (root.halfVisible + 1) + Sh.sz("wallpapers", 20)) * 2
 
                     Image {
                         width: frame.wide
@@ -206,9 +206,9 @@ Item {
                 }
 
                 Rectangle {
-                    anchors { left: parent.left; top: parent.top; margins: Sh.fs(8) }
+                    anchors { left: parent.left; top: parent.top; margins: Sh.sz("wallpapers", 8) }
                     visible: cell.wall && cell.wall.path === Wallpapers.current && cell.selFade > 0.5
-                    width: Sh.fs(22); height: Sh.fs(22)
+                    width: Sh.sz("wallpapers", 22); height: Sh.sz("wallpapers", 22)
                     radius: width / 2
                     color: Theme.accent
                     Text {
@@ -216,7 +216,7 @@ Item {
                         text: Sh.icCorner
                         color: Theme.bg
                         font.family: Sh.iconFont
-                        font.pixelSize: Sh.fs(12)
+                        font.pixelSize: Sh.sz("wallpapers", 12)
                     }
                 }
             }
@@ -227,21 +227,21 @@ Item {
         id: caption
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: strip.bottom
-        anchors.topMargin: Sh.fs(26)
+        anchors.topMargin: Sh.sz("wallpapers", 26)
         gateOnReveal: false
         show: true
         content: root.centeredWall ? root.centeredWall.name
                : (Wallpapers.list.length === 0 ? "no wallpapers found" : "")
         color: Theme.fg
         font.family: Sh.font
-        font.pixelSize: Sh.fs(16)
+        font.pixelSize: Sh.sz("wallpapers", 16)
         font.weight: Font.Medium
     }
 
     Text {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: caption.bottom
-        anchors.topMargin: Sh.fs(8)
+        anchors.topMargin: Sh.sz("wallpapers", 8)
         visible: Wallpapers.list.length > 0
         textFormat: Text.StyledText
         text: {
@@ -252,6 +252,6 @@ Item {
         }
         color: Theme.muted
         font.family: Sh.font
-        font.pixelSize: Sh.fs(11)
+        font.pixelSize: Sh.sz("wallpapers", 11)
     }
 }

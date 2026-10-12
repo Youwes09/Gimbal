@@ -1,12 +1,12 @@
 <h1 align="center">Gimbal</h1>
 
-<p align="center">A summoned <a href="https://github.com/quickshell-mirror/quickshell">Quickshell</a> shell for wlroots Wayland. No bar — nothing is on screen until you call it.</p>
+<p align="center">A summoned <a href="https://github.com/quickshell-mirror/quickshell">Quickshell</a> shell for wlroots Wayland. No bar by default — nothing is on screen until you call it.</p>
 
 ---
 
 ## What it is
 
-Gimbal has no persistent chrome. You bind three keys:
+Gimbal has no persistent chrome unless you turn on the bar. You bind three keys:
 
 - **the deck** — a three-column overview: at a glance on the left, a main panel in the middle, controls on the right
 - **the launcher** — a Spotlight-style bar: apps, files, clipboard history, a calculator, and run-a-command, all behind single-character prefixes, ranked by frecency, with an inspect card for previews
@@ -122,6 +122,7 @@ gimbal screenshot …     region | full
 gimbal record …         full | region | toggle | stop
 gimbal spaces …         restore | load <name> | save <name> | remove <name> | rename <from> <to> | list
 gimbal kbd …            up | down | cycle | set <n>   (keyboard backlight)
+gimbal bar …            show | hide | toggle   (when `bar` is on in config)
 ```
 
 **In the carousel:** `←`/`→` cycle · `enter` apply · `esc` close
@@ -182,7 +183,9 @@ bindsym $mod+Tab exec gimbal toggle
   "idleDark": 600,
   "emojiAction": "type",
   "scale": 1.0,
+  "scales": { "bar": 1.0, "deck": 1.0, "launcher": 1.0 },
   "kbdBacklight": "auto",
+  "bar": false,
   "fileRoots": ["~/Projects", "~/Documents", "~/Downloads"]
 }
 ```
@@ -193,9 +196,13 @@ bindsym $mod+Tab exec gimbal toggle
 
 `scale` — size of everything Gimbal draws: a number, or `"auto"` to follow the screen's pixel density (a 243 PPI panel is 1.0). Use this instead of `QT_SCALE_FACTOR`, which blurs images and leaks into apps launched from Gimbal.
 
+`scales` — per-surface multipliers on top of `scale`: `bar`, `deck`, `launcher`, `wallpapers` (carousel), `rest`, `notifications`, `osd`, `recording`, `launch` (app-launch indicator), `screenshot` (region picker), `polkit`. Anything left out is 1.
+
 `kbdBacklight` — keyboard backlight backend: `auto` | `asusctl` | `upower` | `brightnessctl` | `none`. `auto` takes `asusctl` only with an ASUS Aura keyboard (which is also lit in the wallpaper's accent), then UPower, then `brightnessctl`.
 
-Env vars override the file: `GIMBAL_EDITOR`, `GIMBAL_FILE_MANAGER`, `GIMBAL_TERMINAL`, `GIMBAL_DIR_OPEN`, `GIMBAL_SCALE`, `GIMBAL_KBD_BACKLIGHT`, `GIMBAL_FILE_ROOTS` (`:`-separated), `GIMBAL_WALLPAPER_DIR`.
+`bar` — an optional bar: `false` (default) | `true` or `"top"` | `"bottom"`. Three floating islands in the deck's style: workspaces and the focused window; the clock (click for the deck); the tray, now playing, recording, Focus, network, volume (scroll to change, click to mute) and battery. Toasts and the recording pill move below it.
+
+Env vars override the file: `GIMBAL_EDITOR`, `GIMBAL_FILE_MANAGER`, `GIMBAL_TERMINAL`, `GIMBAL_DIR_OPEN`, `GIMBAL_SCALE`, `GIMBAL_KBD_BACKLIGHT`, `GIMBAL_BAR`, `GIMBAL_FILE_ROOTS` (`:`-separated), `GIMBAL_WALLPAPER_DIR`.
 
 State (frecency, current wallpaper, video posters) lives under `~/.local/state/gimbal` and `~/.cache/gimbal`.
 

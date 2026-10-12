@@ -7,7 +7,7 @@ import "root:/modules"
 PanelWindow {
     id: win
     color: "transparent"
-    visible: Capture.recording || errFlash.on || fade.running
+    visible: win.up || fade.running
 
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "gimbal-rec"
@@ -15,8 +15,8 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
     anchors { top: true }
 
-    implicitWidth: Sh.fs(340)
-    implicitHeight: Sh.fs(90)
+    implicitWidth: Sh.sz("recording", 340)
+    implicitHeight: Sh.sz("recording", 90) + Sh.barTop
     mask: Region {}
 
     property double elapsed: 0
@@ -44,16 +44,17 @@ PanelWindow {
         }
     }
 
-    readonly property bool up: Capture.recording || errFlash.on
+    // The bar shows recordings itself.
+    readonly property bool up: (Capture.recording && Sh.barEdge === "") || errFlash.on
 
     Rectangle {
         id: box
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
-        anchors.topMargin: Sh.fs(20)
-        height: Sh.fs(40)
-        width: errFlash.on ? Sh.fs(280) : Math.min(row.implicitWidth + Sh.fs(30), Sh.fs(320))
-        radius: Sh.fs(14)
+        anchors.topMargin: Sh.sz("recording", 20) + Sh.barTop
+        height: Sh.sz("recording", 40)
+        width: errFlash.on ? Sh.sz("recording", 280) : Math.min(row.implicitWidth + Sh.sz("recording", 30), Sh.sz("recording", 320))
+        radius: Sh.sz("recording", 14)
         color: Theme.surface
         border.width: 1
         border.color: errFlash.on ? Qt.rgba(1, 0.4, 0.4, 0.5) : Qt.rgba(1, 0.3, 0.3, 0.5)
@@ -68,19 +69,19 @@ PanelWindow {
             shadowEnabled: true
             shadowColor: Qt.rgba(0, 0, 0, 0.4)
             shadowBlur: 0.9
-            shadowVerticalOffset: Sh.fs(5)
+            shadowVerticalOffset: Sh.sz("recording", 5)
             blurMax: 48
         }
 
         Row {
             id: row
             anchors.centerIn: parent
-            spacing: Sh.fs(9)
+            spacing: Sh.sz("recording", 9)
             visible: !errFlash.on
 
             Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
-                width: Sh.fs(9); height: Sh.fs(9); radius: width / 2
+                width: Sh.sz("recording", 9); height: Sh.sz("recording", 9); radius: width / 2
                 color: Qt.rgba(1, 0.35, 0.35, 1)
                 SequentialAnimation on opacity {
                     running: Capture.recording; loops: Animation.Infinite
@@ -93,7 +94,7 @@ PanelWindow {
                 text: "REC  " + win._clock(win.elapsed)
                 color: Theme.fg
                 font.family: Sh.font
-                font.pixelSize: Sh.fs(13)
+                font.pixelSize: Sh.sz("recording", 13)
                 font.weight: Font.Medium
                 font.letterSpacing: 1
             }
@@ -101,15 +102,15 @@ PanelWindow {
 
         Text {
             anchors.centerIn: parent
-            anchors.margins: Sh.fs(14)
-            width: box.width - Sh.fs(28)
+            anchors.margins: Sh.sz("recording", 14)
+            width: box.width - Sh.sz("recording", 28)
             visible: errFlash.on
             horizontalAlignment: Text.AlignHCenter
             elide: Text.ElideRight
             text: Capture.error
             color: Qt.rgba(1, 0.55, 0.55, 0.95)
             font.family: Sh.font
-            font.pixelSize: Sh.fs(13)
+            font.pixelSize: Sh.sz("recording", 13)
             font.weight: Font.Medium
         }
     }

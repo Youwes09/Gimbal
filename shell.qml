@@ -17,6 +17,7 @@ ShellRoot {
     readonly property bool _kbd: Kbd.available
 
     WallpaperWindow { }
+    Bar { }
     Overlay { id: overlay }
     LauncherWindow { id: launcher }
     DeckWindow { }
@@ -124,6 +125,15 @@ ShellRoot {
         function cycle():          void { Kbd.cycle() }
         function set(n: string):   void { Kbd.set(parseInt(n) || 0) }
         function get():          string { return Kbd.available ? Kbd.level + "/" + Kbd.max + " " + Kbd.backend : "unavailable" }
+    }
+
+    IpcHandler {
+        target: "bar"
+
+        function toggle(): string { Sh.barHidden = !Sh.barHidden; return Sh.barEdge || "off" }
+        function on():       void { Sh.barHidden = false }
+        function off():      void { Sh.barHidden = true }
+        function get():    string { return Sh.barEdge || "off" }
     }
 
     IpcHandler {

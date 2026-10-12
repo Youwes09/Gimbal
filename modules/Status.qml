@@ -11,7 +11,7 @@ QtObject {
     id: root
 
     // Only tick while something showing it is up.
-    readonly property bool _watched: Sh.deckShown || Sh.shown
+    readonly property bool _watched: Sh.deckShown || Sh.shown || Sh.barEdge !== ""
     property date now: new Date()
     property Timer _tick: Timer {
         running: root._watched

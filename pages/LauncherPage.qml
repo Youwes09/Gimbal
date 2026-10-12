@@ -10,7 +10,7 @@ Item {
     anchors.fill: parent
 
     readonly property real uiScale: 1.12
-    function f(px) { return Sh.fs(px * root.uiScale) }
+    function f(px) { return Sh.sz("launcher", px * root.uiScale) }
 
     readonly property int sp1: f(4)
     readonly property int sp2: f(8)

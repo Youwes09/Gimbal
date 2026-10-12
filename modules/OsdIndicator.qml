@@ -15,8 +15,8 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
     anchors { bottom: true }
 
-    implicitWidth: Sh.fs(260)
-    implicitHeight: Sh.fs(110)
+    implicitWidth: Sh.sz("osd", 260)
+    implicitHeight: Sh.sz("osd", 110)
     mask: Region {}
 
     readonly property bool up: Osd.kind !== ""
@@ -34,10 +34,10 @@ PanelWindow {
         id: pill
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
-        anchors.bottomMargin: Sh.fs(28)
-        width: Sh.fs(216)
-        height: Sh.fs(52)
-        radius: Sh.fs(16)
+        anchors.bottomMargin: Sh.sz("osd", 28)
+        width: Sh.sz("osd", 216)
+        height: Sh.sz("osd", 52)
+        radius: Sh.sz("osd", 16)
         color: Theme.surface
         border.width: 1
         border.color: Qt.alpha(Theme.accent, 0.4)
@@ -52,30 +52,30 @@ PanelWindow {
             shadowEnabled: true
             shadowColor: Qt.rgba(0, 0, 0, 0.4)
             shadowBlur: 0.9
-            shadowVerticalOffset: Sh.fs(6)
+            shadowVerticalOffset: Sh.sz("osd", 6)
             blurMax: 48
         }
 
         Row {
             anchors.fill: parent
-            anchors.leftMargin: Sh.fs(16)
-            anchors.rightMargin: Sh.fs(16)
+            anchors.leftMargin: Sh.sz("osd", 16)
+            anchors.rightMargin: Sh.sz("osd", 16)
             anchors.verticalCenter: parent.verticalCenter
-            spacing: Sh.fs(12)
+            spacing: Sh.sz("osd", 12)
 
             Text {
                 anchors.verticalCenter: parent.verticalCenter
                 text: win.glyph
                 color: win.pct <= 0.001 ? Theme.muted : Theme.accent
                 font.family: Sh.iconFont
-                font.pixelSize: Sh.fs(18)
+                font.pixelSize: Sh.sz("osd", 18)
             }
 
             Rectangle {
                 id: track
                 anchors.verticalCenter: parent.verticalCenter
-                width: parent.width - Sh.fs(18) - Sh.fs(30) - parent.spacing * 2
-                height: Sh.fs(5)
+                width: parent.width - Sh.sz("osd", 18) - Sh.sz("osd", 30) - parent.spacing * 2
+                height: Sh.sz("osd", 5)
                 radius: height / 2
                 color: Qt.rgba(1, 1, 1, 0.1)
 
@@ -92,12 +92,12 @@ PanelWindow {
 
             Text {
                 anchors.verticalCenter: parent.verticalCenter
-                width: Sh.fs(30)
+                width: Sh.sz("osd", 30)
                 horizontalAlignment: Text.AlignRight
                 text: Math.round(win.pct * 100) + "%"
                 color: Theme.fg
                 font.family: Sh.font
-                font.pixelSize: Sh.fs(12)
+                font.pixelSize: Sh.sz("osd", 12)
                 font.weight: Font.Medium
             }
         }

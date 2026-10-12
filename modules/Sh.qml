@@ -104,6 +104,8 @@ QtObject {
 
     property real fontScale: 1.06
     function fs(px) { return Theme.s(px * root.fontScale) }
+    // A size on one surface, with its own scale from Config.scales.
+    function sz(part, px) { return Theme.s(px * root.fontScale * Config.scaleOf(part)) }
 
     // Only one summoned surface at a time.
     function _closeAll() { root.launcherShown = false; root.deckShown = false; root.shown = false }
@@ -128,6 +130,13 @@ QtObject {
     function toggleDeck() { if (root.deckShown) root.closeDeck(); else root.openDeck() }
     function openDeck()   { root._closeAll(); root.deckShown = true }
     function closeDeck()  { root.deckShown = false }
+
+    // The bar's edge, or "" when off or hidden.
+    property bool barHidden: false
+    readonly property string barEdge: root.barHidden ? "" : Config.bar
+    readonly property int barHeight: root.sz("bar", 32)
+    readonly property int barMargin: root.sz("bar", 8)
+    readonly property int barTop: root.barEdge === "top" ? root.barHeight + root.barMargin : 0
 
     property real reveal: 0
 

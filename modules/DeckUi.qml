@@ -8,7 +8,7 @@ QtObject {
     id: root
 
     readonly property real scale: 1.3
-    function f(px) { return Sh.fs(px * root.scale) }
+    function f(px) { return Sh.sz("deck", px * root.scale) }
 
     // Neutrals are fixed; only the accent follows the wallpaper.
     readonly property color canvas:   "#040506"

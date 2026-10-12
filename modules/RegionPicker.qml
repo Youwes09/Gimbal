@@ -50,11 +50,11 @@ Variants {
 
             Rectangle {
                 anchors.bottom: parent.top
-                anchors.bottomMargin: Sh.fs(6)
+                anchors.bottomMargin: Sh.sz("screenshot", 6)
                 anchors.horizontalCenter: parent.horizontalCenter
-                width: dimText.implicitWidth + Sh.fs(12)
-                height: dimText.implicitHeight + Sh.fs(6)
-                radius: Sh.fs(5)
+                width: dimText.implicitWidth + Sh.sz("screenshot", 12)
+                height: dimText.implicitHeight + Sh.sz("screenshot", 6)
+                radius: Sh.sz("screenshot", 5)
                 color: Qt.rgba(0, 0, 0, 0.7)
                 visible: parent.width > 2 && parent.height > 2
 
@@ -64,7 +64,7 @@ Variants {
                     text: Math.round(parent.parent.width) + " × " + Math.round(parent.parent.height)
                     color: "white"
                     font.family: Sh.font
-                    font.pixelSize: Sh.fs(12)
+                    font.pixelSize: Sh.sz("screenshot", 12)
                 }
             }
         }

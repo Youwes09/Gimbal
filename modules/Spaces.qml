@@ -134,7 +134,8 @@ QtObject {
             const layout = root._layouts[key] || "T"
             if (layout !== "T" && layout !== "M") continue
             const g = root.geometry(wins[0].monitor), o = root._gap
-            const area = { x: g.x + o, y: g.y + o, w: g.w - 2 * o, h: g.h - 2 * o }
+            const bar = Sh.barEdge ? Sh.barHeight + Sh.barMargin : 0, barTop = Sh.barEdge === "top" ? bar : 0
+            const area = { x: g.x + o, y: g.y + o + barTop, w: g.w - 2 * o, h: g.h - 2 * o - bar }
             const place = (c, x, y, w, h) => { c.x = Math.round(x); c.y = Math.round(y); c.w = Math.round(w); c.h = Math.round(h) }
             for (const c of wins) if (c.full) place(c, area.x, area.y, area.w, area.h)
             tiled.sort((a, b) => a.x - b.x || a.y - b.y)

@@ -36,6 +36,19 @@ QtObject {
 
     // UI scale: a number, or "auto" to follow the screen's pixel density (see Theme.scale).
     readonly property var scale: _pick("scale", "GIMBAL_SCALE", 1)
+    // Per-surface multipliers on top of `scale`, e.g. { "bar": 1.1, "deck": 0.9 }.
+    readonly property var scales:
+        (root._j.scales && typeof root._j.scales === "object") ? root._j.scales : ({})
+    function scaleOf(part) {
+        const n = parseFloat(root.scales[part])
+        return n > 0 ? n : 1
+    }
+
+    // The bar: off by default; true or "top", or "bottom".
+    readonly property string bar: {
+        const v = String(_pick("bar", "GIMBAL_BAR", "")).toLowerCase()
+        return v === "bottom" ? "bottom" : ["true", "top", "on", "1"].indexOf(v) >= 0 ? "top" : ""
+    }
 
     // Keyboard backlight backend: "auto" | "asusctl" | "upower" | "brightnessctl" | "none".
     readonly property string kbdBacklight: _pick("kbdBacklight", "GIMBAL_KBD_BACKLIGHT", "auto")
