@@ -56,14 +56,11 @@ QtObject {
     function moveWindow(w, tag) { if (w && tag !== w.tag) root._move(w.id, tag) }
     function closeWindow(w) { if (w) Quickshell.execDetached(["mmsg", "dispatch", "killclient", "client," + w.id]) }
 
-    function toplevel(w) {
-        const tls = (ToplevelManager.toplevels && ToplevelManager.toplevels.values) || []
-        return tls.find(t => t.appId === w.appid && t.title === w.title) || tls.find(t => t.appId === w.appid) || null
-    }
-    function focus(w) {
-        root.view(w.tag)
-        const tl = root.toplevel(w)
-        if (tl) tl.activate()
+    // focusid also brings up the special workspace (tag 0) for a window parked there.
+    function focus(w) { Quickshell.execDetached(["mmsg", "dispatch", "focusid", "client," + w.id]) }
+    function clientOf(tl) {
+        return root.clients.find(c => c.appid === tl.appId && c.title === tl.title)
+            || root.clients.find(c => c.appid === tl.appId) || null
     }
 
     // Live state

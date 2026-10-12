@@ -22,6 +22,7 @@ PanelWindow {
     exclusiveZone: Sh.barMargin + Sh.barHeight
     mask: Region { item: strip }
 
+
     Item {
         id: strip
         anchors { left: parent.left; right: parent.right }
@@ -74,7 +75,7 @@ PanelWindow {
 
             Row {
                 id: focusRow
-                readonly property var w: Spaces.clients.find(c => c.focused && c.tag === Spaces.active) || null
+                readonly property var w: Spaces.clients.find(c => c.focused && (c.tag === Spaces.active || c.tag === 0)) || null
                 visible: w !== null
                 anchors.verticalCenter: parent.verticalCenter
                 spacing: Sh.sz("bar", 8)
@@ -175,7 +176,7 @@ PanelWindow {
                                     if (!m.hasMenu) return
                                     const p = ti.mapToItem(null, 0, win.onTop ? ti.height + Sh.sz("bar", 6) : -Sh.sz("bar", 6))
                                     m.display(win, p.x, p.y)
-                                } else m.activate()
+                                } else Compositor.focus([m.id, m.title, m.tooltipTitle])
                             }
                             onWheel: (e) => ti.modelData.scroll(e.angleDelta.y / 120, false)
                         }

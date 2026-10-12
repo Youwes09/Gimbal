@@ -93,7 +93,7 @@ QtObject {
         const pats = (names || []).filter(s => s && String(s).length).map(root._norm)
         if (pats.length && root._recentlyKilled(pats)) { if (onMiss) onMiss(); return }
         const tl = root.find(names)
-        if (tl) { tl.activate(); return }
+        if (tl) { const w = Spaces.clientOf(tl); if (w) Spaces.focus(w); else tl.activate(); return }
         root.wake(names, onMiss)
     }
 
