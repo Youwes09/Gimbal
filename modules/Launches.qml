@@ -42,7 +42,7 @@ QtObject {
         interval: 200; repeat: true
         onTriggered: {
             if (root.phase !== "starting") { watch.stop(); return }
-            if (Compositor.find(root.names, 3) || Compositor.findTray(root.names))
+            if (Compositor.find(root.names) || Compositor.findTray(root.names))
                 root._found()
         }
     }
@@ -51,7 +51,7 @@ QtObject {
         onTriggered: if (root.phase === "starting") root.slow = true
     }
     property Timer giveUp: Timer {
-        interval: 45000
+        interval: 10000
         onTriggered: { watch.stop(); slowMark.stop(); root.phase = ""; root.slow = false }
     }
     property Timer hide: Timer {

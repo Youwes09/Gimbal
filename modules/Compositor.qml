@@ -25,8 +25,8 @@ QtObject {
         return s
     }
 
-    // minScore 3 = app id match only; the default also accepts a title that mentions the name.
-    function find(names, minScore) {
+    // A window whose app id matches; titles aren't trusted (a browser tab can name any app).
+    function find(names) {
         const pats = (names || []).filter(s => s && String(s).length).map(root._norm)
         if (!pats.length) return null
 
@@ -34,12 +34,10 @@ QtObject {
         let best = null, bs = 0
         for (const tl of tls) {
             const a = root._norm(tl.appId)
-            const t = String(tl.title || "").toLowerCase()
-            let s = root._score([a], pats)
-            if (!s) for (const p of pats) if (t.indexOf(p) >= 0) s = 1
+            const s = root._score([a], pats)
             if (s > bs) { bs = s; best = tl }
         }
-        return bs >= (minScore || 1) ? best : null
+        return best
     }
 
     // An editor window that already has this folder open. VS Code-family titles carry the
@@ -93,7 +91,7 @@ QtObject {
     function raiseOrRun(names, onMiss) {
         const pats = (names || []).filter(s => s && String(s).length).map(root._norm)
         if (pats.length && root._recentlyKilled(pats)) { if (onMiss) onMiss(); return }
-        const tl = root.find(names, 3)
+        const tl = root.find(names)
         if (tl) { const w = Spaces.clientOf(tl); if (w) Spaces.focus(w); else tl.activate(); return }
         root.wake(names, onMiss)
     }
@@ -114,7 +112,7 @@ QtObject {
         onTriggered: {
             const now = Date.now(), left = []
             for (const w of root._waking) {
-                if (root.find(w.names, 3)) continue
+                if (root.find(w.names)) continue
                 if (now < w.until) left.push(w)
                 else if (w.onMiss) w.onMiss()
             }
