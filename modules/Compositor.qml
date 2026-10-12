@@ -25,7 +25,8 @@ QtObject {
         return s
     }
 
-    function find(names) {
+    // minScore 3 = app id match only; the default also accepts a title that mentions the name.
+    function find(names, minScore) {
         const pats = (names || []).filter(s => s && String(s).length).map(root._norm)
         if (!pats.length) return null
 
@@ -38,7 +39,7 @@ QtObject {
             if (!s) for (const p of pats) if (t.indexOf(p) >= 0) s = 1
             if (s > bs) { bs = s; best = tl }
         }
-        return best
+        return bs >= (minScore || 1) ? best : null
     }
 
     // An editor window that already has this folder open. VS Code-family titles carry the
@@ -92,7 +93,7 @@ QtObject {
     function raiseOrRun(names, onMiss) {
         const pats = (names || []).filter(s => s && String(s).length).map(root._norm)
         if (pats.length && root._recentlyKilled(pats)) { if (onMiss) onMiss(); return }
-        const tl = root.find(names)
+        const tl = root.find(names, 3)
         if (tl) { const w = Spaces.clientOf(tl); if (w) Spaces.focus(w); else tl.activate(); return }
         root.wake(names, onMiss)
     }
@@ -113,7 +114,7 @@ QtObject {
         onTriggered: {
             const now = Date.now(), left = []
             for (const w of root._waking) {
-                if (root.find(w.names)) continue
+                if (root.find(w.names, 3)) continue
                 if (now < w.until) left.push(w)
                 else if (w.onMiss) w.onMiss()
             }
