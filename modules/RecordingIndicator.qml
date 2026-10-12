@@ -6,6 +6,7 @@ import "root:/modules"
 
 PanelWindow {
     id: win
+    screen: Sh.focusedScreen
     color: "transparent"
     visible: win.up || fade.running
 

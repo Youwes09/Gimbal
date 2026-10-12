@@ -107,8 +107,16 @@ QtObject {
     // A size on one surface, with its own scale from Config.scales.
     function sz(part, px) { return Theme.s(px * root.fontScale * Config.scaleOf(part)) }
 
+    // The focused output, from mango. Summoned surfaces open on it and stay there while open.
+    readonly property var focusedScreen:
+        Quickshell.screens.find(s => s.name === Spaces.monitor) || Quickshell.screens[0] || null
+    property var screen: null
+
     // Only one summoned surface at a time.
-    function _closeAll() { root.launcherShown = false; root.deckShown = false; root.shown = false }
+    function _closeAll() {
+        root.launcherShown = false; root.deckShown = false; root.shown = false
+        root.screen = root.focusedScreen
+    }
 
     // The overlay window: the "wallpaper" carousel or the "rest" screen (idle / Super+L).
     property bool   shown: false

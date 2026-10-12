@@ -95,11 +95,11 @@ QtObject {
         property string out: ""
         property string quiet: "0"
         command: ["sh", "-c",
-            'q="$2"; out="$1"; '
-            + 'if [ "$q" = "1" ]; then grim - | wl-copy --type image/png || exit 2; exit 0; fi; '
-            + 'mkdir -p "$(dirname "$out")"; grim "$out" || exit 2; '
+            'q="$2"; out="$1"; o=${3:+-o $3}; '
+            + 'if [ "$q" = "1" ]; then grim $o - | wl-copy --type image/png || exit 2; exit 0; fi; '
+            + 'mkdir -p "$(dirname "$out")"; grim $o "$out" || exit 2; '
             + 'wl-copy --type image/png < "$out" 2>/dev/null & printf %s "$out"',
-            "_", _shot.out, _shot.quiet]
+            "_", _shot.out, _shot.quiet, Spaces.monitor]
         stdout: StdioCollector { id: _shotOut }
         stderr: StdioCollector { id: _shotErr }
         onExited: (code) => root._done(code, _shotOut.text, _shotErr.text)
@@ -219,8 +219,8 @@ QtObject {
         command: ["sh", "-c",
             'out="$1"; mkdir -p "$(dirname "$out")"; '
             + 'command -v wl-screenrec >/dev/null || { echo "wl-screenrec not installed" >&2; exit 3; }; '
-            + 'exec wl-screenrec -f "$out"',
-            "_", root.recFile]
+            + 'exec wl-screenrec ${2:+-o "$2"} -f "$out"',
+            "_", root.recFile, Spaces.monitor]
         stderr: StdioCollector { id: _recErr }
         onStarted: {
             root.recording = true

@@ -7,6 +7,7 @@ import "root:/pages"
 
 PanelWindow {
     id: root
+    screen: Sh.screen || Sh.focusedScreen
 
     readonly property bool open: Sh.shown === true
 

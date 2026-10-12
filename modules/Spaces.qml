@@ -15,6 +15,7 @@ QtObject {
     property var monitors: ({})       // name → { x, y, w, h }
     property string monitor: ""       // the focused one
     property int active: 1
+    property var activeOn: ({})     // monitor name → its active tag
 
     property var last: null           // { at, windows }
     property var setups: []           // [{ name, at, windows }]
@@ -51,6 +52,10 @@ QtObject {
     }
 
     function view(tag) { Quickshell.execDetached(["mmsg", "dispatch", "view," + tag + ",0"]) }
+    function viewOn(mon, tag) {
+        if (!mon || mon === root.monitor) { root.view(tag); return }
+        Quickshell.execDetached(["sh", "-c", 'mmsg dispatch focusmon,"$1" && mmsg dispatch view,"$2",0', "_", mon, String(tag)])
+    }
     function _move(id, tag) { Quickshell.execDetached(["mmsg", "dispatch", "tagsilent," + tag, "client," + id]) }
 
     function moveWindow(w, tag) { if (w && tag !== w.tag) root._move(w.id, tag) }
@@ -162,10 +167,13 @@ QtObject {
     function _onMonitors(line) {
         let j
         try { j = JSON.parse(line) } catch (e) { return }
-        const m = {}, layouts = {}
+        const m = {}, layouts = {}, on = {}
         for (const mon of j.monitors || []) {
             m[mon.name] = { x: mon.x, y: mon.y, w: mon.width, h: mon.height }
-            for (const t of mon.tags || []) layouts[mon.name + ":" + t.index] = t.layout
+            for (const t of mon.tags || []) {
+                layouts[mon.name + ":" + t.index] = t.layout
+                if (t.is_active) on[mon.name] = t.index
+            }
             if (mon.active) {
                 root.monitor = mon.name
                 const t = (mon.tags || []).find(t => t.is_active)
@@ -173,6 +181,7 @@ QtObject {
             }
         }
         root.monitors = m
+        root.activeOn = on
         root._layouts = layouts
     }
 

@@ -9,6 +9,7 @@ import "root:/pages/deck"
 // and torn down on close.
 PanelWindow {
     id: root
+    screen: Sh.screen || Sh.focusedScreen
     readonly property bool open: Sh.deckShown
 
     anchors { left: true; right: true; top: true; bottom: true }

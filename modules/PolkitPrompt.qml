@@ -17,6 +17,7 @@ Scope {
 
         PanelWindow {
             id: win
+            screen: Sh.focusedScreen
             function f(px) { return Sh.sz("polkit", px * DeckUi.scale) }
             readonly property var flow: agent.flow
             property real t: 0
