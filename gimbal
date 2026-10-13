@@ -72,7 +72,7 @@ gimbal — summoned-overlay shell daemon control
   gimbal launch [text]    show/hide the launcher, or open it with text (e.g. ":" for emoji)
   gimbal clipboard | emoji | files | calc | run
                           show/hide the launcher in that mode
-  gimbal deck [home|spaces|network|notifications|captures|session]
+  gimbal deck [home|spaces|network|notifications|captures|github|keys|session]
                           show/hide the deck (on that page)
   gimbal wallpaper [name|next|prev|random|rescan|list]
                           manage the wallpaper (no arg prints the current one)

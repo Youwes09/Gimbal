@@ -25,6 +25,8 @@ Item {
         { id: "network",       glyph: Sh.icWifi,   label: "Network" },
         { id: "notifications", glyph: Sh.icBell,   label: "Notifications" },
         { id: "captures",      glyph: Sh.icImages, label: "Captures" },
+        { id: "github",        glyph: Sh.icGitBranch, label: "GitHub" },
+        { id: "keys",          glyph: Sh.icCommand, label: "Keybinds" },
         { id: "session",       glyph: Sh.icPower,  label: "Session" }
     ]
 
@@ -162,6 +164,8 @@ Item {
                 Section { sid: "network";       sourceComponent: Network {} }
                 Section { sid: "notifications"; sourceComponent: Notifs {} }
                 Section { sid: "captures";      sourceComponent: Captures {} }
+                Section { sid: "github";        sourceComponent: GitHubPage {} }
+                Section { sid: "keys";          sourceComponent: KeybindsPage {} }
                 Section { sid: "session";       sourceComponent: Session {} }
             }
         }
@@ -196,6 +200,8 @@ Item {
             if (s === "network") return [["⏎", "connect"], ["←→", "day"], ["del", "forget"]]
             if (s === "notifications") return [["⏎", "open"], ["del", "dismiss"], ["c", "clear all"]]
             if (s === "captures") return [["⏎", "open"], ["c", "copy"], ["del", "trash"]]
+            if (s === "github") return [["⏎", "open"], ["r", "refresh"]]
+            if (s === "keys") return [["↑↓", "scroll"], ["⏎", "edit"]]
             if (s === "session") return [["⏎", "run"]]
             return [["⏎", "open"]]
         }

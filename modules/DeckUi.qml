@@ -46,7 +46,7 @@ QtObject {
     // under quick.
     property string zone: "center"
     property string section: "home"     // center panel: one of `sections`
-    readonly property var sections: ["home", "spaces", "network", "notifications", "captures", "session"]
+    readonly property var sections: ["home", "spaces", "network", "notifications", "captures", "github", "keys", "session"]
     property bool calendarOpen: false
     property int tile: 0               // focused stat tile, 0..3 (CPU, memory, GPU, temp)
     readonly property var _next: ({

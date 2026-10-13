@@ -195,6 +195,7 @@ Variants {
 
                 Glyph {
                     visible: Status.player !== null
+                    spectrum: Visualizer.levels.length > 0
                     glyph: Status.playing ? Sh.icPause : Sh.icPlay
                     tint: Status.playing ? Theme.accent : DeckUi.dim
                     label: Status.player ? Status.player.trackTitle : ""
@@ -321,6 +322,7 @@ Variants {
         property color tint: DeckUi.text
         property string label: ""
         property real labelMax: Sh.sz("bar", 120)
+        property bool spectrum: false   // a few visualizer bars stand in for the glyph
         signal clicked()
         signal scrolled(int dir)
 
@@ -338,7 +340,18 @@ Variants {
             id: gRow
             anchors.centerIn: parent
             spacing: Sh.sz("bar", 6)
+            Spectrum {
+                visible: g.spectrum
+                anchors.verticalCenter: parent.verticalCenter
+                width: Sh.sz("bar", 14)
+                height: Sh.sz("bar", 13)
+                bands: 4
+                gap: Sh.sz("bar", 2)
+                centered: true
+                color: g.tint
+            }
             Text {
+                visible: !g.spectrum
                 anchors.verticalCenter: parent.verticalCenter
                 text: g.glyph
                 color: g.tint

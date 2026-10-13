@@ -94,6 +94,16 @@ QtObject {
     readonly property string icFolderOpen:    "\ue247"
     readonly property string icRotate:        "\ue149"
     readonly property string icLogOut:        "\ue10e"
+    readonly property string icCommand:       "\ue09a"
+    readonly property string icGitBranch:     "\ue0e2"
+    readonly property string icGitCommit:     "\ue0e3"
+    readonly property string icGitPull:       "\ue0e5"
+    readonly property string icGitMerge:      "\ue0e4"
+    readonly property string icGitFork:       "\ue28d"
+    readonly property string icStar:          "\ue176"
+    readonly property string icTag:           "\ue17f"
+    readonly property string icMessage:       "\ue117"
+    readonly property string icExternal:      "\ue0b9"
 
     function batteryGlyph(pct, charging) {
         if (charging)  return root.icBatteryChg

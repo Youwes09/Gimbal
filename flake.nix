@@ -77,6 +77,8 @@
             wl-screenrec # screen recording
             file # richer mime detection in the inspect card
             glib # gdbus: keyboard backlight through UPower
+            cava # audio visualizer
+            curl # GitHub page
           ];
 
           allDeps = runtimeDeps ++ optionalDeps;

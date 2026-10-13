@@ -64,6 +64,25 @@ QtObject {
     // in (needs wtype), or "copy" it to the clipboard.
     readonly property string emojiAction: root._j.emojiAction === "copy" ? "copy" : "type"
 
+    // The audio spectrum on the deck's now playing card and the bar (needs cava).
+    readonly property bool visualizer: root._j.visualizer !== undefined ? !!root._j.visualizer : true
+
+    // The compositor config the keybinds page reads; empty picks mango's, or Hyprland's under it.
+    readonly property string keybinds: root._expand(_pick("keybinds", "GIMBAL_KEYBINDS", ""))
+
+    // GitHub accounts for the deck: "name", or { "user", "token" | "tokenFile" } to include
+    // private work (a token must belong to that account).
+    readonly property var github: {
+        let v = root._j.github
+        const env = Quickshell.env("GIMBAL_GITHUB")
+        if (env) v = env.split(/[\s,]+/).filter(s => s.length > 0)
+        if (!v) return []
+        return (Array.isArray(v) ? v : [v])
+            .map(a => typeof a === "string" ? { user: a } : a)
+            .filter(a => a && a.user)
+            .map(a => ({ user: String(a.user), token: String(a.token || ""), tokenFile: root._expand(String(a.tokenFile || "")) }))
+    }
+
     readonly property var notifications:
         (root._j.notifications && typeof root._j.notifications === "object")
             ? root._j.notifications : ({})

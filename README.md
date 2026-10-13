@@ -17,16 +17,18 @@ It also owns your wallpaper (static / GIF / video, cross-faded on switch), repai
 ## Features
 
 **Deck**
-- Left: clock and battery (Enter or click it for a calendar with day, month and year progress; ←→ change month), now playing (art, seek, controls), CPU / RAM / GPU / temperature as matching ring tiles
+- Left: clock and battery (Enter or click it for a calendar with day, month and year progress; ←→ change month), now playing (art, seek, controls, a live spectrum via `cava`), CPU / RAM / GPU / temperature as matching ring tiles
 - Centre, with a section rail:
   - **Home** — your most-used apps, the folders you open most from the launcher with their git branch and uncommitted changes, the latest notifications
   - **Spaces** — every workspace with the apps open on it and a preview of its layout; the last session and saved setups as strips you can restore. Restoring moves open windows back onto their workspaces and relaunches the rest (terminals in their old directory). The layout is saved as it changes, through `mmsg` (mango)
   - **Network** — the link you're on (signal, band, channel and rate, address, gateway, internet, Tailscale), live throughput with average and peak, data used per day and per network (counted in the background, kept across reboots), Wi-Fi networks (passwords asked inline) and Bluetooth devices with battery and how long they've been connected
   - **Notifications** — full history; open, dismiss, clear, Focus (Do Not Disturb)
   - **Captures** — newest screenshots and recordings; open, copy, trash; take new ones
+  - **GitHub** — one or more accounts: profile and totals, a year of contributions (hover a day for its count), recently pushed repos and recent activity; enter opens on github.com. Fetched when the page opens, cached between
+  - **Keybinds** — your compositor binds (mango, or Hyprland), grouped and described, with runs like `Super 1–9` folded to one line; enter opens the config
   - **Session** — your machine at a glance (host, OS, kernel, uptime, NixOS generation and when it was built), then rest, suspend, log out, reboot, shut down (the last three ask twice)
 - Right: quick toggles (Focus, keyboard backlight, power profile via `asusctl`, warm light via WayOLED's `oledctl`; each shows "Unavailable" without its tool) above Sound (output, microphone, a slider per app playing, with its icon) and Display (brightness)
-- Fully keyboard driven with arrows and `enter`: arrows move spatially across the whole deck and hand off between panels at the edges; in the mixer `←`/`→` set the level. `tab` / `1`–`6` switch pages, `space` play/pause, `esc` close. Key chips under the deck show what works where you are
+- Fully keyboard driven with arrows and `enter`: arrows move spatially across the whole deck and hand off between panels at the edges; in the mixer `←`/`→` set the level. `tab` / `1`–`8` switch pages, `space` play/pause, `esc` close. Key chips under the deck show what works where you are
 - Frosted backdrop from one blurred still of the screen; everything is built on open and torn down on close. Stats and git state are only sampled while it is open
 
 **Launcher**
@@ -116,7 +118,7 @@ gimbal start            run the daemon (compositor autostart)
 gimbal launch           the launcher
 gimbal clipboard        the launcher in one mode (also emoji, files, calc, run)
 gimbal toggle           summon / dismiss the deck
-gimbal deck <page>      the deck on a page: home | spaces | network | notifications | captures | session
+gimbal deck <page>      the deck on a page: home | spaces | network | notifications | captures | github | keys | session
 gimbal walls            summon / dismiss the wallpaper carousel
 gimbal rest             show the rest screen
 gimbal wallpaper …      next | prev | random | rescan | list | <name>
@@ -194,6 +196,8 @@ bindsym $mod+v exec gimbal clipboard
   "scales": { "bar": 1.0, "deck": 1.0, "launcher": 1.0 },
   "kbdBacklight": "auto",
   "bar": false,
+  "visualizer": true,
+  "github": ["you", { "user": "you-at-work", "tokenFile": "~/.config/gimbal/github-work-token" }],
   "fileRoots": ["~/Projects", "~/Documents", "~/Downloads"]
 }
 ```
@@ -210,7 +214,13 @@ bindsym $mod+v exec gimbal clipboard
 
 `bar` — an optional bar: `false` (default) | `true` or `"top"` | `"bottom"`. Three floating islands in the deck's style: workspaces and the focused window; the clock (click for the deck); the tray, now playing, recording, Focus, network, volume (scroll to change, click to mute) and battery. Toasts and the recording pill move below it.
 
-Env vars override the file: `GIMBAL_EDITOR`, `GIMBAL_FILE_MANAGER`, `GIMBAL_TERMINAL`, `GIMBAL_DIR_OPEN`, `GIMBAL_SCALE`, `GIMBAL_KBD_BACKLIGHT`, `GIMBAL_BAR`, `GIMBAL_FILE_ROOTS` (`:`-separated), `GIMBAL_WALLPAPER_DIR`.
+`visualizer` — the spectrum on now playing (deck and bar) while music plays; needs `cava`. `false` turns it off.
+
+`github` — accounts for the GitHub page: a name, or `{ "user", "tokenFile" }` (or `"token"`). Without a token it shows public data (60 API calls an hour, plenty for a few accounts). A token belonging to that account adds private contributions and activity, and lists every repo it works in, its organisations' too: a classic token with `repo` and `read:user`, or a fine-grained one with read access to the repos. Keep it in a `tokenFile` so it stays out of the Nix store; a missing or rejected token falls back to public data.
+
+`keybinds` — the config file the keybinds page reads, if not `~/.config/mango/config.conf` (or `~/.config/hypr/hyprland.conf` under Hyprland). Files it `source`s are read too.
+
+Env vars override the file: `GIMBAL_EDITOR`, `GIMBAL_FILE_MANAGER`, `GIMBAL_TERMINAL`, `GIMBAL_DIR_OPEN`, `GIMBAL_SCALE`, `GIMBAL_KBD_BACKLIGHT`, `GIMBAL_BAR`, `GIMBAL_GITHUB` (account names), `GIMBAL_KEYBINDS`, `GIMBAL_FILE_ROOTS` (`:`-separated), `GIMBAL_WALLPAPER_DIR`.
 
 State (frecency, current wallpaper, video posters) lives under `~/.local/state/gimbal` and `~/.cache/gimbal`.
 

@@ -244,6 +244,13 @@ Column {
                     font.family: DeckUi.sans
                     font.pixelSize: DeckUi.f(11.5)
                 }
+                Spectrum {
+                    visible: Visualizer.levels.length > 0
+                    width: parent.width
+                    height: DeckUi.f(16)
+                    gap: DeckUi.f(2)
+                    color: Qt.alpha(DeckUi.accent, 0.8)
+                }
             }
 
             Row {
