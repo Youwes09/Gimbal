@@ -126,20 +126,47 @@ PanelWindow {
                         anchors.rightMargin: Sh.sz("notifications", 16)
                         anchors.bottomMargin: Sh.sz("notifications", 6)
 
+                        // The notification's own image (a received photo, a screenshot) fills
+                        // the tile; otherwise the app's icon sits in it.
                         Rectangle {
                             id: tile
+                            readonly property bool pictured: thumb.status === Image.Ready
                             anchors.left: parent.left
                             anchors.verticalCenter: parent.verticalCenter
                             width: Sh.sz("notifications", 38); height: width
                             radius: Sh.sz("notifications", 9)
                             color: DeckUi.graphite
-                            border.width: 1
+                            border.width: tile.pictured ? 0 : 1
                             border.color: DeckUi.line
                             AppIcon {
+                                visible: !tile.pictured
                                 anchors.centerIn: parent
                                 width: Sh.sz("notifications", 24); height: width
                                 icon: card.model.appIcon
-                                fallbackGlyph: Sh.icBell
+                                fallbackGlyph: card.model.app === "AirDrop" ? Sh.icRadio : Sh.icBell
+                            }
+                            Image {
+                                id: thumb
+                                anchors.fill: parent
+                                visible: false
+                                source: card.model.image || ""
+                                sourceSize: Qt.size(width * 2, height * 2)
+                                fillMode: Image.PreserveAspectCrop
+                                asynchronous: true
+                            }
+                            MultiEffect {
+                                anchors.fill: parent
+                                visible: tile.pictured
+                                source: thumb
+                                maskEnabled: true
+                                maskSource: thumbMask
+                            }
+                            Item {
+                                id: thumbMask
+                                anchors.fill: parent
+                                layer.enabled: true
+                                visible: false
+                                Rectangle { anchors.fill: parent; radius: tile.radius }
                             }
                         }
 

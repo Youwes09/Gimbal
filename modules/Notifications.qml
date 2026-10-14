@@ -61,8 +61,9 @@ QtObject {
         }
     }
 
+    // Transient notifications pop up but stay out of the history.
     function _ingest(n) {
-        root._push(_rec(n))
+        root._push(_rec(n), false, n.transient)
     }
 
     function notifySynthetic(rec, forceShow) {
@@ -72,14 +73,16 @@ QtObject {
         }, rec), !!forceShow)
     }
 
-    function _push(r, forceShow) {
-        const h = root.history.slice()
-        h.unshift(r)
-        if (h.length > 100) h.length = 100
-        root.history = h
-        root.historyModel.insert(0, r)
-        while (root.historyModel.count > 100) root.historyModel.remove(root.historyModel.count - 1)
-        _saveTimer.restart()
+    function _push(r, forceShow, transient) {
+        if (!transient) {
+            const h = root.history.slice()
+            h.unshift(r)
+            if (h.length > 100) h.length = 100
+            root.history = h
+            root.historyModel.insert(0, r)
+            while (root.historyModel.count > 100) root.historyModel.remove(root.historyModel.count - 1)
+            _saveTimer.restart()
+        }
 
         const crit = r.urgency === "critical"
         if (!root.dnd || (crit && root._c("dndBypassCritical", true)) || forceShow) {
