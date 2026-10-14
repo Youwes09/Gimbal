@@ -65,7 +65,8 @@ QtObject {
         root._notify("Screenshot", "Saved and copied")
     }
 
-    function shot(mode) {
+    // `keep` leaves an open deck or launcher in the shot (the keybind); otherwise it closes first.
+    function shot(mode, keep) {
         if (root.busy) return
         root.error = ""
         root.busy = true
@@ -73,9 +74,11 @@ QtObject {
         root._quiet = /-quiet$/.test(m)
         root._pickerFor = m.replace(/-quiet$/, "") === "region" ? "shot" : ""
         // From the launcher or deck, let its close animation finish so it isn't in the grab.
-        _grabDelay.interval = Sh.deckShown ? 240 : Sh.launcherShown ? 160 : 0
-        Sh.closeLauncher()
-        Sh.closeDeck()
+        _grabDelay.interval = keep ? 0 : Sh.deckShown ? 240 : Sh.launcherShown ? 160 : 0
+        if (!keep) {
+            Sh.closeLauncher()
+            Sh.closeDeck()
+        }
         _grabDelay.restart()
     }
     property Timer _grabDelay: Timer {

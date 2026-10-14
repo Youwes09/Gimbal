@@ -94,7 +94,7 @@ ShellRoot {
     IpcHandler {
         target: "capture"
 
-        function screenshot(mode: string): void { Capture.shot(mode ?? "region") }
+        function screenshot(mode: string): void { Capture.shot(mode ?? "region", true) }
         function record(mode: string):     void { Capture.recStart(mode ?? "full") }
         function stop():                   void { Capture.recStop() }
         function recordToggle():           void { Capture.recToggle() }
