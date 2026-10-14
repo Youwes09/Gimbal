@@ -67,6 +67,12 @@ QtObject {
     // The audio spectrum on the deck's now playing card and the bar (needs cava).
     readonly property bool visualizer: root._j.visualizer !== undefined ? !!root._j.visualizer : true
 
+    // AirDrop through omdrop: a switch on the network page and a bar glyph while it's on. Off by default.
+    readonly property bool airdrop: !!root._j.airdrop
+    // A USB Wi-Fi adapter that brings AirDrop up when it's plugged in, by interface name: Gimbal
+    // shows it starting, and gives the window it opens the length picked on the AirDrop page.
+    readonly property string airdropAdapter: typeof root._j.airdropAdapter === "string" ? root._j.airdropAdapter : ""
+
     // The compositor config the keybinds page reads; empty picks mango's, or Hyprland's under it.
     readonly property string keybinds: root._expand(_pick("keybinds", "GIMBAL_KEYBINDS", ""))
 

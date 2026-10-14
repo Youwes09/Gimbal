@@ -63,6 +63,10 @@ Item {
         set(false)
     }
     function toggleScan() { Net.discover(!np.scanning) }
+    // Header buttons in keyboard order; AirDrop only when it's turned on in the config.
+    readonly property var heads: Config.airdrop ? ["wifi", "bt", "airdrop", "scan"] : ["wifi", "bt", "scan"]
+    function head(name) { return np.kb && np.row === "head" && np.heads[np.btn] === name }
+    onHeadsChanged: np.btn = Math.min(np.btn, np.heads.length - 1)
     Timer { id: scanStop; interval: 30000; onTriggered: Net.discover(false) }
     onScanningChanged: if (scanning) scanStop.restart()
 
@@ -77,9 +81,10 @@ Item {
             if (U || D || L || R) { np.armed = ""; np.offArmed = "" }
             if (np.row === "head") {
                 if (L) { if (np.btn === 0) DeckUi.go("left"); else np.btn-- }
-                if (R) { if (np.btn === 2) DeckUi.go("right"); else np.btn++ }
+                if (R) { if (np.btn >= np.heads.length - 1) DeckUi.go("right"); else np.btn++ }
                 if (D) np.row = "usage"
-                if (enter) [() => np.toggleRadio("wifi"), () => np.toggleRadio("bt"), np.toggleScan][np.btn]()
+                if (enter) ({ wifi: () => np.toggleRadio("wifi"), bt: () => np.toggleRadio("bt"),
+                              airdrop: () => AirDrop.toggle(), scan: np.toggleScan })[np.heads[np.btn]]()
                 return
             }
             if (np.row === "usage") {
@@ -116,13 +121,13 @@ Item {
         id: header
         anchors { left: parent.left; right: parent.right; top: parent.top }
         title: "Network"
-        detail: Net.iface || (Net.wifiOn ? "Not connected" : "Wi-Fi off")
+        detail: AirDrop.error || Net.iface || (Net.wifiOn ? "Not connected" : "Wi-Fi off")
         Button {
             glyph: Net.wifiOn ? Sh.icWifi : Sh.icWifiOff
             label: np.offArmed === "wifi" ? "Turn off?" : "Wi-Fi"
             on: Net.wifiOn
             danger: np.offArmed === "wifi"
-            selected: np.kb && np.row === "head" && np.btn === 0
+            selected: np.head("wifi")
             onClicked: np.toggleRadio("wifi")
         }
         Button {
@@ -130,14 +135,24 @@ Item {
             label: np.offArmed === "bt" ? "Turn off?" : "Bluetooth"
             on: Net.btOn
             danger: np.offArmed === "bt"
-            selected: np.kb && np.row === "head" && np.btn === 1
+            selected: np.head("bt")
             onClicked: np.toggleRadio("bt")
+        }
+        Button {
+            visible: Config.airdrop
+            glyph: AirDrop.receiving ? Sh.icRadio : Sh.icRadioOff
+            label: AirDrop.busy ? (AirDrop.receiving ? "Stopping" : "Starting")
+                 : AirDrop.error ? "Failed" : "AirDrop"
+            on: AirDrop.receiving
+            danger: !!AirDrop.error
+            selected: np.head("airdrop")
+            onClicked: AirDrop.toggle()
         }
         Button {
             glyph: Sh.icRadar
             label: np.scanning ? "Scanning" : "Scan"
             on: np.scanning
-            selected: np.kb && np.row === "head" && np.btn === 2
+            selected: np.head("scan")
             onClicked: np.toggleScan()
         }
     }

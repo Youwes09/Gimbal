@@ -22,13 +22,14 @@ It also owns your wallpaper (static / GIF / video, cross-faded on switch), repai
   - **Home** — your most-used apps, the folders you open most from the launcher with their git branch and uncommitted changes, the latest notifications
   - **Spaces** — every workspace with the apps open on it and a preview of its layout; the last session and saved setups as strips you can restore. Restoring moves open windows back onto their workspaces and relaunches the rest (terminals in their old directory). The layout is saved as it changes, through `mmsg` (mango)
   - **Network** — the link you're on (signal, band, channel and rate, address, gateway, internet, Tailscale), live throughput with average and peak, data used per day and per network (counted in the background, kept across reboots), Wi-Fi networks (passwords asked inline) and Bluetooth devices with battery and how long they've been connected
+  - **AirDrop** (with `airdrop` on) — whether this machine is visible and for how long; the Apple devices nearby (enter sends files, the star or `f` favorites one); and your favorites, which skip the prompt once you've picked **Always accept** for them; and a history of what came in, went out, or was declined
   - **Notifications** — full history; open, dismiss, clear, Focus (Do Not Disturb)
   - **Captures** — newest screenshots and recordings; open, copy, trash; take new ones
   - **GitHub** — one or more accounts: profile and totals, a year of contributions (hover a day for its count), recently pushed repos and recent activity; enter opens on github.com. Fetched when the page opens, cached between
   - **Keybinds** — your compositor binds (mango, or Hyprland), grouped and described, with runs like `Super 1–9` folded to one line; enter opens the config
   - **Session** — your machine at a glance (host, OS, kernel, uptime, NixOS generation and when it was built), then rest, suspend, log out, reboot, shut down (the last three ask twice)
 - Right: quick toggles (Focus, keyboard backlight, power profile via `asusctl`, warm light via WayOLED's `oledctl`; each shows "Unavailable" without its tool) above Sound (output, microphone, a slider per app playing, with its icon) and Display (brightness)
-- Fully keyboard driven with arrows and `enter`: arrows move spatially across the whole deck and hand off between panels at the edges; in the mixer `←`/`→` set the level. `tab` / `1`–`8` switch pages, `space` play/pause, `esc` close. Key chips under the deck show what works where you are
+- Fully keyboard driven with arrows and `enter`: arrows move spatially across the whole deck and hand off between panels at the edges; in the mixer `←`/`→` set the level. `tab` / `1`–`9` switch pages, `space` play/pause, `esc` close. Key chips under the deck show what works where you are
 - Frosted backdrop from one blurred still of the screen; everything is built on open and torn down on close. Stats and git state are only sampled while it is open
 
 **Launcher**
@@ -118,7 +119,7 @@ gimbal start            run the daemon (compositor autostart)
 gimbal launch           the launcher
 gimbal clipboard        the launcher in one mode (also emoji, files, calc, run)
 gimbal toggle           summon / dismiss the deck
-gimbal deck <page>      the deck on a page: home | spaces | network | notifications | captures | github | keys | session
+gimbal deck <page>      the deck on a page: home | spaces | network | airdrop | notifications | captures | github | keys | session
 gimbal walls            summon / dismiss the wallpaper carousel
 gimbal rest             show the rest screen
 gimbal wallpaper …      next | prev | random | rescan | list | <name>
@@ -197,6 +198,8 @@ bindsym $mod+v exec gimbal clipboard
   "kbdBacklight": "auto",
   "bar": false,
   "visualizer": true,
+  "airdrop": false,
+  "airdropAdapter": "",
   "github": ["you", { "user": "you-at-work", "tokenFile": "~/.config/gimbal/github-work-token" }],
   "fileRoots": ["~/Projects", "~/Documents", "~/Downloads"]
 }
@@ -215,6 +218,10 @@ bindsym $mod+v exec gimbal clipboard
 `bar` — an optional bar: `false` (default) | `true` or `"top"` | `"bottom"`. Three floating islands in the deck's style: workspaces and the focused window; the clock (click for the deck); the tray, now playing, recording, Focus, network, volume (scroll to change, click to mute) and battery. Toasts and the recording pill move below it.
 
 `visualizer` — the spectrum on now playing (deck and bar) while music plays; needs `cava`. `false` turns it off.
+
+`airdrop` — AirDrop with nearby Apple devices through [omdrop](https://github.com/netmojo-systems/omdrop-plugin) (needs `omdrop` on `PATH` and a working radio backend): an **AirDrop** page in the deck and an AirDrop button on the Network page, a bar glyph while it's on or sending (accent once the radio is advertising, with the time on or left), and, when omdrop's receiver is set to ask (`ask = true` in `~/.config/airdrop/config.toml`, needs `inotify-tools`), a prompt with the sender's preview for each incoming transfer. Nothing polls: Gimbal wakes when omdrop's `awdl0` link comes or goes. Off by default.
+
+`airdropAdapter` — the interface name of a USB Wi-Fi adapter whose arrival turns AirDrop on (something outside Gimbal has to start it, such as a systemd unit bound to the device). Gimbal shows AirDrop starting the moment it appears, and narrows the window it opened to the length picked on the AirDrop page. Empty by default.
 
 `github` — accounts for the GitHub page: a name, or `{ "user", "tokenFile" }` (or `"token"`). Without a token it shows public data (60 API calls an hour, plenty for a few accounts). A token belonging to that account adds private contributions and activity, and lists every repo it works in, its organisations' too: a classic token with `repo` and `read:user`, or a fine-grained one with read access to the repos. Keep it in a `tokenFile` so it stays out of the Nix store; a missing or rejected token falls back to public data.
 

@@ -13,6 +13,8 @@ Rectangle {
     property string badge: ""         // short tag, e.g. "+19"
     property bool badgeLive: false    // accent for live state ("Connected"); neutral otherwise
     property bool selected: false
+    // Controls after the meta text, e.g. a button; they take their own clicks.
+    default property alias accessories: side.data
     signal clicked()
 
     implicitHeight: DeckUi.f(40)
@@ -115,6 +117,7 @@ Rectangle {
     MouseArea {
         id: ma
         anchors.fill: parent
+        z: -1
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
         onClicked: row.clicked()

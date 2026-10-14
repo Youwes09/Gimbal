@@ -79,6 +79,7 @@
             glib # gdbus: keyboard backlight through UPower
             cava # audio visualizer
             curl # GitHub page
+            inotify-tools # AirDrop transfer prompts
           ];
 
           allDeps = runtimeDeps ++ optionalDeps;

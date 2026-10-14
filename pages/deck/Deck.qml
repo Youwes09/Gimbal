@@ -23,12 +23,13 @@ Item {
         { id: "home",          glyph: Sh.icHome,   label: "Home" },
         { id: "spaces",        glyph: Sh.icSpaces, label: "Spaces" },
         { id: "network",       glyph: Sh.icWifi,   label: "Network" },
+        { id: "airdrop",       glyph: Sh.icRadio,  label: "AirDrop" },
         { id: "notifications", glyph: Sh.icBell,   label: "Notifications" },
         { id: "captures",      glyph: Sh.icImages, label: "Captures" },
         { id: "github",        glyph: Sh.icGitBranch, label: "GitHub" },
         { id: "keys",          glyph: Sh.icCommand, label: "Keybinds" },
         { id: "session",       glyph: Sh.icPower,  label: "Session" }
-    ]
+    ].filter(s => DeckUi.sections.indexOf(s.id) >= 0)
 
     Item {
         id: frame
@@ -162,6 +163,7 @@ Item {
                 Section { sid: "home";          sourceComponent: Home {} }
                 Section { sid: "spaces";        sourceComponent: Workspaces {} }
                 Section { sid: "network";       sourceComponent: Network {} }
+                Section { sid: "airdrop";       sourceComponent: AirDropPage {} }
                 Section { sid: "notifications"; sourceComponent: Notifs {} }
                 Section { sid: "captures";      sourceComponent: Captures {} }
                 Section { sid: "github";        sourceComponent: GitHubPage {} }
@@ -198,6 +200,7 @@ Item {
             if (z === "tiles") return [["⏎", "flip"]]
             if (s === "spaces") return [["⏎", "open"], ["⇧←→", "move window"], ["del", "close · delete"], ["r", "rename"], ["u", "replace"], ["⇧↑↓", "reorder"]]
             if (s === "network") return [["⏎", "connect"], ["←→", "day"], ["del", "forget"]]
+            if (s === "airdrop") return [["⏎", "send"], ["f", "favorite"], ["r", "look again"], ["del", "remove"]]
             if (s === "notifications") return [["⏎", "open"], ["del", "dismiss"], ["c", "clear all"]]
             if (s === "captures") return [["⏎", "open"], ["c", "copy"], ["del", "trash"]]
             if (s === "github") return [["⏎", "open"], ["r", "refresh"]]

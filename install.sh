@@ -29,6 +29,7 @@ optional=(
   "wl-screenrec|command -v wl-screenrec|wl-screenrec|aur|screen recording"
   "upower|command -v upower|upower|pacman|low-battery warnings"
   "file|command -v file|file|pacman|richer metadata in the inspect card"
+  "inotify-tools|command -v inotifywait|inotify-tools|pacman|AirDrop transfer prompts"
 )
 
 qml_has() {

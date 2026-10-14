@@ -22,6 +22,7 @@ ShellRoot {
     LauncherWindow { id: launcher }
     DeckWindow { }
     NotificationToasts { }
+    AirDropPrompt { }
     LaunchIndicator { }
     RecordingIndicator { }
     OsdIndicator { }

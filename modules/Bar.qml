@@ -231,6 +231,24 @@ Variants {
                 }
 
                 Glyph {
+                    id: airdrop
+                    property real now: Date.now()
+                    visible: AirDrop.enabled && (AirDrop.receiving || AirDrop.sending || AirDrop.starting)
+                    glyph: Sh.icRadio
+                    tint: AirDrop.visible || AirDrop.sending ? Theme.accent : DeckUi.dim
+                    label: AirDrop.sending ? "Sending" : AirDrop.starting ? "Starting"
+                         : AirDrop.until > airdrop.now ? Math.ceil((AirDrop.until - airdrop.now) / 60000) + "m left"
+                         : AirDrop.since ? "on " + Net.duration(airdrop.now - AirDrop.since) : ""
+                    onClicked: { DeckUi.openTo = "airdrop"; Sh.openDeck() }
+                    // Only while it's showing a time.
+                    Timer {
+                        interval: 30000; repeat: true; triggeredOnStart: true
+                        running: airdrop.visible && (AirDrop.until > 0 || AirDrop.since > 0)
+                        onTriggered: airdrop.now = Date.now()
+                    }
+                }
+
+                Glyph {
                     readonly property var link: Net.current
                     glyph: !Net.wifiOn ? (Net.online ? Sh.icNetwork : Sh.icWifiOff)
                          : link ? Net.strengthGlyph(link.signalStrength)
