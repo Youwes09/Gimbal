@@ -59,6 +59,11 @@ QtObject {
     // Seconds of idle before the rest screen, and before it fades to black. 0 disables.
     readonly property int idleRest: root._j.idleRest !== undefined ? root._j.idleRest : 300
     readonly property int idleDark: root._j.idleDark !== undefined ? root._j.idleDark : 600
+    // Media playing in any other player counts as activity, for apps whose video never asks
+    // the compositor to stay awake (WebKit, some browsers). Names match the player's desktop
+    // entry or identity, lowercase.
+    readonly property var idleMusicPlayers: Array.isArray(root._j.idleMusicPlayers)
+        ? root._j.idleMusicPlayers.map(s => String(s).toLowerCase()) : ["spotify"]
 
     // What Enter does on an emoji or symbol in the launcher: "type" it into the window you were
     // in (needs wtype), or "copy" it to the clipboard.

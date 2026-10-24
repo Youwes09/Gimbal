@@ -42,7 +42,7 @@ It also owns your wallpaper (static / GIF / video, cross-faded on switch), repai
 
 **Rest screen**
 - Big clock, date, battery (with time left / to full), now playing; no password, any key or click returns
-- Comes up after `idleRest` seconds idle (default 300) or on `gimbal rest`; fades to true black after `idleDark` (default 600). Idle inhibitors (video, calls) hold it off
+- Comes up after `idleRest` seconds idle (default 300) or on `gimbal rest`; fades to true black after `idleDark` (default 600). Idle inhibitors (video, calls) hold it off, and so does anything playing in a player not listed in `idleMusicPlayers` (default `["spotify"]`)
 - Drifts a few pixels each minute so an OLED never holds the same image
 
 **Wallpaper**
@@ -192,6 +192,7 @@ bindsym $mod+v exec gimbal clipboard
   "dirOpen": "smart",
   "idleRest": 300,
   "idleDark": 600,
+  "idleMusicPlayers": ["spotify"],
   "emojiAction": "type",
   "scale": 1.0,
   "scales": { "bar": 1.0, "deck": 1.0, "launcher": 1.0 },
